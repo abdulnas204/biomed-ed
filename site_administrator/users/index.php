@@ -9,7 +9,7 @@
 			if ($user['userName'] !== $_SESSION['MM_Username']) {
 				mysql_query("DELETE FROM `users` WHERE `id` = '{$id}'", $connDBA);
 				
-				header ("Location: index.php?message=userDeleted");
+				header ("Location: index.php");
 				exit;
 			} else {
 				header ("Location: index.php");
@@ -88,9 +88,6 @@
 //A user was edited
 	} elseif (isset($_GET['message']) && $_GET['message'] == "userEdited") {
 		successMessage("The user was modified");	
-//A user was deleted
-	} elseif (isset($_GET['message']) && $_GET['message'] == "userDeleted") {
-		successMessage("The user was deleted");
 //If a site administrator tries to change their role, and there aren't any other site administrators
 	} elseif (isset($_GET['message']) && $_GET['message'] == "noAdmin") {
 		errorMessage("Your profile was not updated, since you tried to change your role, and thus would have left this site without a site administrator.");
@@ -394,8 +391,9 @@
 			//Alternate the color of each row.
 			if ($number++ & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 			echo "<td width=\"200\"><a href=\"profile.php?id=" . $userData['id'] . "\">" . $userData['lastName'] . ", " . $userData['firstName'] . "</a></td>" . 
-			"<td width=\"150\"><a href=\"../communication/email/index.php?id=" . $userData['id'] . "\">" . $userData['emailAddress1'] . "</a></td>" . 
+			"<td width=\"150\"><a href=\"../communication/send_email.php?id=" . $userData['id'] . "\">" . $userData['emailAddress1'] . "</a></td>" . 
 			"<td width=\"175\">" . $userData['role'] . "</td>";
+			
 			if (!$userData['organization'] || $userData['organization'] == "1") {
 				if ($userData['role'] !== "Site Administrator" && $userData['role'] !== "Site Manager") {
 					$organization = "<span class=\"alertNotAssigned\">None</span>";
@@ -403,19 +401,14 @@
 					$organization = "<span class=\"notAssigned\">None</span>";
 				}
 			} else {
-				$organization = $userData['organization'];
-			}
-			 
-			if ($userData['organization'] != "1") {
-				$organizationName = $userData['organization'];
-				$organizationDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organizationName}' LIMIT 1", $connDBA);
+				$organizationID = $userData['organization'];
+				$organizationDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
 				$organizationData = mysql_fetch_array($organizationDataGrabber);
-				 
-				echo "<td><a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . $organization . "</a></td>";
-			} else {
-				echo "<td>" . $organization . "</td>";
+				
+				$organization = "<a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . $organizationData['organization'] . "</a>";
 			}
-				 
+			
+			echo "<td>" . $organization . "</td>"; 
 			echo "<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=user&period=overall&id=" . $userData['id'] . "\" onmouseover=\"Tip('View <strong>" . $userData['firstName'] . " " . $userData['lastName'] . "\'s</strong> statistics')\" onmouseout=\"UnTip()\"></a></td>" . 
 			"<td width=\"50\"><a class=\"action edit\" href=\"manage_user.php?id=" . $userData['id'] . "\" onmouseover=\"Tip('Edit <strong>" .  $userData['firstName'] . " " . $userData['lastName'] . "</strong>')\" onmouseout=\"UnTip()\"></a>
 			</td>" . "<td width=\"50\">";

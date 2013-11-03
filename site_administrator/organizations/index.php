@@ -10,7 +10,7 @@
 			mysql_query("DELETE FROM `organizations` WHERE `id` = '{$id}'", $connDBA);
 			mysql_query("DELETE FROM `users` WHERE `organization` = '{$organizationName}'", $connDBA);
 			
-			header ("Location: index.php?message=organizationDeleted");
+			header ("Location: index.php");
 			exit;
 		} else {
 			header ("Location: index.php");
@@ -28,33 +28,24 @@
 <body<?php bodyClass(); ?>>
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Organizations</h2>
-    <p>Below is a list of all organizations registered within this system. Organizations may be sorted according to a certain criteria by clicking on the text in the header   row of the desired column.</p>
+<h2>Organizations</h2>
+<p>Below is a list of all organizations registered within this system. Organizations may be sorted according to a certain criteria by clicking on the text in the header   row of the desired column.</p>
+<p>&nbsp;</p>
+    <div class="toolBar"><a href="manage_organization.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="manage_organization.php">Add New Organization</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="manage_billing.php"><img src="../../images/admin_icons/dollar_sign.png" alt="Billing" width="24" height="24" /></a> <a href="manage_billing.php">Manage Billing</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="search.php"><img src="../../images/admin_icons/search.png" alt="Search" width="24" height="24" /></a> <a href="search.php">Search for Organizations</a></div>
 <?php
-//If the user has assigned someone to an organization
-	if (isset($_GET['message']) && $_GET['message'] == "assignedUser") {
-		successMessage("The organization was assigned to an organization.");
-//A user was created
-	} elseif (isset($_GET['message']) && $_GET['message'] == "organizationCreated") {
-		successMessage("The organization was created.");	
-//A user was edited
+//An organization was created
+	if (isset($_GET['message']) && $_GET['message'] == "organizationCreated") {
+		successMessage("The organization was created");	
+//An organization was edited
 	} elseif (isset($_GET['message']) && $_GET['message'] == "organizationEdited") {
-		successMessage("The organization was modified.");	
-//A user was deleted
-	} elseif (isset($_GET['message']) && $_GET['message'] == "organizationDeleted") {
-		successMessage("The organization was deleted.");
-//If the user is given an error when assigning an administrator to an orgainzation
-	} elseif (isset($_GET['message']) && $_GET['message'] == "errorAssign") {
-		errorMessage("Site administrators and site managers cannot be assigned to an organization. Please change their role if you wish to assign them.");
+		successMessage("The organization was modified");
 //If the user is given an error that an assigned user does not exist
 	} elseif (isset($_GET['message']) && $_GET['message'] == "noUser") {
-		errorMessage("The user you are attempting to assign to an organization does not exist.");
+		errorMessage("The user you are attempting to assign to this organization does not exist.");
 	} else {
-		echo "<p>&nbsp;</p>";
+		echo "<br />";
 	}
 ?>
-    <div class="toolBar"><a href="manage_organization.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="manage_organization.php">Add New Organization</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="manage_billing.php"><img src="../../images/admin_icons/dollar_sign.png" alt="Billing" width="24" height="24" /></a> <a href="manage_billing.php">Manage Billing</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="search.php"><img src="../../images/admin_icons/search.png" alt="Search" width="24" height="24" /></a> <a href="search.php">Search for Organizations</a></div>
-<br />
 <div align="center">
 <?php
 	if (!isset ($_GET['sort'])) {

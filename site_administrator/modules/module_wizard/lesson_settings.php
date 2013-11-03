@@ -184,11 +184,11 @@
 	if (isset($_GET['checkName'])) {
 		$inputNameSpaces = $_GET['checkName'];
 		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-		$checkName= mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$inputNameSpaces}'", $connDBA);
+		$checkName = mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$inputNameSpaces}'", $connDBA);
 		
-		if($name = mysql_fetch_array($checkName)) {					
+		if ($name = mysql_fetch_array($checkName)) {					
 			if (isset($_SESSION['currentModule'])) {
-				if (strtolower($name['name']) !== strtolower($_SESSION['currentModule'])) {
+				if (strtolower($name['name']) != strtolower($_SESSION['currentModule'])) {
 					echo "<div class=\"error\" id=\"errorWindow\">A module with this name already exists</div>";
 				} else {
 					echo "<p>&nbsp;</p>";

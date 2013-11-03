@@ -41,14 +41,14 @@
 			}
 			
 			$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
-			if (mysql_fetch_array($organizationGrabber)) {
-				//Do nothing
+			if ($organizationInfo = mysql_fetch_array($organizationGrabber)) {
+				$organizationID = $organizationInfo['id'];
 			} else {
 				header ("Location: assign_user.php?message=noOrganization");
 				exit;
 			}
 			
-			mysql_query("UPDATE `users` SET `organization` = '{$organization}' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}' LIMIT 1", $connDBA);
+			mysql_query("UPDATE `users` SET `organization` = '{$organizationID}' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}' LIMIT 1", $connDBA);
 			
 			$userIDGrabber = mysql_query("SELECT * FROM `users` WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 			$userIDArray = mysql_fetch_array($userIDGrabber);
@@ -78,8 +78,8 @@
 			}
 			
 			$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
-			if (mysql_fetch_array($organizationGrabber)) {
-				//Do nothing
+			if ($organizationInfo = mysql_fetch_array($organizationGrabber)) {
+				$organizationID = $organizationInfo['id'];
 			} else {
 				if ($user != false) {
 					header ("Location: assign_user.php?id=" . $id . "&message=noOrganization");
@@ -90,7 +90,7 @@
 				}
 			}
 			
-			mysql_query("UPDATE `users` SET `organization` = '{$organization}' WHERE `id` = '{$id}' LIMIT 1", $connDBA);
+			mysql_query("UPDATE `users` SET `organization` = '{$organizationID}' WHERE `id` = '{$id}' LIMIT 1", $connDBA);
 			
 			$organizationIDGrabber = mysql_query("SELECT * FROM `organizations` WHERE `name` = '{$organization}'", $connDBA);
 			$organizationIDArray = mysql_fetch_array($organizationIDGrabber);

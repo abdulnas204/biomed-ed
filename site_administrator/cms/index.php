@@ -153,40 +153,40 @@
 	if (!isset ($_GET['updated']) && !isset ($_GET['added'])) {echo "<br />";}
 ?>
 <?php
-	//Table header, only displayed if pages exist.
-		if ($pageGrabber !== 0) {
-		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
-		//Loop through each page.
-			while($pageData = mysql_fetch_array($pageGrabber)) {
-				echo "<tr";
-			//Alternate the color of each row.
-				if ($pageData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-				 echo "<td width=\"25\"><div align=\"center\"><form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $pageData['id'] . "\" class=\"visible"; if ($pageData['visible'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $pageData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $pageData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($pageData['visible'] == "on") {echo " checked=\"checked\"";} echo "></div></form></div></td>";
-				echo "<td width=\"75\"><form name=\"pages\" action=\"index.php\"><input type=\"hidden\" name=\"id\" value=\"" . $pageData['id'] . "\"><input type=\"hidden\" name=\"currentPosition\" value=\"" .  $pageData['position'] .  "\"><input type=\"hidden\" name=\"action\" value=\"modifySettings\"><select name=\"position\" onchange=\"this.form.submit();\">";
-				
-				$pageCount = mysql_num_rows($pageGrabber);
-				for ($count=1; $count <= $pageCount; $count++) {
-					echo "<option value=\"{$count}\"";
-					if ($pageData ['position'] == $count) {
-						echo " selected=\"selected\"";
-					}
-					echo ">" . $count . "</option>";
+//Table header, only displayed if pages exist.
+	if ($pageGrabber !== 0) {
+	echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+	//Loop through each page.
+		while($pageData = mysql_fetch_array($pageGrabber)) {
+			echo "<tr";
+		//Alternate the color of each row.
+			if ($pageData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+			 echo "<td width=\"25\"><div align=\"center\"><form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $pageData['id'] . "\" class=\"visible"; if ($pageData['visible'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $pageData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $pageData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($pageData['visible'] == "on") {echo " checked=\"checked\"";} echo "></div></form></div></td>";
+			echo "<td width=\"75\"><form name=\"pages\" action=\"index.php\"><input type=\"hidden\" name=\"id\" value=\"" . $pageData['id'] . "\"><input type=\"hidden\" name=\"currentPosition\" value=\"" .  $pageData['position'] .  "\"><input type=\"hidden\" name=\"action\" value=\"modifySettings\"><select name=\"position\" onchange=\"this.form.submit();\">";
+			
+			$pageCount = mysql_num_rows($pageGrabber);
+			for ($count=1; $count <= $pageCount; $count++) {
+				echo "<option value=\"{$count}\"";
+				if ($pageData ['position'] == $count) {
+					echo " selected=\"selected\"";
 				}
-				
-				echo "</select></form></td><td width=\"200\"><a";
-				if ($pageData['position'] == "1") {
-					echo " class=\"homePage\"";
-				}
-				echo " href=\"../../index.php?page=" . $pageData['id'] . "\" onmouseover=\"Tip('Preview the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($pageData['title']) . "</a></td>";
-				echo "<td>" . commentTrim(100, $pageData['content']) . "</td>";
-				echo "<td width=\"50\"><a class=\"action edit\" href=\"manage_page.php?id=" . $pageData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>"; 
-				echo "<td width=\"50\"><a class=\"action delete\" href=\"index.php?action=delete&page=" . $pageData['position'] . "&id=" . $pageData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\" onmouseover=\"Tip('Delete the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>";
-				}
-			echo "</tr></tbody></table>";
-		 } else {
-		 	echo "<div class=\"noResults\">This site has no pages. <a href=\"manage_page.php\">Create a new page now</a>.</div>";
-		 } 
-	?>
+				echo ">" . $count . "</option>";
+			}
+			
+			echo "</select></form></td><td width=\"200\"><a";
+			if ($pageData['position'] == "1") {
+				echo " class=\"homePage\"";
+			}
+			echo " href=\"../../index.php?page=" . $pageData['id'] . "\" onmouseover=\"Tip('Preview the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($pageData['title']) . "</a></td>";
+			echo "<td>" . commentTrim(100, $pageData['content']) . "</td>";
+			echo "<td width=\"50\"><a class=\"action edit\" href=\"manage_page.php?id=" . $pageData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>"; 
+			echo "<td width=\"50\"><a class=\"action delete\" href=\"index.php?action=delete&page=" . $pageData['position'] . "&id=" . $pageData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\" onmouseover=\"Tip('Delete the <strong>" . htmlentities($pageData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>";
+			}
+		echo "</tr></tbody></table>";
+	 } else {
+		echo "<div class=\"noResults\">This site has no pages. <a href=\"manage_page.php\">Create a new page now</a>.</div>";
+	 } 
+?>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

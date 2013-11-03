@@ -353,11 +353,10 @@ px
 	} elseif (isset ($theme)) { 
 ?>
 <?php 
-	if (isset ($_GET['action']) && $_GET['action'] == "modifyTheme" && !empty($_GET['theme']) && !empty ($_GET['assist'])) {
+	if (isset ($_GET['action']) && $_GET['action'] == "modifyTheme" && !empty($_GET['theme'])) {
 		$theme = $_GET['theme'];
-		$assist = $_GET['assist'];
 		
-		$modifyThemeQuery = "UPDATE siteProfiles SET assist = '{$assist}', style = '{$theme}'";
+		$modifyThemeQuery = "UPDATE siteProfiles SET style = '{$theme}'";
 		$modifyThemeQueryResult = mysql_query($modifyThemeQuery, $connDBA);
 		header ("Location: index.php?updated=theme");
 		exit;
@@ -395,27 +394,27 @@ px
     <blockquote>
       <p><strong>American</strong></p><?php if ($theme['style'] == "american.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/american/preview.jpg" alt="American Theme Preview" width="252" height="124" />
-        <input type="button" name="chooseAmerican" id="chooseAmerican" value="Choose American Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=american.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseAmerican" id="chooseAmerican" value="Choose American Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=american.css');return document.MM_returnValue" />
       </p>
       <p><strong>Binary</strong></p><?php if ($theme['style'] == "binary.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/binary/preivew.jpg" alt="Binary Theme Preview" width="251" height="119" />
-        <input type="button" name="chooseBinary" id="chooseBinary" value="Choose Binary Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=binary.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseBinary" id="chooseBinary" value="Choose Binary Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=binary.css');return document.MM_returnValue" />
       </p>
       <p><strong>Business</strong></p><?php if ($theme['style'] == "business.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/business/preview.jpg" alt="Business Theme Preview" width="251" height="125" />
-        <input type="button" name="chooseBusiness" id="chooseBusiness" value="Choose Business Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=business.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseBusiness" id="chooseBusiness" value="Choose Business Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=business.css');return document.MM_returnValue" />
       </p>
       <p><strong>Digital University</strong></p><?php if ($theme['style'] == "digitalUniversity.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/digital_university/preview.jpg" alt="Digitial University Theme Preview" width="252" height="111" />
-        <input type="button" name="chooseDigital" id="chooseDigital" value="Choose Digital University Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=digitalUniversity.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseDigital" id="chooseDigital" value="Choose Digital University Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=digitalUniversity.css');return document.MM_returnValue" />
       </p>
       <p><strong>e-Learning</strong></p><?php if ($theme['style'] == "eLearning.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/e_learning/preview.jpg" alt="e-Learning Theme Preview" width="252" height="111" />
-        <input type="button" name="chooseLearning" id="chooseLearning" value="Choose e-Learning Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=eLearning.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseLearning" id="chooseLearning" value="Choose e-Learning Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=eLearning.css');return document.MM_returnValue" />
       </p>
       <p><strong>Knowledge Library</strong></p><?php if ($theme['style'] == "knowledgeLibrary.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/knowledge_library/preview.jpg" alt="Knowledge Library Theme Preview" width="252" height="111" />
-        <input type="button" name="chooseLibrary" id="chooseLibrary" value="Choose Knowledge Library Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=knowLedgeLibrary.css&assist=no');return document.MM_returnValue" />
+        <input type="button" name="chooseLibrary" id="chooseLibrary" value="Choose Knowledge Library Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=knowLedgeLibrary.css');return document.MM_returnValue" />
       </p>
       <p>&nbsp;</p>
     </blockquote>

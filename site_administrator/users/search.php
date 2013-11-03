@@ -3,8 +3,21 @@
 <?php
 //Search for users
 	if (isset($_GET['keywords']) && isset($_GET['searchMethod'])) {
-		$keywords = $_GET['keywords'];
-		$searchMethod = $_GET['searchMethod'];
+		if ($_GET['searchMethod'] == "organization") {
+			$organizationName = $_GET['keywords'];
+			$organizationInfoGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` LIKE '%{$organizationName}%'", $connDBA);
+			
+			if ($organizationInfo = mysql_fetch_array($organizationInfoGrabber)) {
+				$keywords = $organizationInfo['id'];
+				$searchMethod = $_GET['searchMethod'];
+			} else {
+				header("Location: search.php?suggestions=display");
+				exit;
+			}
+		} else {
+			$keywords = $_GET['keywords'];
+			$searchMethod = $_GET['searchMethod'];
+		}
 		
 		if (empty($keywords)) {
 			header("Location: search.php");
@@ -400,7 +413,7 @@
 				}
 				
 				echo "</a></td>" . 
-				"<td width=\"150\"><a href=\"../communication/email/index.php?id=" . $userData['id'] . "\">";
+				"<td width=\"150\"><a href=\"../communication/send_email.php?id=" . $userData['id'] . "\">";
 				
 				if ($_GET['searchMethod'] == "emailAddress1") {
 					echo str_ireplace($_GET['keywords'], "<span class=\"searchKeywords\">" . strtolower($_GET['keywords']) . "</span>", $userData['emailAddress1']);	
@@ -426,23 +439,18 @@
 						$organization = "<span class=\"notAssigned\">None</span>";
 					}
 				} else {
+					$organizationID = $userData['organization'];
+					$organizationDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
+					$organizationData = mysql_fetch_array($organizationDataGrabber);
+					
 					if ($_GET['searchMethod'] == "organization") {
-						$organization = str_ireplace($_GET['keywords'], "<span class=\"searchKeywords\">" . strtolower($_GET['keywords']) . "</span>", $userData['organization']);	
+						$organization = "<a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . str_ireplace($_GET['keywords'], "<span class=\"searchKeywords\">" . strtolower($_GET['keywords']) . "</span>", $organizationData['organization']) . "</a>";	
 					} else {
-						$organization = $userData['organization'];
+						$organization = "<a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . $organizationData['organization'] . "</a>";
 					}
 				}
 				
-				if ($userData['organization'] != "1") {
-					$organizationName = $userData['organization'];
-					$organizationDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organizationName}' LIMIT 1", $connDBA);
-					$organizationData = mysql_fetch_array($organizationDataGrabber);
-					 
-					echo "<td><a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . $organization . "</a></td>";
-				} else {
-					echo "<td>" . $organization . "</td>";
-				}
-				
+				echo "<td>" . $organization . "</td>";
 				echo "<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=user&period=overall&id=" . $userData['id'] . "\" onmouseover=\"Tip('View <strong>" . $userData['firstName'] . " " . $userData['lastName'] . "\'s</strong> statistics')\" onmouseout=\"UnTip()\"></a></td>" . 
 				"<td width=\"50\"><a class=\"action edit\" href=\"manage_user.php?id=" . $userData['id'] . "\" onmouseover=\"Tip('Edit <strong>" .  $userData['firstName'] . " " . $userData['lastName'] . "</strong>')\" onmouseout=\"UnTip()\"></a>
 				</td>" . "<td width=\"50\">";

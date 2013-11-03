@@ -126,11 +126,11 @@
 	if (isset($_GET['checkName'])) {
 		$inputNameSpaces = $_GET['checkName'];
 		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-		$checkName= mysql_query("SELECT * FROM `moduledata` WHERE `testName` = '{$inputNameSpaces}'", $connDBA);
+		$checkName = mysql_query("SELECT * FROM `moduledata` WHERE `testName` = '{$inputNameSpaces}'", $connDBA);
 		
-		if($name = mysql_fetch_array($checkName)) {					
+		if ($name = mysql_fetch_array($checkName)) {					
 			if (isset($_SESSION['currentModule'])) {
-				if ($name['name'] !== $testData['testName']) {
+				if ($name['name'] != $testData['testName']) {
 					echo "<div class=\"error\" id=\"errorWindow\">A test with this name already exists</div>";
 				} else {
 					echo "<p>&nbsp;</p>";
@@ -371,7 +371,7 @@
       <blockquote>
         <p>
           Hours:          
-          <select name="timeHours" id="timeHours"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+          <select name="timeHours" id="timeHours"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"disabled\"";}} else {echo " disabled=\"disabled\"";}?>>
             <option value="0"<?php if ($testData['time'] !== "") {if ($testH == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>0</option>
             <option value="1"<?php if ($testData['time'] !== "") {if ($testH == "1") {echo " selected=\"selected\"";}}?>>1</option>
             <option value="2"<?php if ($testData['time'] !== "") {if ($testH == "2") {echo " selected=\"selected\"";}}?>>2</option>
@@ -380,7 +380,7 @@
             <option value="5"<?php if ($testData['time'] !== "") {if ($testH == "5") {echo " selected=\"selected\"";}}?>>5</option>
           </select>
         Minutes: 
-        <select name="timeMinutes" id="timeMinutes"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+        <select name="timeMinutes" id="timeMinutes"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"disabled\"";}} else {echo " disabled=\"disabled\"";}?>>
           <option value="00"<?php if ($testData['time'] !== "") {if ($testM == "00") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>00</option>
           <option value="05"<?php if ($testData['time'] !== "") {if ($testM == "05") {echo " selected=\"selected\"";}}?>>05</option>
           <option value="10"<?php if ($testData['time'] !== "") {if ($testM == "10") {echo " selected=\"selected\"";}}?>>10</option>
@@ -403,7 +403,7 @@
       <blockquote>
         <p>
           Penalties: 
-            <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+            <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"disabled\"";}} else {echo " disabled=\"disabled\"";}?>>
               <option value="0"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>The test will close</option>
               <option value="1"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "1") {echo " selected=\"selected\"";}}?>>All answers will reset</option>
               <option value="10"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "10") {echo " selected=\"selected\"";}}?>>Grade decreases 10%</option>

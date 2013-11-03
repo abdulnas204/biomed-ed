@@ -86,6 +86,30 @@
 		}
 	}
 ?>
+<?php
+	if (isset($_GET['checkName'])) {
+		$inputNameSpaces = $_GET['checkName'];
+		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
+		$checkName = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$inputNameSpaces}'", $connDBA);
+		
+		if($name = mysql_fetch_array($checkName)) {	
+			if (isset($_GET['id'])) {
+				$userID = $_GET['id'];
+				$currentUserGrabber = mysql_query("SELECT * FROM `users` WHERE `id` = '{$userID}'", $connDBA);
+				$currentUser = mysql_fetch_array($currentUserGrabber);
+				
+				if (strtolower($currentUser['userName']) != strtolower($inputNameSpaces)) {
+					echo "<div class=\"error\" id=\"errorWindow\">This user name is already taken</div>";
+				}
+			} else {
+				echo "<div class=\"error\" id=\"errorWindow\">This user name is already taken</div>";
+			}
+		}
+		
+		echo "<script type=\"text/javascript\">validateName()</script>";
+		die();
+	}
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -101,6 +125,7 @@
 ?>
 <?php headers(); ?>
 <?php validate(); ?>
+<?php liveError(); ?>
 <script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
 </head>
@@ -135,8 +160,7 @@
       </select>
     </p>
     </blockquote>
-  </blockquote>
-<p>&nbsp;</p>
+</blockquote>
 </div>
 <div class="catDivider two">User Information</div>
 <div class="stepContent">
@@ -144,19 +168,20 @@
   <p>First Name<span class="require">*</span>:</p>
   <blockquote>
     <p>
-      <input name="firstName" type="text" id="firstName" size="50" autocomplete="off" class="validate[required]"<?php if (isset($id)) {echo " value=\"" . $user['firstName'] . "\"";} ?> />
+      <input name="firstName" type="text" id="firstName" size="50" autocomplete="off" class="validate[required,custom[noSpecialCharacters]]"<?php if (isset($id)) {echo " value=\"" . $user['firstName'] . "\"";} ?> />
     </p>
   </blockquote>
   <p>Last Name<span class="require">*</span>:</p>
   <blockquote>
     <p>
-      <input name="lastName" type="text" id="lastName" size="50" autocomplete="off" class="validate[required]"<?php if (isset($id)) {echo " value=\"" . $user['lastName'] . "\"";} ?> />
+      <input name="lastName" type="text" id="lastName" size="50" autocomplete="off" class="validate[required,custom[noSpecialCharacters]]"<?php if (isset($id)) {echo " value=\"" . $user['lastName'] . "\"";} ?> />
     </p>
   </blockquote>
+  <?php errorWindow("database", "This user name is already taken", "error", "identical", "true"); ?>
   <p>User Name<?php if (isset($user)) {if ($user['userName'] != $_SESSION['MM_Username']) {echo "<span class=\"require\">*</span>";}} else {echo "<span class=\"require\">*</span>";} ?>:</p>
   <blockquote>
     <p>
-      <input name="userName" type="text" id="userName" size="50" autocomplete="off" class="validate[required]<?php if (isset($user)) {if ($user['userName'] == $_SESSION['MM_Username']) {echo " disabled";}} ?>"<?php if (isset($user)) {if ($user['userName'] == $_SESSION['MM_Username']) {echo " readonly=\"readonly\"";}} if (isset($id)) {echo " value=\"" . $user['userName'] . "\"";} ?> />
+      <input name="userName" type="text" id="userName" size="50" autocomplete="off" class="validate[required]<?php if (isset($user)) {if ($user['userName'] == $_SESSION['MM_Username']) {echo " disabled";}} ?>" onblur="checkName(this.name, 'manage_user'<?php if (isset ($user)) {echo ", 'id=" . $user['id'] . "'";}?>"<?php if (isset($user)) {if ($user['userName'] == $_SESSION['MM_Username']) {echo " readonly=\"readonly\"";}} if (isset($id)) {echo " value=\"" . $user['userName'] . "\"";} ?> />
     </p>
   </blockquote>
   <p>Password<?php if (!isset($id)) {echo "<span class=\"require\">*</span>";} ?>:</p>
@@ -191,7 +216,6 @@
     </p>
   </blockquote>
 </blockquote>
-<p>&nbsp;</p>
 </div>
 <div class="catDivider three">Contact Information</div>
 <div class="stepContent">
@@ -215,7 +239,6 @@
       </p>
     </blockquote>
   </blockquote>
-  <p>&nbsp;</p>
 </div>
 <div class="catDivider four">Submit</div>
 <div class="stepContent">

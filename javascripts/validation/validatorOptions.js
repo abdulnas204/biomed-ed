@@ -36,9 +36,9 @@
 					"onlyNumber":{
 						"regex":"/^[0-9\ ]+$/",
 						"alertText":"* Numbers only"},	
-					"noSpecialCaracters":{
-						"regex":"/^[0-9a-zA-Z]+$/",
-						"alertText":"* No special caracters allowed"},	
+					"noSpecialCharacters":{
+						"regex":"/^[0-9a-zA-Z ]+$/",
+						"alertText":"* No special characters allowed"},	
 					"ajaxUser":{
 						"file":"validateUser.php",
 						"extraData":"name=eric",
@@ -46,7 +46,7 @@
 						"alertTextLoad":"* Loading, please wait",
 						"alertText":"* This user is already taken"},	
 					"ajaxName":{
-						"file":"validateUser.php",
+						"file": document.location.href + "?validate=true",
 						"alertText":"* This name is already taken",
 						"alertTextOk":"* This name is available",	
 						"alertTextLoad":"* Loading, please wait"},		

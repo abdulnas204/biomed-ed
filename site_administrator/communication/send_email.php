@@ -1,4 +1,4 @@
-<?php require_once('../../../Connections/connDBA.php'); ?>
+<?php require_once('../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
 //Process the form
@@ -59,74 +59,24 @@
 			}
 		}
 		
-	//Grab the attachment
-		$fileTempName = $_FILES['attachment']['tmp_name'];
-		$fileType = $_FILES['attachment']['type'];
-		$fileName = basename($_FILES['attachment'] ['name']);
+	//Header information, including the "From" field
+		$random = md5(time());
+		$mimeBoundary = "==Multipart_Boundary_x{$random}x";
+	
+		$header = "Return-Path: " . $from . ">\n";
+		$header .= "Reply-To: " . $from . "\n";
+		$header .= "From: " . $from . "\n";
+		$header .= "Bcc: " . $to . "\n";
+		$header .= "X-Mailer: PHP/" . phpversion() . "\n";
+		$header .= "MIME-Version: 1.0\n";
+		$header .= "Content-Type: text/html;";
 		
-	//Check to see that the file was uploaded properly
-		if (is_uploaded_file($fileTempName)) {
-		//Pre-processing
-			// Grab the attachment info
-				$file = fopen($fileTempName, 'rb');
-				$data = fread($file, filesize($fileTempName));
-				fclose ($file);
+	//Processor:
+		 mail($to, $subject, $message, $header);
 			
-			//Generate the boundary line string
-				$random = md5(time());
-				$mimeBoundary = "==Multipart_Boundary_x{$random}x";
-			
-		//Processing			
-			//The header information of the email, including the "From" field					
-				$header .= "\nMIME-Version: 1.0\n" .
-						  "Content-Type: multipart/mixed;\n" .
-						  "X-Mailer: PHP/" . phpversion() . "\n" . 
-						  "X-Priority: " . $priority . "\n" . 
-						  " boundary=\"{$mimeBoundary}\"";
-				
-			//The message of the email
-				$message = "This is a multi-part message in MIME format.\n\n" . 
-							"--{$mimeBoundary}\n" . 
-							"Content-Type: text/html; charset=\"iso-8859-1\"\n" . 
-							"Content-Transfer-Encoding: 7bit\n\n" . 
-							$body . "\n\n";
-							
-				$data = chunk_split(base64_encode($data));
-				$message .= "--{$mimeBoundary}\n" .
-							"Content-Type: {$fileType};\n" . 
-							" name = \"{$fileName}\"\n" . 
-							"Content-Transfer-Encoding: base64\n\n" . 
-							$data . "\n\n" .    
-							"--{$mimeBoundary}--\n";
-		} else {
-		//Pre-processing
-			//Generate the boundary line string
-				$random = md5(time());
-				$mimeBoundary = "==Multipart_Boundary_x{$random}x";
-			
-		//Processing			
-			//The header information of the email, including the "From" field					
-				$header .= "\nMIME-Version: 1.0\n" .
-						  "Content-Type: multipart/mixed;\n" .
-						  "X-Mailer: PHP/" . phpversion() . "\n" . 
-						  "X-Priority: " . $priority . "\n" . 
-						  " boundary=\"{$mimeBoundary}\"";
-				
-			//The message of the email
-				$message = "This is a multi-part message in MIME format.\n\n" . 
-							"--{$mimeBoundary}\n" . 
-							"Content-Type: text/html; charset=\"iso-8859-1\"\n" . 
-							"Content-Transfer-Encoding: 7bit\n\n" . 
-							$body . "\n\n" .    
-							"--{$mimeBoundary}--\n";
-		}
-		
-		//Send the email!
-			mail("Oliver Spryn <wot200@gmail.com>", $subject, $message, $header);
-			
-		//Display a confirmation
-			header ("Location: index.php?result=success");
-			exit;
+	//Display a confirmation
+		header ("Location: index.php?result=success");
+		exit;
 	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -136,9 +86,9 @@
 <?php headers(); ?>
 <?php validate(); ?>
 <?php tinyMCEAdvanced(); ?>
-<script src="../../../javascripts/common/optionTransfer.js" type="text/javascript"></script>
-<script src="../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
-<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
+<script src="../../javascripts/common/optionTransfer.js" type="text/javascript"></script>
+<script src="../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
+<script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 
 <body<?php bodyClass(); ?><?php if (isset($_GET['type'])) {if ($_GET['type'] == "users" || $_GET['type'] == "organizations" || $_GET['type'] == "roles") {echo " onload=\"opt.init(document.forms[0])\"";}} ?>>
@@ -149,10 +99,10 @@
 <?php
 //If the type of user is being selected
 	if (!isset($_GET['type'])) {
-		echo "<blockquote><p><a href=\"index.php?type=users\">Selected Users</a> - Only selected users will recieve this email<br /><a href=\"index.php?type=all\">All Users</a> - All registered users will recieve this email<br /><a href=\"index.php?type=organizations\">Selected Organizations</a> - All users within selected organizations will recieve this email<br /><a href=\"index.php?type=allOrganizations\">All Organizations</a> - All registered organizations will recieve this email<br /><a href=\"index.php?type=roles\">Selected Roles</a> - All users with a selected role will recieve this email</p></blockquote>";
+		echo "<blockquote><p><a href=\"send_email.php?type=users\">Selected Users</a> - Only selected users will recieve this email<br /><a href=\"send_email.php?type=all\">All Users</a> - All registered users will recieve this email<br /><a href=\"send_email.php?type=organizations\">Selected Organizations</a> - All users within selected organizations will recieve this email<br /><a href=\"send_email.php?type=allOrganizations\">All Organizations</a> - All registered organizations will recieve this email<br /><a href=\"send_email.php?type=roles\">Selected Roles</a> - All users with a selected role will recieve this email</p></blockquote>";
 	} else {
 ?>
-<form action="index.php?type=users" method="post" enctype="multipart/form-data" name="sendEmail" id="validate" onsubmit="return errorsOnSubmit(this);">
+<form action="send_email.php?type=<?php echo $_GET['type']; ?>" method="post" enctype="multipart/form-data" name="sendEmail" id="validate" onsubmit="return errorsOnSubmit(this);">
 <div class="catDivider one">Settings</div>
 <div class="stepContent">
 <blockquote>
@@ -189,7 +139,7 @@
             case "users" : 
 				$usersGrabber = mysql_query("SELECT * FROM `users` ORDER BY `firstName` ASC", $connDBA);
 				
-				echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"all\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential users:</h3><div style=\"visibility:hidden;\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notTo\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
+				echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"users\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential users:</h3><div style=\"visibility:hidden;\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notTo\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
 				while($users = mysql_fetch_array($usersGrabber)) {
 					echo "<option value=\"" . $users['firstName'] . " " . $users['lastName'] . " <" . $users['emailAddress1'] . ">\">" . $users['firstName'] . " " . $users['lastName'] . "</option>";
 				}
@@ -200,7 +150,7 @@
 			case "organizations" : 
 				$organizationsGrabber = mysql_query("SELECT * FROM `organizations` ORDER BY `organization` ASC", $connDBA);
 				
-				echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"all\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential organizations:</h3><div style=\"visibility:hidden;\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notToList\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
+				echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"organizations\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential organizations:</h3><div style=\"visibility:hidden;\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notToList\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
 				while($organizations = mysql_fetch_array($organizationsGrabber)) {
 					echo "<option value=\"" . $organizations['organization'] . "\">" . $organizations['organization'] . "</option>";
 				}
@@ -243,23 +193,11 @@
     </blockquote>
   </blockquote>
 </div>
-<div class="catDivider three">Attachments</div>
+<div class="catDivider three">Submit</div>
 <div class="stepContent">
   <blockquote>
     <p>
-      Add an attachment:</p>
-    <blockquote>
-      <p>
-        <input name="attachment" type="file" id="attachment" size="50" />
-      </p>
-    </blockquote>
-  </blockquote>
-</div>
-<div class="catDivider four">Submit</div>
-<div class="stepContent">
-  <blockquote>
-    <p>
-      <?php submit("submit", "Send Email"); ?>
+      <?php submit("submit", "Submit"); ?>
       <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
       <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
     </p>

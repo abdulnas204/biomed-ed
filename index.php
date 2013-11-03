@@ -102,11 +102,7 @@
 </head>
 <body>
 <?php
-	if (isset($_GET['page'])) {
-		topPage("includes/top_menu.php?page=" . $_GET['page']);
-	} else {
-		topPage("includes/top_menu.php");
-	}
+	topPage("includes/top_menu.php");
 ?>
 <?php
 //Use the layout control if the page is displaying a sidebar
@@ -196,11 +192,7 @@
 	}
 ?>
 <?php
-	if (isset($_GET['page'])) {
-		footer("includes/bottom_menu.php?page=" . $_GET['page']);
-	} else {
-		footer("includes/bottom_menu.php");
-	}
+	footer("includes/bottom_menu.php");
 ?>
 </body>
 </html>
