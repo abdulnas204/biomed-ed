@@ -1,103 +1,91 @@
 /*
 LICENSE: See "license.php" located at the root installation
 
-This is a library of tools for use within the learning module
+This is a library of tools to allow objects to be createable, editable, draggable, and deleteable on the fly. Also included are other minor real-time transactions.
 */
 
 $(document).ready(function() {
-//Detect when a course or learning unit is hovered over, and display its tools
-	$('div.showTools').live('mouseover', function() {
-		$('a.draggable, a.visible, a.mediumEdit, a.smallDelete', this).show();
-	});
+/*
+Real-time editor
+---------------------------------------------------------
+*/	
+
+//Set globally used variables
+	var container = $('div.showTools');
 	
-	$('div.showTools').live('mouseout', function() {
+//Detect when a container is hovered over, and display its tools
+	$(container).live('mouseover', function() {
+		$('a.draggable, a.visible, a.mediumEdit, a.smallDelete', this).show();
+	}).live('mouseout', function() {
 		$('a.draggable, a.visible, a.mediumEdit, a.smallDelete', this).hide();
 	});
 	
-//Detect when a request to reorder a course or learning unit is made
-	$('a.draggable').parent().parent().parent().sortable({
+//Detect when a request is made to reorder a list of containers
+	$('a.draggable', container).parent().parent().parent().sortable({
 		'placeholder' : 'ui-state-highlight',
 		'axis' : 'y',
 		'stop' : function(event, ui) {
-			var object = ui.item;
-			var position;
-			
-			$.each($('div.showTools'), function(index) {
-				if($(this).is('#' + object.attr('id'))) {
-					position = index + 1;
-					var URL = document.location.href;
-					
-					if(URL.split('?').length >= 2) {
-						URL = URL.split('?');
-						
-						if(URL[1].split('&').length >= 2) {
-							URL = URL[1].split('&');
-							
-							$.each(URL, function(index) {
-								if(URL[index].split('=')[0] == 'course') {
-									URL = "index.php?course=" + URL[index].split("=")[1];
-									return false;
-								}
-							});
-						} else {
-							var parameter = URL[1].split('=');
-							
-							if(parameter[0] == 'course') {
-								URL = "index.php?course=" + parameter[1];
-							}
-						}
-					} else {
-						URL = "index.php";
-					}
-					
-					$.ajax({
-						'type' : 'POST',
-						'url' : URL,
-						'data' : {
-							'id' : object.attr('id'),
-							'currentPosition' : object.attr('name'),
-							'newPosition' : position
-						}
-					});
-					
-					object.attr('name', position);
-					
-					return false;
+			$.ajax({
+				'type' : 'POST',
+				'url' : document.location.href,
+				'data' : {
+					'id' : ui.item.attr('id'),
+					'currentPosition' : ui.item.attr('name'),
+					'newPosition' : ui.item.index() + 1
 				}
 			});
+			
+			ui.item.attr('name', ui.item.index() + 1);
 		}
 	}).disableSelection();
 	
-//Open the course creator dialog
-	$('a.createCourse').click(function() {
+//Open the creator dialog
+	function create(title, includePrice, width, height) {
 	//Include the dialog contents in a variable for quick access
 		var editor = $('div#manageDialog table tr');
+		var dialog = $('div#manageDialog');
 		
-	//Reset any previous values
+	//Empty the name text field
 		$('td :text#name', editor).val('');
-		$('td :text#price', editor).val('0.00').attr('disabled', 'disabled');
-		$('td :checkbox#priceEnabled', editor).removeAttr('checked');
 		
-	//Create the textarea
-		$('td#placeHolder', editor).empty().html('<textarea name="creatorDescription" id="creatorDescription" style="width:475px;"></textarea>');
+	//Create the description textarea
+		$('td#placeHolder', editor).empty().html('<textarea name="editorDescription" id="editorDescription" style="width:475px;" class="required"></textarea>');
 		
-	//Listen for the price toggling checkbox
-		$('td :checkbox#priceEnabled', editor).click(function() {
-			if ($(this).attr('checked') == true) {
-				$('td :input#price', editor).removeAttr('disabled');
-			} else {
-				$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
-			}
-		});
+		if (includePrice == true) {
+		//Disable the price field
+			$('td :text#price', editor).val('0.00').attr('disabled', 'disabled');
+			
+		//Listen for the price toggling checkbox
+			$('td :checkbox#priceEnabled', editor).click(function() {
+				if ($(this).attr('checked') == true) {
+					$('td :input#price', editor).removeAttr('disabled');
+				} else {
+					$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
+				}
+			});
+		}
+		
+	//Set the width and height
+		if (isNaN(width)) {
+			width = 650;
+		}
+		
+		if (isNaN(height)) {
+			height = 410;
+		}
 	
 	//Open the dialog
-		$('div#manageDialog').dialog({
-			'title' : 'Create New Course',
-			'width' : 650,
-			'height' : 410,
+		$(dialog).dialog({
+			'title' : title,
+			'width' : width,
+			'height' : height,
 			'resizable' : false,
 			'close' : function() {
-				tinyMCE.execCommand('mceRemoveControl', true, 'creatorDescription');
+			//Destroy the editor
+				tinyMCE.execCommand('mceRemoveControl', true, 'editorDescription');
+				
+			//Clear the form invalid message
+				$('span#message', dialog).removeClass().text('');
 			},
 			'buttons' : {
 				'Submit' : function() {
@@ -105,67 +93,70 @@ $(document).ready(function() {
 					tinyMCE.triggerSave();
 					
 				//Validate the form
-					if ($('td :text#name', editor).val() != "" && $('td#placeHolder textarea#creatorDescription', editor).val() != "") {
+					var valid = true;
+					
+					$.each($('.required:input'), function(index, value) {
+						if ($(value, dialog).val() == "") {
+							valid = false;
+							return false;
+						}
+					});
+					
+					if (valid == true) {
+					//Generate the post data
+						if (includePrice == true) {
+							var data = {
+								'name' : $('td :text#name', editor).val(),
+								'description' : $('td#placeHolder textarea#editorDescription', editor).val(),
+								'price' : $('td :input#price', editor).val()
+							}
+						} else {
+							var data = {
+								'name' : $('td :text#name', editor).val(),
+								'description' : $('td#placeHolder textarea#editorDescription', editor).val()
+							}
+						}
+						
 						$.ajax({
 						//Send the post data
 							'type' : 'POST',
-							'url' : 'index.php',
-							'data' : {
-								'name' : $('td :text#name', editor).val(),
-								'description' : $('td#placeHolder textarea#creatorDescription', editor).val(),
-								'price' : $('td :input#price', editor).val()
-							},
+							'url' : document.location.href,
+							'data' : data,
 							'success' : function(data) {
 							//Close the dialog
-								$('div#manageDialog').dialog('close');
+								$(dialog).dialog('close');
 								
-							//Set the price of the course
-								var value;
+							//Clear the form invalid message
+								$('span#message', dialog).removeClass().text('');
 								
-								if ($('td :input#price', editor).attr('disabled') == true) {
-									var value = 'Free of Charge';
-								} else {
-									value = $('td :input#price', editor).val();
-									value = value.replace(/[^0-9.]/g, '');
-									
-									if(value == "" || parseInt(value) == 0) {
-										value = 'Free of Charge';
-									} else {
-										value = '$' + value;
-										
-										if (value.indexOf('.') == -1) {
-											value += '.00';
-										}
-									}
+							//Append on the list of curent items
+								if ($('div.showTools', 'div#sortable').length == 0) {
+									$('div#sortable').empty();
 								}
 								
-								data = $.parseJSON(data);
+								$('div#sortable').append(data);
 								
-							//Append on the list of courses
-								$('div.showTools:last').after('<div class="showTools" style="background-color:#FFF380" id="' + data.id + '" name="' + data.position + '"><p class="homeDivider" id="' + data.id + '"><span><a href="index.htm?course=' + data.id + '">' + $('td :text#name', editor).val() + '</a></span><a href="javascript:;" class="contentHide action draggable" id="' + data.id + '"></a><a href="javascript:;" class="contentHide visible" id="' + data.id + '"></a><a href="javascript:;" class="contentHide action mediumEdit editCourse" id="' + data.id + '"></a><a href="javascript:;" class="contentHide action smallDelete deleteCourse" id="' + data.id + '"></a></p><blockquote><div id="description">' + $('td#placeHolder textarea#creatorDescription', editor).val() + '</div><br /><p><em>No learning units currently avaliable</em></p><p id="price"><strong>Price:</strong> <span>' + value + '</span></p></blockquote></div>'
-								);
-								
-							//Scroll to the new course and highlight its background
+							//Scroll to the new item and highlight its background
 								$('html, body').animate({
-									scrollTop: $('div.showTools:last').offset().top
+									scrollTop : $('div.showTools:last').offset().top
 								}, 1000, function() {
 									$('div.showTools:last').animate({
 										'background-color' : '#FFFFFF'
 									}, 1000);
 								});
 								
-							//Listen for new requests to reorder courses
-								$('a.draggable').parent().parent().parent().sortable('refresh');
+							//Listen for new requests to reorder items
+								$('div.showTools').sortable('refresh');
 							}
 						});
 					} else {
 					//Stretch the dialog to fit the new text
-						$('div#manageDialog').dialog({
-							'height' : 450
+						$(dialog).dialog({
+							'height' : height + 40
 						});
 						
 					//Send the user a message
-						$('div#manageDialog span#required').addClass('require').text('Both the name and description are required');
+						$('#message', dialog).empty().addClass('require').text('The name and description are required.');
 					}
 				},
 				'Cancel' : function() {
@@ -176,13 +167,14 @@ $(document).ready(function() {
 		
 	//Setup TinyMCE
 		setupEditor();
-	});
+	}
 	
-//Open the course editor dialog		
-	$('div.showTools a.editCourse').live('click', function() {
-	//Include the edited course and dialog contents in variables for quick access
-		var region = $(this).parent();
+//Open the editor dialog		
+	function editor(object, includePrice, width, height) {
+	//Include the dialog contents in a variable for quick access
+		var region = $(object).parent();
 		var editor = $('div#manageDialog table tr');
+		var dialog = $('div#manageDialog');
 		
 	//Set the value of the name textfield
 		$('td :text#name', editor).val(region.children('span').text());
@@ -194,29 +186,40 @@ $(document).ready(function() {
 		$('td#placeHolder', editor).empty().html('<textarea name="editorDescription" id="editorDescription" style="width:475px;"></textarea>');
 		$('td#placeHolder textarea#editorDescription', editor).val(region.next().children('div#description').html());
 		
-	//Set the value of the price, and its toggling checkbox
-		if(region.next().children('p#price').children('span').text().replace(/[^0-9]/g, '') == "") {
-			$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
-			$('td :checkbox#priceEnabled', editor).removeAttr('checked');
-		} else {
-			$('td :input#price', editor).val(region.next().children('p#price').children('span').text().replace(/[^0-9.]/g, '')).removeAttr('disabled');
-			$('td :checkbox#priceEnabled', editor).attr('checked', 'checked');
+		if (includePrice == true) {
+		//Set the value of the price, and its toggling checkbox
+			if(region.next().children('p#price').children('span').text().replace(/[^0-9]/g, '') == "") {
+				$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
+				$('td :checkbox#priceEnabled', editor).removeAttr('checked');
+			} else {
+				$('td :input#price', editor).val(region.next().children('p#price').children('span').text().replace(/[^0-9.]/g, '')).removeAttr('disabled');
+				$('td :checkbox#priceEnabled', editor).attr('checked', 'checked');
+			}
+			
+		//Listen for the price toggling checkbox
+			$('td :checkbox#priceEnabled', editor).click(function() {
+				if ($(this).attr('checked') == true) {
+					$('td :input#price', editor).removeAttr('disabled');
+				} else {
+					$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
+				}
+			});
 		}
 		
-	//Listen for the price toggling checkbox
-		$('td :checkbox#priceEnabled', editor).click(function() {
-			if ($(this).attr('checked') == true) {
-				$('td :input#price', editor).removeAttr('disabled');
-			} else {
-				$('td :input#price', editor).val('0.00').attr('disabled', 'disabled');
-			}
-		});
+	//Set the width and height
+		if (isNaN(width)) {
+			width = 650;
+		}
+		
+		if (isNaN(height)) {
+			height = 410;
+		}
 		
 	//Open the dialog
-		$('div#manageDialog').dialog({
+		$(dialog).dialog({
 			'title' : 'Edit ' + region.children('span').text(),
-			'width' : 650,
-			'height' : 410,
+			'width' : width,
+			'height' : height,
 			'resizable' : false,
 			'close' : function() {
 				tinyMCE.execCommand('mceRemoveControl', true, 'editorDescription');
@@ -228,56 +231,45 @@ $(document).ready(function() {
 					
 				//Validate the form
 					if ($('td :text#name', editor).val() != "" && $('td#placeHolder textarea#editorDescription', editor).val() != "") {
-						$.ajax({
-						//Send the post data
-							'type' : 'POST',
-							'url' : 'index.php',
-							'data' : {
+						if (includePrice == true) {
+							var data = {
 								'id' : $('td :hidden#id', editor).val(),
 								'name' : $('td :text#name', editor).val(),
 								'description' : $('td#placeHolder textarea#editorDescription', editor).val(),
 								'price' : $('td :input#price', editor).val()
-							},
-							'success' : function() {
+							}
+						} else {
+							var data = {
+								'id' : $('td :hidden#id', editor).val(),
+								'name' : $('td :text#name', editor).val(),
+								'description' : $('td#placeHolder textarea#editorDescription', editor).val()
+							}
+						}
+						
+						$.ajax({
+						//Send the post data
+							'type' : 'POST',
+							'url' : document.location.href,
+							'data' : data,
+							'success' : function(data) {
 							//Close the dialog
-								$('div#manageDialog').dialog('close');
+								$(dialog).dialog('close');
 								
 							//Clear the form invalid message
-								$('div#manageDialog span#required').removeClass().text('');
+								$('span#required', dialog).removeClass().text('');
 								
 							//Set the entered values back into their respecitve places
-								region.children('span').children('a').text($('td :text#name', editor).val());
-								region.next().children('div#description').html($('td#placeHolder textarea#editorDescription', editor).val());
-								
-							//Set the price of the course
-								if ($('td :input#price', editor).attr('disabled') == true) {
-									region.next().children('p#price').children('span').text('Free of Charge');
-								} else {
-									var value = $('td :input#price', editor).val();
-									value = value.replace(/[^0-9.]/g, '');
-									
-									if(value == "" || parseInt(value) == 0) {
-										value = 'Free of Charge';
-									} else {
-										value = '$' + value;
-										
-										if (value.indexOf('.') == -1) {
-											value += '.00';
-										}
-									}
-									
-									region.next().children('p#price').children('span').text(value);
-								}
+								region.parent().empty().html(data);
 							}
 						});
 					} else {
 					//Stretch the dialog to fit the new text
-						$('div#manageDialog').dialog({
-							'height' : 450
+						$(dialog).dialog({
+							'height' : height + 40
 						});
 						
 					//Send the user a message
-						$('div#manageDialog span#required').addClass('require').text('Both the name and description are required');
+						$('span#required', dialog).addClass('require').text('The name and description are required.');
 					}
 				},
 				
@@ -289,28 +281,146 @@ $(document).ready(function() {
 		
 	//Setup TinyMCE
 		setupEditor();
+	}
+	
+//Open the deleter dialog
+	function deleter(object, confirmMessage, width, height) {
+		var URL = $(object);
+		
+	//Set the width and height
+		if (isNaN(width)) {
+			width = 500;
+		}
+		
+		if (isNaN(height)) {
+			height = 275;
+		}
+		
+		$('<div id="deleteDialog" title="Confirm Delete"></div>').html(confirmMessage).dialog({
+			'width' : width,
+			'height' : height,
+			'resizable' : false,
+			'modal' : true,
+			'buttons' : {
+				'Yes' : function() {
+					$.ajax({
+						'type' : 'GET',
+						'url' : document.location.href,
+						'data' : {
+							'action' : 'delete',
+							'id' : URL.attr('id')
+						},
+						'success' : function() {
+							$('#deleteDialog').dialog('close').remove();
+							
+							URL.parent().parent().fadeOut(1000, function() {
+								$(this).hide('blind', 1000).remove();
+							});
+						}
+					});
+				},
+				'No' : function() {
+					$(this).dialog('close').remove();
+				}
+			}
+		});
+	}
+	
+//Listeners for course management
+	$('a.createCourse').click(function() {
+		create("Create a New Course", true);
 	});
 	
-//Open the course deletion dialog
+	$('a.editCourse').live('click', function() {
+		editor(this, true);
+	});
+	
 	$('a.deleteCourse').live('click', function() {
-		var URL = $(this);
+		deleter(this, '<p><strong>Warning:</strong> this action will delete this course and all of its learning units.<br /><br />This action cannot be undone. Continue?</p>');
+	});
+	
+//Listeners for learning unit management
+	$('a.deleteUnit').live('click', function() {
+		deleter(this, '<p><strong>Warning:</strong> this action will delete this learning unit.<br /><br />This action cannot be undone. Continue?</p>');
+	});
+	
+//Listeners for super category management
+	$('a.newSuperCategory').click(function() {
+		create("Create a Super Category");
+	});
+	
+	$('a.editSuperCategory').live('click', function() {
+		editor(this);
+	});
+	
+	$('a.deleteSuperCategory').live('click', function() {
+		deleter(this, '<p><strong>Warning:</strong> this action will delete this super category, <em>all</em> of it\'s sub-categories, and <em>all</em> of the questions in each sub-category.<br /><br />The deleted questions will also be removed from any of the tests they have been imported into.<br /><br />This action cannot be undone. Continue?</p>', 500, 375);
+	});
+	
+//Listeners for sub-category management
+	$('a.newSubCategory').click(function() {
+		create("Create a Sub-category");
+	});
+	
+	$('a.editSubCategory').live('click', function() {
+		editor(this);
+	});
+	
+	$('a.deleteSubCategory').live('click', function() {
+		deleter(this, '<p><strong>Warning:</strong> this action will delete this sub-category and <em>all</em> of the questions inside this sub-category.<br /><br />The deleted questions will also be removed from any of the tests they have been imported into.<br /><br />This action cannot be undone. Continue?</p>', 500, 350);
+	});
+	
+/*
+Minor real-time transactions
+---------------------------------------------------------
+*/
+	
+//Add courses to cart, from the main course selection page
+	$('span.cartOut:not(.cartUnit)').click(function() {
+		var object = $(this);
 		
-		$('<div id="deleteDialog" title="Confirm Delete"></div>').html('<p><strong>Warning:</strong> this action will remove this course, and all of its learning units.<br /><br />This action cannot be undone. Continue?</p>').dialog({
-			'height' : 275,
-			'width' : 500,
-			'resizable' : false,
+		object.removeClass('cartOut').addClass('cartProcessing');
+		
+		$.ajax({
+			'type' : 'POST',
+			'url' : 'index.htm',
+			'data' : {'addCourse' : object.attr('id')},
+			'success' : function(data) {
+				if (data == "success") {
+					object.removeClass('cartProcessing').addClass('cartIn');
+				} else {
+					object.removeClass('cartProcessing').addClass('cartOut');
+				}
+			}
+		});
+	});
+
+//Add courses to cart, from the lesson preview page
+	$('span.cartUnit').live('click', function() {
+		var object = $(this);
+		
+		$('<div title="Enrollment Confirmation"></div>')
+		.html('<p>This learning unit is part of the &quot;' + object.attr('name') + '&quot; course.<br /><br />If you wish to purchase this entire course, which is <strong>$' + $('span#price').text() + '</strong>, then click &quot;Yes&quot; to add it to your cart.')
+		.dialog({
+			'width' : 450,
+			'height' : 300,
 			'modal' : true,
+			'resizable' : false,
 			'buttons' : {
 				'Yes' : function() {
+					$(this).dialog('close').remove();
+					object.removeClass('cartOut').addClass('cartProcessing');
+					
 					$.ajax({
-						'type' : 'GET',
-						'url' : 'index.php?action=delete&type=course&id=' + URL.attr('id'),
-						'success' : function() {
-							$('div#deleteDialog').dialog('close').remove();
-							
-							URL.parent().parent().fadeOut(1000, function() {
-								$(this).hide('blind', 1000).remove();
-							});
+						'type' : 'POST',
+						'url' : 'index.htm',
+						'data' : {'addCourse' : object.attr('id')},
+						'success' : function(data) {
+							if (data == "success") {
+								object.removeClass('cartProcessing').addClass('cartIn').removeClass('cartUnit');
+							} else {
+								object.removeClass('cartProcessing').addClass('cartOut');
+							}
 						}
 					});
 				},
@@ -321,26 +431,53 @@ $(document).ready(function() {
 		});
 	});
 	
-//Open the learning unit deletion dialog
-	$('a.deleteUnit').live('click', function() {
-		var URL = $(this);
+
+//Enroll in courses that are free-of-charge
+	$('span.cartFree').click(function() {
+		var object = $(this);
 		
-		$('<div id="deleteDialog" title="Confirm Delete"></div>').html('<p><strong>Warning:</strong> this action will remove this learning unit and all related data.<br /><br />This action cannot be undone. Continue?</p>').dialog({
-			'height' : 275,
-			'width' : 500,
-			'resizable' : false,
+		$('<div title="Enrollment Confirmation"></div>')
+		.html('<p>This learning unit is part of the &quot;' + object.attr('name') + '&quot; course.<br /><br />If you wish to enroll yourself in this entire course, which is <strong>free of charge</strong>, then click &quot;Yes&quot;.')
+		.dialog({
+			'width' : 450,
+			'height' : 300,
 			'modal' : true,
+			'resizable' : false,
 			'buttons' : {
 				'Yes' : function() {
+					$(this).dialog('close').remove();		
+					object.removeClass('cartFree').addClass('enrolling');
+					
 					$.ajax({
-						'type' : 'GET',
-						'url' : 'index.php?action=delete&type=unit&id=' + URL.attr('id'),
-						'success' : function() {
-							$('div#deleteDialog').dialog('close').remove();
-							
-							URL.parent().parent().fadeOut(1000, function() {
-								$(this).hide('blind', 1000).remove();
-							});
+						'type' : 'POST',
+						'url' : 'index.htm',
+						'data' : {'enroll' : object.attr('id')},
+						'success' : function(data) {
+							if (data == "success") {
+								object.fadeTo(1000, 0, function() {
+									$(this).remove();
+									
+									$('<p>You have been enrolled!</p>')
+									.appendTo('div.noResults')
+									.delay(3000)
+									.fadeTo(1000, 0, function() {
+										$(this).remove();
+										$('<input type="button">')
+										.attr({
+											'name' : 'begin',
+											'id' : 'begin',
+											'value' : 'Begin Lesson',
+											'onclick' : 'window.location=\'' + document.location.href + '&page=1\''
+										})
+										.appendTo('div.noResults');
+									});
+								});
+							} else {
+								object.fadeTo(1000, 0, function() {
+									$(this).remove();
+									$('<p>Hmm... doesn\'t look like this was free of charge!</p>').appendTo('div.noResults');
+								});
+							}
 						}
 					});
 				},
@@ -349,5 +486,10 @@ $(document).ready(function() {
 				}
 			}
 		});
+	});
+	
+//Go to checkout
+	$('span.cartIn').live('click', function() {
+		document.location.href = 'enroll/cart.htm';
 	});
 });

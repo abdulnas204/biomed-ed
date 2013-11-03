@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: December 4th, 2010
-Last updated: February 26th, 2010
-
-This script is dedicated to displaying the lesson section 
-of each learning unit.
+This script is dedicated to displaying the lesson section of each learning unit.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	
 //Grab all learning unit data
 	if (isset($_GET['id'])) {
@@ -98,7 +86,7 @@ of each learning unit.
 	}
 
 //Top content
-	headers($unitInfo['name'], "navigationMenu,plugins");
+	headers($unitInfo['name'], "navigationMenu,plugins,library");
 
 //Information bar
 	if (!isset($_GET['page'])) {
@@ -215,20 +203,22 @@ of each learning unit.
 			
 			echo "</div>\n";
 		} elseif (access("Purchase Learning Unit")) {
-			if (!empty($unitInfo['enablePrice'])) {
+			$course = query("SELECT * FROM `courses` WHERE `id` = '{$unitInfo['course']}'");
+			
+			if (empty($course['price']) || intval($course['price']) == 0) {
 				echo "\n<div class=\"noResults\">\n";
-				echo form("cart", false, false, "enroll/cart.php");
-				echo hidden("purchase[]", "purchase[]", $_GET['id']);
-				echo button("submit", "submit", "Add to Cart", "submit");
-				echo closeForm(false);
+				echo "<span id=\"" . $_GET['id'] . "\" class=\"cartBase cartFree\" name=\"" . $course['name'] . "\"></span>\n";
 				echo "</div>\n";
-			} else {
+			} else {				
 				echo "\n<div class=\"noResults\">\n";
-				echo form("cart", false, false, "enroll/enroll.php");
-				echo hidden("enroll", "enroll", $_GET['id']);
-				echo hidden("redirect", "redirect", "true");
-				echo button("submit", "submit", "Enroll in Unit", "submit");
-				echo closeForm(false);
+				echo "<p>Course price: \$<span id=\"price\">" . $course['price'] . "</span></p>\n";
+				
+				if (is_array($_SESSION['cart']) && in_array($course['id'], $_SESSION['cart'])) {
+					echo "<span id=\"" . $course['id'] . "\" class=\"cartBase cartIn\" name=\"" . $course['name'] . "\"></span>\n";
+				} else {
+					echo "<span id=\"" . $course['id'] . "\" class=\"cartBase cartOut cartUnit\" name=\"" . $course['name'] . "\"></span>\n";
+				}
+				
 				echo "</div>\n";
 			}
 		} elseif (access("Edit Unowned Learning Units")) {

@@ -1,26 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: Janurary 10th, 2011
-Last updated: February 25th, 2011
-
-This is the preview script, which will selectively allow 
-access to secured filed based on the user's credentials, 
-access to the subject, and other conditions.
+This is the preview script, which will selectively allow the Google Docs previewer server to access to secured files based on the user's credentials, access to the subject, and other conditions.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	
 //Register a magic access key for external access
 	function registerKey() {
@@ -45,7 +32,7 @@ access to the subject, and other conditions.
 			$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 		}
 		
-		$gatewayFile = urldecode(str_replace($pluginRoot . "preview.php/", "", $gatewayFilePrep['0']));
+		$gatewayFile = "../data/learn/" . urldecode(str_replace($pluginRoot . "preview.php/", "", $gatewayFilePrep['0']));
 		
 	//Generate the preview URL, with necessary parameters
 		$requestedURL = "";

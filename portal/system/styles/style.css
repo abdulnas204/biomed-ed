@@ -1,0 +1,14 @@
+/*
+LICENSE: See "license.php" located at the root installation
+*/
+
+/* Portal home page styles */
+div.addon {
+	padding-left:50px;
+	background:top left no-repeat;
+}
+
+div.addon h3 {
+	font-size:16px;
+	border-bottom:1px solid #CCC;
+}

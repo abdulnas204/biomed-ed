@@ -6,7 +6,7 @@ This is the overview page for the Content Management System site settings add-on
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
+	require_once('../../system/server/index.php');
 	headers("Site Settings", "validate", true);
 	lockAccess();	
 	

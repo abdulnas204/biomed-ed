@@ -1,28 +1,15 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
-
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
+LICENSE: See "license.php" located at the root installation
 
 Sections of the code are courtesy of PayPal.
----------------------------------------------------------
 
-Created by: Oliver Spryn & PayPal developers
-Created on: August 18th, 2010
-Last updated: February 13th, 2011
-
-This script is assign users to a learning unit after it 
-has been purchased, and to confirm that the payment 
-occurred.
+This script is assign users to a learning unit after it has been purchased, and to confirm that the payment occurred.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');
 	
 //Prevent non-system access
 	if (empty($_POST)) {

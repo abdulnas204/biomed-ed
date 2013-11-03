@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: February 24nd, 2011
-
-This is the description management page for the test 
-generator.
+This is the description management page for the test generator.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');	
 	$monitor = monitor("Description", "tinyMCEAdvanced,tinyMCEMediaConfig,validate,autoSuggest");
 	$questionData = dataGrabber("Description");
 	

@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: February 24th, 2011
-
-This is the test settings page for the test and learning 
-generators.
+This is the test settings page for the test and learning generators.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');	
 	$monitor = monitor("Test Settings", "tinyMCEmedia,validate,showHide,enableDisable,navigationMenu");
 
 //Grab the form data
@@ -38,7 +26,6 @@ generators.
 		$gradingMethod = $_POST['gradingMethod'];
 		$penalties = $_POST['penalties'];
 		$randomizeAll = $_POST['randomizeAll'];
-		$questionBank = $_POST['questionBank'];
 		$display = arrayStore($_POST['display']);
 		
 		if (isset($_POST['timer']) && isset($_POST['timeHours']) && isset($_POST['timeMinutes'])) {
@@ -56,12 +43,12 @@ generators.
 			$timer = "0";
 		}		
 					
-		query("UPDATE `{$monitor['parentTable']}` SET `testName` = '{$testName}', `directions` = '{$directions}', `score` = '{$score}', `attempts` = '{$attempts}', `forceCompletion` = '{$forceCompletion}', `completionMethod` = '{$completionMethod}', `reference` = '{$reference}', `delay` = '{$delay}', `gradingMethod` = '{$gradingMethod}', `penalties` = '{$penalties}', `time` = '{$time}', `timer` = '{$timer}', `randomizeAll` = '{$randomizeAll}', `questionBank` = '{$questionBank}', `display` = '{$display}' WHERE `id` = '{$monitor['currentUnit']}'");
+		query("UPDATE `{$monitor['parentTable']}` SET `testName` = '{$testName}', `directions` = '{$directions}', `score` = '{$score}', `attempts` = '{$attempts}', `forceCompletion` = '{$forceCompletion}', `completionMethod` = '{$completionMethod}', `reference` = '{$reference}', `delay` = '{$delay}', `gradingMethod` = '{$gradingMethod}', `penalties` = '{$penalties}', `time` = '{$time}', `timer` = '{$timer}', `randomizeAll` = '{$randomizeAll}', `display` = '{$display}' WHERE `id` = '{$monitor['currentUnit']}'");
 			
 		if ($_POST['submit'] == "Finish") {
 			redirect("../index.php?updated=unit");
 		} else {
-			redirect("question_merge.php");
+			redirect("test_content.php");
 		}
 	}
 	
@@ -151,22 +138,6 @@ generators.
 	indent(radioButton("reference", "reference", "Yes,No", "1,0", true, false, false, false, "testData", "reference"));
 	directions("Randomize questions", false, "Allow users to reference the lesson during the test");
 	indent(radioButton("randomizeAll", "randomizeAll", "Sequential Order,Randomize", "Sequential Order,Randomize", false, false, false, false, "testData", "randomizeAll"));
-	
-	if (access("Edit Unowned Learning Units")) {
-		directions("Automatically pull questions from bank", false, "Set whether or not questions will be <br />automatically pulled from the question bank <br />when a new question in the same category <br />is added");
-		echo "<blockquote><p>\n";
-		echo radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
-		echo "<br /><br />\n";
-		
-		if (exist("questionbank_{$userData['organization']}", "category", $testData['category'])) {
-			echo "The question bank has test questions for this category.";
-		} else {
-			echo "The question bank does not have any test questions for this category.";
-		}
-		
-		echo "</p></blockquote>\n";
-	}
-	
 	directions("After the test is taken display", false, "Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Display a breakdown of points that the user recieved on each quesiton<br/><strong>Selected Answers:</strong> The answer(s) the user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>");
 	
 	$checks = arrayRevert($testData['display']);

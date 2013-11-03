@@ -19,7 +19,9 @@ LICENSE: See "license.php" located at the root installation
 	if (!loggedIn()) {
 ?>
 $(document).ready(function() {
-    $('a#login').click(function() {
+	var URL = "<?php echo $root; ?>";
+    
+    $('.login').live('click', function() {
         $('<div id="modal" title="Login Prompt"></div>')
         .html('<p>Please login to access your account.</p><span id="loginAttempt"></span><p>Username<span class="require">*</span>: </p><blockquote><p><input type="text" name="userNameModal" id="userNameModal" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote><p>Password<span class="require">*</span>: </p><blockquote><p><input type="password" name="passWordModal" id="passWordModal" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote>')
          .dialog({
@@ -34,6 +36,7 @@ $(document).ready(function() {
             },
             buttons : {
             	'Login' : function() {
+                	$(this).button('option', 'disabled');
                 	var userName = $('#userNameModal');
                     var passWord = $('#passWordModal');
                     var messageBox = $('#loginAttempt');
@@ -65,10 +68,10 @@ $(document).ready(function() {
                         });
                     }
                  },
-                 'Forgot Password' : function() {
+                 /*'Forgot Password' : function() {
                  	$('#modal').dialog('close');
                     window.location.href = '<?php echo $root; ?>users/forgot_password.htm';
-                 },
+                 },*/
                  'Register' : function() {
                  	$('#modal').dialog('close');
                  	window.location.href = '<?php echo $root; ?>users/register.htm';

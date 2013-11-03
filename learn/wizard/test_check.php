@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: Janurary 8th, 2011
-
-This is the test checking page, which asks a user if a test 
-should be generated along with the lesson.
+This is the test checking page, which asks a user if a test should be generated along with the lesson.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");	
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');	
 	$monitor = monitor("Create a Test", "navigationMenu");
 
 //Process the form

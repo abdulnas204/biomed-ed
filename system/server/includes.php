@@ -61,7 +61,7 @@ Widgets
 	function sessionControl() {
 		global $root;
 		
-		return "<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_1.4.4.js\"></script>
+		return "<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_1.5.2.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_UI_1.8.9.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/javascripts/session_control.htm\"></script>
 <link rel=\"stylesheet\" href=\"" . $root . "system/styles/ajaxLibraries/jQuery_UI_1.8.9.css\" type=\"text/css\">";

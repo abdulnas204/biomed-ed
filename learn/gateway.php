@@ -1,26 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: February 26th, 2011
-
-This is the gateway script, which will selectively allow 
-access to secured filed based on the user's credentials, 
-access to the subject, and other conditions.
+This is the gateway script, which will selectively allow access to secured files based on the user's credentials, access to the subject, and other conditions.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	
 //Open the file
 	function open() {
@@ -49,8 +36,16 @@ access to the subject, and other conditions.
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {
 	//Strip the paramters from the preview URL
 		if (!loggedIn()) {
+			if ($protocol == "https://") {
+				$requestedURL = "https://" . $_SERVER['HTTP_HOST'] . urldecode($_SERVER['REQUEST_URI']);
+			} else {
+				$requestedURL = "http://" . $_SERVER['HTTP_HOST'] . urldecode($_SERVER['REQUEST_URI']);
+			}
+			
+			$requestedURL = str_replace($pluginRoot . "gateway.php/", "", $requestedURL);
+			
+			$parameters = explode("/", $requestedURL);
 			$requestedURL = "";
-			$parameters = explode("/", $_SERVER['REQUEST_URI']);
 			$limit = sizeof($parameters);
 			
 			for($count = 0; $count <= $limit - 4; $count ++) {
@@ -59,17 +54,12 @@ access to the subject, and other conditions.
 			
 			$requestedURL = $requestedURL . $parameters[$limit - 1];
 		} else {
-			$requestedURL = $_SERVER['REQUEST_URI'];
+			$parameters = explode("gateway.php/", $_SERVER['REQUEST_URI']);
+			$requestedURL = urldecode($parameters[1]);
 		}
 		
 	//Generate the URL to the file	
-		if ($protocol == "https://") {
-			$gatewayFilePrep = explode("?", "https://" . $_SERVER['HTTP_HOST'] . $requestedURL);
-		} else {
-			$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $requestedURL);
-		}
-		
-		$gatewayFile = urldecode(str_replace($pluginRoot . "gateway.php/", "", $gatewayFilePrep['0']));
+		$gatewayFile = "../data/learn/" . $requestedURL;
 		$fileSize = filesize($gatewayFile);
 		
 	//Check to see if the file exists
@@ -81,7 +71,7 @@ access to the subject, and other conditions.
 		if (!loggedIn()) {
 			$sessionID = encrypt($parameters[$limit - 3]);
 			$magicKey = $parameters[$limit - 2];
-			$time = time() - 60;
+			$time = time() - 6000;
 			
 		//Check to see if a user with this sessionID exists, and that the provided magic key is still active
 			if (exist("users", "sessionID", $sessionID) && exist("magickeys", "key", $magicKey)) {
@@ -92,8 +82,7 @@ access to the subject, and other conditions.
 				}
 			}
 		} else {
-			$directoryAttn = explode("gateway.php/", $requestedURL);
-			$directoryArray = explode("/", $directoryAttn['1']);
+			$directoryArray = explode("/", str_replace("../data/learn/", "", $gatewayFile));
 			$directoryDepth = sizeof($directoryArray) - 1;
 			
 		//Site administrators will have access to lesson and answer files from learning units

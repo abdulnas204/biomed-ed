@@ -11,10 +11,8 @@
 
 /* Begin layout control */
 	.layoutControl {
-		display:table;
-		width:100%;
-		*display:inline-block;
-		_display:inline-block;
+		clear: both;
+		overflow: hidden;
 	}
 	
 	.contentHide {
@@ -27,24 +25,22 @@
 	
 	.contentLeft{
 		width:75%;
-		display:table-cell;
+		float:left;
 	}
 	
 	.contentRight{
 		width:75%;
-		display:table-cell;
+		float:right;
 	}
 	
 	.dataLeft {
 		width:20%;
-		height:100%;
-		display:table-cell;
+		float:left;
 	}
 	
 	.dataRight{
 		width:20%;
-		height:100%;
-		display:table-cell;
+		float:right;
 	}
 	
 	.halfLeft {

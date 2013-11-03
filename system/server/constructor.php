@@ -734,9 +734,6 @@ Non-form input elements
 				
 				break;
 		}
-		
-		//Close the HTML
-		echo "<br />\n";
 	}
 	
 //Generate a charting component

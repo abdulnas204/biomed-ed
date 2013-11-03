@@ -45,7 +45,7 @@ This script contains user commonly used functions to process simple requests, su
 			$doAction = true;
 		}
 		
-		if ($doAction == true && isset($_POST['id']) && $_POST['action'] == "setAvaliability") {			
+		if ($doAction == true && isset($_POST['id']) && isset($_POST['action']) && $_POST['action'] == "setAvaliability") {			
 			$id = $_POST['id'];
 			$toggleData = query("SELECT * FROM `{$table}` WHERE `id` = '{$id}'");
 			
@@ -98,7 +98,7 @@ This script contains user commonly used functions to process simple requests, su
 			$doAction = true;
 		}
 		
-		if ($doAction == true && isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
+		if ($doAction == true && (isset($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) || (isset($_POST['action']) && $_POST['action'] == "delete" && isset($_POST['id']))) {
 			if (isset ($_GET['questionID'])) {
 				$deleteItem = $_GET['questionID'];
 			} else {

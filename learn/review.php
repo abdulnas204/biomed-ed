@@ -1,26 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: September 1st, 2010
-Last updated: February 24th, 2011
-
-This script is dedicated to displaying the results of a 
-test, and grading questions which could not be automatically
-graded.
+This script is dedicated to displaying the results of a test, and grading questions which could not be automatically graded.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	headers("Review Test", "validate,calculate", true);
 	
 //Grab all learning unit settings and test data

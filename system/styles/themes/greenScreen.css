@@ -1,8 +1,5 @@
 /*
 LICENSE: See "license.php" located at the root installation
-
-Sections of the code are courtesy of Dynamic Drive DHTML.
----------------------------------------------------------
 */
 
 /* Universal declarations */
@@ -38,110 +35,106 @@ img {
 }
 
 /* Header */
-/***********************************************
-BEGIN LGEAL NOTICE
-
-* DD Tab Menu script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
-* This notice MUST stay intact for legal use
-* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
-***********************************************/
-
-ul.tabMenu {
-	margin:0px;
-	padding:0px;
-	font:bold 12px Arial;
+div.tabMenu {
+	width:100%;
 	text-align:center;
 	background:url(../../images/themes/green_screen/bar_background.png) top repeat-x;
-	border-bottom:thin solid black;
-	height:25px;
-	width:100%;
+	font:bold 12px Arial;
+	border-bottom:1px solid #555;
+	height:22px;
 }
 
-ul.tabMenu li {
-	display:inline;
-	display:inline-block;
-}
-
-ul.tabMenu li a, ul.tabMenu li span {
+div.tabMenu a {
 	text-decoration:none;
 	color:#333;
-	float:left;
-	padding:5px 11px 0px 11px;
-	border-right:thin solid black;
+	display:inline-block;
+	background:url(../../images/themes/green_screen/tab_inactive.png) repeat-x top;
+	border-right:1px solid #555;
+	padding:3px 11px 0px 11px;
 	height:20px;
 }
 
-ul.tabMenu li a.first, ul.tabMenu li span.first {
-	border-left:thin solid black;
+div.tabMenu a.first, div.tabMenu span.first {
+	border-left:1px solid #555;
 }
 
-ul.tabMenu li a:visited {
+div.tabMenu a:visited {
 	color:#333;
 }
 
-ul.tabMenu li a:hover, ul.tabMenu li a.current {
-	color:white;
-	background:transparent url(../../images/themes/green_screen/tab_background.png) center repeat-x;
-	border-bottom:thin solid #72980E;
+div.tabMenu a:hover {
+	color:#333;
+	background-color:#327B2A;
+	background:url(../../images/themes/green_screen/tab_hover.png) repeat-x top;
 }
 
-/***********************************************
-END LGEAL NOTICE
-***********************************************/
+div.tabMenu a.current {
+	color:#FFF;
+	background-color:#50830F;
+	background-image:none;
+}
+
+div.tabMenu a.current:hover {
+	color:#FFF;
+	background-color:#50830F;
+	background-image:none;
+}
+
+div.tabMenu a.current:visited {
+	color:#FFF;
+	text-decoration:none;
+	background-color:#50830F;
+	background-image:none;
+}
 
 div.loginStatus {
 	position:absolute;
-	padding-top:2px;
 	right:5px;
 }
 
 div.header {
-	height:200px;
-	background:url(../../images/themes/green_screen/body_background.png) top repeat-x;
+	height:138px;
+	background:url(../../images/themes/green_screen/header_background.png) top repeat-x;
+	background-position:0px 22px;
 }
 
 div.header div.navigation {
 	position:absolute;
+	background-color:#CDEAFA;
+	border-top:1px solid #555;
+	border-bottom:1px solid #555;
+	padding:5px 0px 5px 0px;
 	width:100%;
-	top:153px;
+	top:108px;
 	text-align:center;
 }
 
-div.header div.navigation p a {
+div.header div.navigation a {
 	text-decoration:none;
 	color:#333;
-	padding:3px 11px 4px 11px;
-	border-right:thin solid #006600;
+	padding:6px 11px 5px 11px;
+	border-right:1px solid #555;
 	height:20px;
 }
 
-div.header div.navigation p a.current {
-	text-decoration:none;
-	color:#333;
-	padding:3px 11px 4px 11px;
-	border-top:thin solid #72980E;
-	border-right:thin solid #006600;
-	border-bottom:thin solid #FFF;
-	height:20px;
-	background:url(../../images/themes/green_screen/navigation_background.png) #FFF;
+div.header div.navigation a.current {
+	border-bottom:1px solid #FFF;
+	background-color:#FFF;
 }
 
-div.header div.navigation p a.first {
-	border-left:thin solid #006600;
+div.header div.navigation a.first {
+	border-left:1px solid #555;
 }
 
 /* Sidebar */
 div.sideBarLeft {
-	height:100%;
-	width:275px;
-	background:url(../../images/themes/green_screen/sidebar_left_background.png) top repeat-y;
+	max-width:275px;
+	background:url(../../images/themes/green_screen/sidebar_left_background.png) top right repeat-y;
 }
 
 div.sideBarRight {
-	height:100%;
-	width:275px;
-	padding-left:16px;
-	background:url(../../images/themes/green_screen/sidebar_right_background.png) top repeat-y;
+	max-width:275px;
+	background:url(../../images/themes/green_screen/sidebar_right_background.png) top left repeat-y;
 }
 
 h2.boxTitle {
@@ -151,7 +144,7 @@ h2.boxTitle {
 
 div.sideBarLeft div {
 	padding-bottom:5px;
-	width:275px;
+	max-width:275px;
 	font-size:12px;
 	background:url(../../images/themes/green_screen/sidebar_divider_left.png) left bottom no-repeat;
 }
@@ -160,12 +153,13 @@ div.sideBarRight div {
 	padding-bottom:5px;
 	width:275px;
 	font-size:12px;
-	padding-left:5px;
+	padding-left:15px;
 	background:url(../../images/themes/green_screen/sidebar_divider_right.png) left bottom no-repeat;
 }
 
 /* Content */
 div.content {
+	clear:both;
 	height:100%;
 	padding:0px 15px 0px 15px;
 }
@@ -175,13 +169,14 @@ div.footer {
 	padding:20px 0px 0px 0px;
 	margin-top:10px;
 	width:100%;
+	border-top:1px solid #555;
 	background:url(../../images/themes/green_screen/footer_background.png) top repeat-x;
 }
 
 div.footer div.navigation {
-	padding-left:12%;
-	width:75%;
+	margin:0px 12% 0px 12%;
 	text-align:center;
+	padding-bottom:5px;
 }
 
 div.footer div.navigation p a {
@@ -193,6 +188,7 @@ div.footer div.powered {
 	position:absolute;
 	width:45%;
 	left:5px;
+	font-size:10px;
 }
 
 div.footer div.text {
@@ -200,4 +196,5 @@ div.footer div.text {
 	position:absolute;
 	width:45%;
 	right:5px;
+	font-size:10px;
 }

@@ -103,17 +103,6 @@
 		
 		return $return;
 	}
-	
-	//A function to safely mail automated emails
-	function autoEmail($to, $subject, $message) {
-		$domain = explode(":", $_SERVER['HTTP_HOST']);
-		
-		if (mail($to, $subject, $message, "From: No Reply<no-reply@" . $domain['0'] . ">")) {
-			//Do nothing, the email was sent
-		} else {
-			die("Error sending automated email.");
-		}
-	}
 /* End system functions */
 	
 /* Begin statistics tracker */

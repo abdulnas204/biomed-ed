@@ -1,20 +1,19 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: Novemeber 28th, 2010
-Last updated: February 26th, 2011
-
-This script contains additional functions relevent to this 
-plugin only.
+This script contains additional functions relevent to this plugin only.
 */
+
+/*
+Global server-side declarations
+---------------------------------------------------------
+*/
+
+	$pluginRootPrep = str_replace($root, "", $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+	$pluginRootArray = explode("/", $pluginRootPrep);
+	$pluginRoot = $root . $pluginRootArray['0'] . "/";
+	
 
 /*
 Server-side functions
@@ -130,7 +129,7 @@ Server-side functions
 		if (isset($_SESSION['currentUnit'])) {
 			$lessonTable = "lesson" . "_" . $_SESSION['currentUnit'];
 			$testTable = "test" . "_" . $_SESSION['currentUnit'];
-			$directory = "../unit_" . $_SESSION['currentUnit'] . "/";
+			$directory = "../../data/learn/unit_" . $_SESSION['currentUnit'] . "/";
 			$gatewayPath = "../preview.php/unit_" . $_SESSION['currentUnit'] . "/";
 			$redirect = "../wizard/test_content.php";
 			$type = "Learning Unit";
@@ -146,7 +145,7 @@ Server-side functions
 			$monitor = array("parentTable" => $parentTable, "lessonTable" => $lessonTable, "testTable" => $testTable, "directory" => $directory, "gatewayPath" => $gatewayPath, "currentUnit" => $currentUnit, "currentTable" => $currentTable, "title" => $titlePrefix, "redirect" => $redirect, "type" => $type);
 		} else {
 			$id = nextID($parentTable);
-			$directory = "../" . $id . "/";
+			$directory = "../../data/learn/unit_" . $id . "/";
 			
 			$monitor = array("parentTable" => $parentTable, "title" => $titlePrefix, "directory" => $directory);
 		}
@@ -533,6 +532,143 @@ Server-side functions
 		echo prepare($lesson['content']);
 		echo "\n";
 		
+	//A private function which will be included inside of all documents which are previewed externally
+		function browserDetect() {
+			echo "<script type=\"text/javascript\">
+//Detect the versions of Internet Explorer
+  if (navigator.userAgent.indexOf('MSIE')!= -1) {
+    var fullVersion = navigator.userAgent.substring(navigator.userAgent.indexOf('MSIE') + 5);
+	
+    if (fullVersion.indexOf(';') != -1) {
+      fullVersion = fullVersion.substring(0, fullVersion.indexOf(';'));
+    }
+    
+    if (fullVersion.indexOf(' ') != -1) {
+      fullVersion = fullVersion.substring(0, fullVersion.indexOf(' '));
+    }
+    
+    var majorVersion = parseInt('' + fullVersion, 10);
+    
+    if (isNaN(majorVersion)) {
+      fullVersion = '' + parseFloat(navigator.appVersion); 
+      majorVersion = parseInt(navigator.appVersion, 10);
+    }
+    
+  //Run this only on Internet Explorer versions 6, 7, and 8
+    if (majorVersion == '6' || majorVersion == '7' || majorVersion == '8') {
+      var show = true;
+      var cookies = document.cookie.split(';');
+      var item;
+	  
+      for(var count = 0; count <= cookies.length - 1; count++) {
+        if (cookies[count].indexOf(' ') != -1) {
+          item = cookies[count].substring(1);
+        } else {
+          item = cookies[count];
+        }
+        
+        item = item.split('=');
+		
+        if (item[0] == 'hideDirections') {
+          show = false;
+        }
+      }
+	  
+    //Show this alert, only if it is not set to be hidden
+      if (show == true) {
+        document.write('<div class=\"IEAlert\">The browser you are using may have difficulties displaying the pages in document previewer below. Click <a id=\"modal\">here</a> if you are experiencing troubles. <a id=\"close\">[Close]</a></div><br />');
+      }
+      
+      $(document).ready(function() {
+      //Set a cookie to hide the IEAlert <div>
+        $('div.IEAlert a#close').click(function() {
+          $(this).parent().remove();
+          
+          var expire = new Date();
+          expire.setDate(expire.getDate() + 6000);
+          var value = 'true; expires=' + expire.toUTCString();
+          document.cookie = 'hideDirections=' + value;
+        });
+        
+      //Generate the help HTML
+        var HTML = '<p>On occasions, the pages within the doucment previewer will fail to load. To ensure this problem does not continue, follow these steps:</p><ol><li>Navigate to your browser's &quot;Tools&quot; menu, and select &quot;Internet Options&quot;:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_1.jpg\" width=\"628\" height=\"342\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_1.jpg\" width=\"624\" height=\"344\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Click on the &quot;Privacy&quot; tab:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_2.jpg\" width=\"406\" height=\"452\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_2.jpg\" width=\"413\" height=\"519\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>';
+        
+        if (majorVersion == \"6\") {
+          HTML += 'Click on the &quot;Edit&quot; button:<br /><img src=\"system/images/help/internet_explorer_6/step_3.jpg\" width=\"406\" height=\"452\" /><br />';
+        } else {
+          HTML += 'Click on the &quot;Sites&quot; button:<br /><img src=\"system/images/help/internet_explorer_7/step_3.jpg\" width=\"413\" height=\"519\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Type &quot;google.com&quot; into the text field as shown in the screenshot below:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_4.jpg\" width=\"441\" height=\"461\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_4.jpg\" width=\"441\" height=\"468\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Click the &quot;Allow&quot; button:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_5.jpg\" width=\"441\" height=\"461\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_5.jpg\" width=\"441\" height=\"468\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Click &quot;OK&quot;:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_6.jpg\" width=\"441\" height=\"461\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_6.jpg\" width=\"441\" height=\"468\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Click &quot;OK&quot;, on the main dialog window:<br />';
+        
+        if (majorVersion == \"6\") {
+          HTML += '<img src=\"system/images/help/internet_explorer_6/step_7.jpg\" width=\"406\" height=\"452\" /><br />';
+        } else {
+          HTML += '<img src=\"system/images/help/internet_explorer_7/step_7.jpg\" width=\"413\" height=\"519\" /><br />';
+        }
+        
+        HTML += '<br /></li><li>Refresh the web page to see the changes.</li></ol>';
+      
+      //Use jQuery to create a dialog to help the user with the problem described in the dynamically created <div> above
+        $('div.IEAlert a#modal').click(function() {
+          $('<div title=\"Document Previewer Help\"></div>').load('help.htm', function() {
+            $(this).dialog({
+              'height' : 400,
+              'width' : 700,
+              'modal' : true,
+              'resizable' : false,
+              'onclose' : function() {
+                 $(this).dialog('close').remove();
+              }
+            });
+          });
+       });
+     });
+    }
+  }
+</script>\n";
+		}
+		
 		if (!empty($lesson['attachment'])) {
 			$siteInfo = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 			$file = $pluginRoot . "gateway.php/unit_" . $id . "/lesson/" . $lesson['attachment'];
@@ -545,6 +681,8 @@ Server-side functions
 			switch ($fileType) {
 			//If it is a PDF
 				case "pdf" : 
+					browserDetect();
+					
 					echo "<div align=\"center\">\n<iframe src=\"" . $documentURL . "\" frameborder=\"0\" width=\"900\" height=\"600\"></iframe>\n</div>\n";
 					echo "<br />\n<br />\n";
 					echo "<div>\n";
@@ -556,6 +694,8 @@ Server-side functions
 			//If it is a Word Document
 				case "doc" : 
 				case "docx" : 
+					browserDetect();
+					
 					echo "<div align=\"center\">\n<iframe src=\"" . $documentURL . "\" frameborder=\"0\" width=\"900\" height=\"600\"></iframe>\n</div>\n";
 					echo "<br />\n<br />\n";
 					echo "<div>\n";
@@ -567,6 +707,8 @@ Server-side functions
 			//If it is a PowerPoint Presentation
 				case "ppt" : 
 				case "pptx" : 
+					browserDetect();
+					
 					echo "<div align=\"center\">\n<iframe src=\"" . $documentURL . "\" frameborder=\"0\" width=\"900\" height=\"600\"></iframe>\n</div>\n";
 					echo "<br />\n<br />\n";
 					echo "<div>\n";
@@ -578,6 +720,8 @@ Server-side functions
 			//If it is an Excel Spreadsheet
 				case "xls" : 
 				case "xlsx" : 
+					browserDetect();
+					
 					echo "<div align=\"center\">\n<iframe src=\"" . $documentURL . "\" frameborder=\"0\" width=\"900\" height=\"600\"></iframe>\n</div>\n";
 					echo "<br />\n<br />\n";
 					echo "<div>\n";
@@ -1364,7 +1508,7 @@ Create standard question types for the question generator
 		global $monitor, $userData;
 		
 		if (!strstr($_SERVER['REQUEST_URI'], "wizard")) {
-			$priorEntries = query("SELECT * FROM `categories` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
+			
 			$noRepeat = array();
 			$valuesPrep = "";
 			
@@ -1383,12 +1527,16 @@ Create standard question types for the question generator
 				$defaultSelect = query("SELECT * FROM `categories` WHERE `id` = '{$_SESSION['questionBank']}'");
 			}
 			
-			while($suggestion = fetch($priorEntries)) {
-				if (!in_array(prepare($suggestion['category']), $noRepeat)) {
-					$valuesPrep .= prepare($suggestion['category']) . ",";
-				}
+			if (exist("categories", "organization", $userData['organization'])) {
+				$priorEntries = query("SELECT * FROM `categories` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
 				
-				array_push($noRepeat, prepare($suggestion['category']));
+				while($suggestion = fetch($priorEntries)) {
+					if (!in_array(prepare($suggestion['category']), $noRepeat)) {
+						$valuesPrep .= prepare($suggestion['category']) . ",";
+					}
+					
+					array_push($noRepeat, prepare($suggestion['category']));
+				}
 			}
 			
 			$values = rtrim($valuesPrep, ",");
@@ -1654,14 +1802,6 @@ Include JavaScripts and CSS for client-side processing
 <script src=\"" . $pluginRoot . "system/javascripts/systemCheck/flashDetect.js\" type=\"text/javascript\"></script>
 <script src=\"" . $pluginRoot . "system/javascripts/systemCheck/quicktimeDetect.js\" type=\"text/javascript\"></script>
 <script src=\"" . $pluginRoot . "system/javascripts/systemCheck/windowsMediaDetect.js\" type=\"text/javascript\"></script>";
-	}
-	
-//jQuery mini-event calendar
-	function eventCalendar() {
-		global $pluginRoot;
-		
-		return "<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/jQuery_Sparkle.js\"></script>
-<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/mini_calendar_config.js\"></script>";
 	}
 	
 //Update the contents of a field in real-time

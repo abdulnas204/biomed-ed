@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: Janurary 10th, 2011
-
-This is the lesson content page for the learning unit 
-generator.
+This is the lesson content page for the learning unit generator.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');
 	$monitor = monitor("Lesson Content", "navigationMenu");
 	
 //Reorder pages

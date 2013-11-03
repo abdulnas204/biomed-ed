@@ -1,0 +1,263 @@
+/*
+LICENSE: See "license.php" located at the root installation
+*/
+
+/*
+Registration page
+---------------------------------------------------------
+*/
+
+/* Containers */
+	div.superContainer {
+		height:468px; /* Makes up for intended height of the loader <div>, if it weren't absolutly positioned */
+	}
+	
+	div.loader {
+		padding:100px 0px 200px 0px;
+		text-align:center;
+		font-size:18px;
+		font-weight:bold;
+		opacity:0;
+		position:absolute;
+		top:inherit;
+		left:0px;
+		width:100%;
+	}
+	
+	div.superContainer table tr td {
+		padding:inherit 0px inherit 0px;
+	}
+	
+	div.glowBox {
+		font-size:14px;
+		border:1px solid #22C3EB;
+		border-radius:5px;
+		padding:0px 10px 0px 0px;
+		width:200px;
+		display:block;
+		background:#FFF;
+	}
+	
+	div.glowBoxHover {
+		border: 1px solid #22C3EB;
+		-webkit-box-shadow: 0 0 5px #22C3EB;
+		-moz-box-shadow: 0 0 5px #22C3EB;
+		box-shadow: 0 0 5px #22C3EB;
+	}
+	
+	div.glowBoxActive {
+		border: 1px solid #972324;
+		-webkit-box-shadow: 0 0 5px #972324;
+		-moz-box-shadow: 0 0 5px #972324;
+		box-shadow: 0 0 5px #972324;
+	}
+	
+/* Form progress bar */
+	div.ribbonContainer {
+		height:150px;
+		padding-top:10px;
+	}
+	
+	div.ribbon {
+		background:url(../images/ribbon.png) repeat-x;
+		padding-top:3px;
+		position:absolute;
+		top:inherit;
+		left:0px;
+		height:100px;
+		width:100%;
+	}
+	
+/* Form progress buttons */
+	span.stepBase {
+		height:0px;
+		background:url(../images/number_sprite.png) no-repeat;
+		padding:0px 100px 137px 0px;
+	}
+	
+/* These styles are used if there are four steps for registration */
+	span.step1ActiveMore {
+		position:absolute;
+		top:inherit;
+		background-position:-105px 0px;
+		left:15%;
+	}
+	
+	span.step1FinishedMore {
+		position:absolute;
+		top:inherit;
+		background-position:0px 0px;
+		left:15%;
+		cursor:pointer;
+	}
+	
+	span.step2IncompleteMore {
+		position:absolute;
+		top:inherit;
+		background-position:-210px -137px;
+		left:35%;
+	}
+	
+	span.step2ActiveMore {
+		position:absolute;
+		top:inherit;
+		background-position:-104px -137px;
+		left:35%;
+	}
+	
+	span.step2FinishedMore {
+		position:absolute;
+		top:inherit;
+		background-position:0px -137px;
+		left:35%;
+		cursor:pointer;
+	}
+	
+	span.step3IncompleteMore {
+		position:absolute;
+		top:inherit;
+		background-position:-210px -274px;
+		right:35%;
+	}
+	
+	span.step3ActiveMore {
+		position:absolute;
+		top:inherit;
+		background-position:-104px -274px;
+		right:35%;
+	}
+	
+	span.step3FinishedMore {
+		position:absolute;
+		top:inherit;
+		background-position:0px -274px;
+		right:35%;
+		cursor:pointer;
+	}
+	
+	span.step4IncompleteMore {
+		position:absolute;
+		top:inherit;
+		background-position:-210px -411px;
+		right:15%;
+	}
+	
+	span.step4ActiveMore {
+		position:absolute;
+		top:inherit;
+		background-position:-104px -411px;
+		right:15%;
+	}
+	
+/* These styles are used if there are three steps for registration, in other words, no step for payment */
+	span.step1ActiveLess {
+		position:absolute;
+		top:inherit;
+		background-position:-105px 0px;
+		left:20%;
+	}
+	
+	span.step1FinishedLess {
+		position:absolute;
+		top:inherit;
+		background-position:0px 0px;
+		left:20%;
+		cursor:pointer;
+	}
+	
+	span.step2IncompleteLess {
+		position:absolute;
+		top:inherit;
+		background-position:-210px -137px;
+		left:46%;
+	}
+	
+	span.step2ActiveLess {
+		position:absolute;
+		top:inherit;
+		background-position:-104px -137px;
+		left:46%;
+	}
+	
+	span.step2FinishedLess {
+		position:absolute;
+		top:inherit;
+		background-position:0px -137px;
+		left:46%;
+		cursor:pointer;
+	}
+	
+	span.step3IncompleteLess {
+		position:absolute;
+		top:inherit;
+		background-position:-210px -274px;
+		right:20%;
+	}
+	
+	span.step3ActiveLess {
+		position:absolute;
+		top:inherit;
+		background-position:-104px -274px;
+		right:20%;
+	}
+	
+/* Form-layout table styles */
+	tr.help td {
+		padding: 0px 0px 0px 5px;
+		vertical-align:top;
+		font-size:10px;
+	}
+	
+	span.sideNote {
+		font-size:10px;
+	}
+	
+	tr.spacer {
+		height:30px;
+	}
+	
+/* Checkout table styles */
+	table.checkout {
+		padding:10px;
+		border:none;
+	}
+	
+	table.checkout th {
+		background-color:#D7EBFF;
+		font-weight:bolder;
+		font-size:13px;
+		padding:10px 0px 10px 5px;
+	}
+	
+	table.checkout tr td.divider {
+		max-height:2px;
+		height:2px;
+		padding:0px;
+		margin:0px;
+		background-color:#eeeecc;
+	}
+	
+	table.checkout tr td span.price {
+		color: #990000;
+	}
+	
+/* Form input styles */	
+	.superContainer input[type="text"], .superContainer input[type="password"], .superContainer textarea {
+		background:#FFFFFF;
+		border:none;
+		width:200px;
+		font-size:14px;
+		padding:11px 0px 11px 10px;
+		border-radius:5px;
+	}
+	
+	span.tip {
+		position:absolute;
+		top:inherit;
+		padding:11px 0px 12px 10px;
+		display:none;
+		width:188px;
+		max-width:188px;
+		border-bottom-right-radius:5px;
+		border-top-right-radius:5px;
+	}

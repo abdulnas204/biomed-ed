@@ -4,55 +4,55 @@ LICENSE: See "license.php" located at the root installation
 
 This script is the core of the system, which contains key information and definitions which will be used globally.
 */
+
+//Include the configuration file
+	strstr(dirname(__FILE__), "\\") ? $configScript = str_replace("system\server", "", dirname(__FILE__)) . "data\system\config.php" : $configScript = str_replace("system/server", "", dirname(__FILE__)) . "data/system/config.php";
+	require_once($configScript);
 	
 //Info address for entire site
-	if ($_SERVER['HTTPS'] == "on") {
+	if (!empty($_SERVER['HTTPS'])) {
 		$protocol = "https://";
 	} else {
 		$protocol = "http://";
 	}
 	
-	$root = $protocol . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
+	$root = $protocol . $config['installDomain'];
 	$strippedRoot = str_replace($protocol . $_SERVER['HTTP_HOST'], "", $root);
-	$salt = "4f6938531f0bc8991f62da7bbd6f7de3fad44562b8c6f4ebf146d5b4e46f7c17";
+	$salt = $config['salt'];
 	
-//Start a session and output buffering
-	if ($strippedRoot != "/") {
-		$sessionPath = $_SERVER['DOCUMENT_ROOT'] . $strippedRoot . "/system/sessions";
-	} else {
-		$sessionPath = $_SERVER['DOCUMENT_ROOT'] . "/system/sessions";
-	}
-	
-	session_save_path($sessionPath);
-	session_name("ENSIGMAPRO");
+//Start a session
+	session_save_path($config['installPath'] . "system/sessions");
+	session_name("ENSIGMAPRO_" . $config['sessionSuffix']);
 	session_start();
-	setcookie(session_name(), session_id(), time() + 1200, "/");
-	ob_start();
+	setcookie(session_name(), session_id(), time() + $config['cookieLife'], "/");
 
-//Database connection
-	$databaseType = "mysql";
-	$connDBA = mysql_connect("localhost", "root", "Oliver99");
-	$dbSelect = mysql_select_db("biomed-ed", $connDBA);
+//Database connection for main application
+	$connDBA = mysql_connect($config['serverMain'], $config['userMain'], $config['passwordMain']);
+	mysql_select_db($config['dbMain'], $connDBA);
+	
+//Database connection for tabbed navigation
+	$connNavigation = mysql_connect($config['serverNavigation'], $config['userNavigation'], $config['passwordNavigation'], true);
+	mysql_select_db($config['dbNavigation'], $connNavigation);
 	
 //Define time zone
 	$timeZoneGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
 	$timeZone = mysql_fetch_array($timeZoneGrabber);
 	date_default_timezone_set($timeZone['timeZone']);
 	
-//Credentials for developer login
-	$rootUserName = "spryno724";
-	$rootPassWord = "Oliver99";
+//Credentials for system administrative login
+	$rootUserName = $config['userAdmin'];
+	$rootPassWord = $config['passwordAdmin'];
 	
 //Set server configurations
 	set_time_limit(3600);
 	ini_set("expose_php", "Off");
-	
-	/*---------------------------------------------------- Developer use ONLY!!!! Disable during production!!!! ----------------------------------------------------*/
-	error_reporting(-1);
+	error_reporting($config['errorReporting']);
 	
 //Create a relative address in order to access other system functions	
-	function relativeAddress($addressAddition) {		
-		return "/xampp/xampp/htdocs/biomed-ed/" . $addressAddition . "/";
+	function relativeAddress($addressAddition) {
+		global $config;
+			
+		return $config['installPath'] . $addressAddition . "/";
 	}
 	
 	$relativeAddress = relativeAddress("system/server");

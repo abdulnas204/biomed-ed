@@ -47,7 +47,7 @@ This is the page where user's can manage their lesson plan with a visual drag-an
 	headers("Lesson Planner", "fullCalendar");
 	
 //Title
-	title($name, "Below is a calendar which represents your lesson plan for this month. Each learning unit within your lesson plan is resembled by a horizontal blue bar, which spans several days or weeks. Drag these bars to different dates on the calendar to alter your lesson plan. For example, if you have too many learning units assigned at one time, you may wish to drag several of them to a future date.");
+	title("Lesson Planner", "Below is a calendar which represents your lesson plan for this month. Each learning unit within your lesson plan is resembled by a horizontal blue bar, which spans several days or weeks. Drag these bars to different dates on the calendar to alter your lesson plan. For example, if you have too many learning units assigned at one time, you may wish to drag several of them to a future date.");
 	
 //Admin toolbar
 	echo "<div class=\"toolBar\">\n";

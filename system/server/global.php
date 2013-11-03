@@ -244,12 +244,10 @@ Database management functions
 	}
 	
 //Grab the value of the primary key for the values just inserted
-	function primaryKey($queryName = false) {
-		if ($queryName == false) {
-			return mysql_insert_id();
-		} else {
-			return mysql_insert_id($queryName);
-		}
+	function primaryKey() {
+		global $connDBA;
+		
+		return mysql_insert_id($connDBA);
 	}
 	
 //Grab the next primary key ID

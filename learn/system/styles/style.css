@@ -102,6 +102,41 @@ LICENSE: See "license.php" located at the root installation
 		background:url(../images/common/percent.png) no-repeat center;
 	}
 	
+/* Shopping cart */
+	span.cartBase {
+		background:url(../images/common/cart_sprite.png) no-repeat;
+	}
+	
+	span.cartOut {
+		background-position:0px 0px;
+		padding:5px 74px 3px 74px;
+		cursor:pointer;
+	}
+	
+	span.cartProcessing {
+		background-position:-149px 0px;
+		padding:5px 75px 3px 75px;
+		cursor:pointer;
+	}
+	
+	span.cartIn {
+		background-position:-298px 0px;
+		padding:5px 122px 3px 122px;
+		cursor:pointer;
+	}
+	
+	span.cartFree {
+		background-position:-0px -26px;
+		padding:5px 122px 3px 122px;
+		cursor:pointer;
+	}
+	
+	span.enrolling {
+		background-position:-246px -26px;
+		padding:5px 122px 3px 122px;
+		cursor:pointer;
+	}
+	
 /* Misc. */
 	a.smallDelete, span.smallDelete {
 		background:url(../images/common/x.png) no-repeat center;
@@ -123,4 +158,15 @@ LICENSE: See "license.php" located at the root installation
 		background:#CCC;
 		margin:5px 0px 5px 0px;
 		padding:2px;
+	}
+	
+	div.IEAlert {
+		width:auto;
+		text-align:center;
+		background-color:#FE495B;
+		border:thin solid #F00;
+	}
+	
+	div.IEAlert a {
+		cursor:pointer;
 	}

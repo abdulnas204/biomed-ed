@@ -5,6 +5,17 @@ LICENSE: See "license.php" located at the root installation
 This script contains additional functions relevent to this addon only.
 */
 
+
+/*
+Global server-side declarations
+---------------------------------------------------------
+*/
+
+	$pluginRootPrep = str_replace($root, "", $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+	$pluginRootArray = explode("/", $pluginRootPrep);
+	$pluginRoot = $root . $pluginRootArray['0'] . "/";
+	
+
 /*
 Server-side functions
 ---------------------------------------------------------
@@ -47,4 +58,18 @@ Server-side functions
 Include JavaScripts and CSS for client-side modules
 ---------------------------------------------------------
 */
+
+//Include the jQuery registration script library
+	function registration() {
+		global $pluginRoot;
+		
+		return "<script src=\"" . $pluginRoot . "system/javascripts/registration.js\" type=\"text/javascript\"></script>";
+	}
+	
+//Include the jQuery activation script library
+	function activation() {
+		global $pluginRoot;
+		
+		return "<script src=\"" . $pluginRoot . "system/javascripts/activation.js\" type=\"text/javascript\"></script>";
+	}
 ?>

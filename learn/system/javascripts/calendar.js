@@ -1,5 +1,4 @@
 /*
-
  FullCalendar v1.4.10
  http://arshaw.com/fullcalendar/
 
@@ -12,8 +11,8 @@
  MIT-LICENSE.txt and GPL-LICENSE.txt respectively.
 
  Date: Sat Jan 1 23:46:27 2011 -0800
-
 */
+
 (function(l,ha){function hb(a){l.extend(true,Oa,a)}function Db(a,b,f){function e(q){if(I){s();r();ka();N(q)}else g()}function g(){P=b.theme?"ui":"fc";a.addClass("fc");b.isRTL&&a.addClass("fc-rtl");b.theme&&a.addClass("ui-widget");I=l("<div class='fc-content "+P+"-widget-content' style='position:relative'/>").prependTo(a);L=new Eb(Y,b);(D=L.render())&&a.prepend(D);y(b.defaultView);l(window).resize(ia);t()||h()}function h(){setTimeout(function(){!v.start&&t()&&N()},0)}function m(){l(window).unbind("resize",
 ia);L.destroy();I.remove();a.removeClass("fc fc-rtl fc-ui-widget")}function o(){return Q.offsetWidth!==0}function t(){return l("body")[0].offsetWidth!==0}function y(q){if(!v||q!=v.name){p++;z();var A=v,J;if(A){(A.beforeHide||ib)();Ra(I,I.height());A.element.hide()}else Ra(I,1);I.css("overflow","hidden");if(v=i[q])v.element.show();else v=i[q]=new Fa[q](J=j=l("<div class='fc-view fc-view-"+q+"' style='position:absolute'/>").appendTo(I),Y);A&&L.deactivateButton(A.name);L.activateButton(q);N();I.css("overflow",
 "");A&&Ra(I,1);J||(v.afterShow||ib)();p--}}function N(q){if(o()){p++;z();E===ha&&s();var A=false;if(!v.start||q||u<v.start||u>=v.end){v.render(u,q||0);Z(true);A=true}else if(v.sizeDirty){v.clearEvents();Z();A=true}else if(v.eventsDirty){v.clearEvents();A=true}v.sizeDirty=false;v.eventsDirty=false;da(A);k=a.outerWidth();L.updateTitle(v.title);q=new Date;q>=v.start&&q<v.end?L.disableButton("today"):L.enableButton("today");p--;v.trigger("viewDisplay",Q)}}function O(){r();if(o()){s();Z();z();v.clearEvents();
@@ -111,12 +110,14 @@ MMMM:function(a,b){return b.monthNames[a.getMonth()]},yy:function(a){return(a.ge
 
 $(document).ready(function() {
 	$('#calendar').fullCalendar({
+		events : 'index.htm?data=JSON',
+		editable : true,
+		theme : true,
 		header: {
 			left: 'prev,next',
 			center: 'title',
 			right: 'today'
 		},
-		
 		loading: function(bool) {
 			if (bool) {
 				$('#loading').show();
@@ -124,8 +125,7 @@ $(document).ready(function() {
 				$('#loading').hide();
 			}
 		},
-		
-		eventDrop: function getEvents() {
+		eventDrop: function() {
 			var events = $('#calendar').fullCalendar('clientEvents');
 			var eventsString = "[";
 			
@@ -136,7 +136,7 @@ $(document).ready(function() {
 					eventsString += "\"" + eventKey + "\":\"" + events[key][eventKey] + "\",";
 				}
 				
-				eventsString = eventsString.slice(0, -1)
+				eventsString = eventsString.slice(0, -1);
 				eventsString += "},";
 			}
 			
@@ -144,14 +144,10 @@ $(document).ready(function() {
 			eventsString += "]";
 			
 			$.ajax({
-				type: "POST",
-				url: "index.htm",
-			  	data: "events=" + eventsString
+				'type' : 'POST',
+				'url' : 'index.htm',
+			  	'data' : 'events=' + eventsString
 			})
-		},
-		
-		events: "index.htm?data=JSON",
-		editable: true,
-		theme: true
+		}
 	});
 });

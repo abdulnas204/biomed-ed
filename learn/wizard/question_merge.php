@@ -1,28 +1,16 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: December 10th, 2010
-
-This is purly a backend script used to merge questions 
-from the question bank into the test.
+This is purely a backend script used to merge questions from the question bank into the test.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');	
 	$monitor = monitor("Question Merge", false, true);
 
-//Check to see if questions from the question bank need to be mass merged
+//Check to see if questions from the question bank need to be mass merged, CURRENTLY UNUSED
 	if (!isset($_GET['type'])) {
 		$importCheck = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentUnit']}'");
 		

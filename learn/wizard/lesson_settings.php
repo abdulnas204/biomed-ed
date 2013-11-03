@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 16th, 2010
-Last updated: February 24th, 2011
-
-This is the lesson settings page for the learning unit 
-generator.
+This is the lesson settings page for the learning unit generator.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');
 	$monitor = monitor("Lesson Settings", "tinyMCEMedia,validate,enableDisable,navigationMenu,autoSuggest");
 	
 //Grab the form data
@@ -28,7 +16,9 @@ generator.
 	}
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected'])) {
+	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['course']) && !empty($_POST['category']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected'])) {
+		$course = $_POST['course'];
+		$position = lastItem($monitor['parentTable'], "course", $course);
 		$name = escape($_POST['name']);
 		$comments = escape($_POST['comments']);
 		$time = $_POST['time'];
@@ -44,18 +34,24 @@ generator.
 		
 		if ($lessonData) {
 			$id = $lessonData['id'];
+			$previousEntry = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$id}'");
+			
+			if ($previousEntry['course'] !== $course) {
+				query("UPDATE `{$monitor['parentTable']}` SET `position` = position-1 WHERE `position` > '{$previousEntry['position']}' AND `course` = '{$previousEntry['course']}'");
+				query("UPDATE `{$monitor['parentTable']}` SET `position` = '{$position}' WHERE `id` = '{$id}'");
+			}
 								
-			query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `feedback` = '{$feedback}', `tags` = '{$tags}' WHERE `id` = '{$id}'");
+			query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `course` = '{$course}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `feedback` = '{$feedback}', `tags` = '{$tags}' WHERE `id` = '{$id}'");
 		} else {
 			$organization = $userData['organization'];
 			
 			query("INSERT INTO `{$monitor['parentTable']}` (
-				  `id`, `locked`, `visible`, `name`, `category`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `feedback`, `tags`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
+				  `id`, `position`, `locked`, `visible`, `name`, `category`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `feedback`, `tags`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `display`, `organization`, `course`
 				  ) VALUES (
-				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'YToyOntpOjA7czoxOiIwIjtpOjE7czoyOiIwMCI7fQ==', 'Sequential Order', '0', 'YToxOntpOjA7czoxOiIxIjt9', '{$organization}'
+				  NULL, '{$position}', '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'YToyOntpOjA7czoxOiIwIjtpOjE7czoyOiIwMCI7fQ==', 'Sequential Order', 'YToxOntpOjA7czoxOiIxIjt9', '{$organization}', '{$course}'
 				  )");
 						
-			$id =  mysql_insert_id();
+			$id = primaryKey();
 			
 			query("CREATE TABLE IF NOT EXISTS `lesson_{$id}` (
 					`id` int(255) NOT NULL AUTO_INCREMENT,
@@ -66,14 +62,14 @@ generator.
 					PRIMARY KEY (`id`)
 				  )");
 						
-			mkdir("../unit_" . $id, 0777);
-			mkdir("../unit_" . $id . "/lesson", 0777);
-			mkdir("../unit_" . $id . "/lesson/browser", 0777);
-			mkdir("../unit_" . $id . "/lesson/browser/public", 0777);
-			mkdir("../unit_" . $id . "/lesson/browser/secure", 0777);
-			mkdir("../unit_" . $id . "/test", 0777);
-			mkdir("../unit_" . $id . "/test/answers", 0777);
-			mkdir("../unit_" . $id . "/test/responses", 0777);
+			mkdir("../../data/learn/unit_" . $id, 0777);
+			mkdir("../../data/learn/unit_" . $id . "/lesson", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/lesson/browser", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/lesson/browser/public", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/lesson/browser/secure", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/test", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/test/answers", 0777);
+			mkdir("../../data/learn/unit_" . $id . "/test/responses", 0777);
 						
 			$_SESSION['currentUnit'] = $id;
 		}
@@ -113,6 +109,20 @@ generator.
 	dropDown("timeLabel", "timeLabel", "Days,Weeks,Months,Years", "Days,Weeks,Months,Years", false, false, false, $timeLabel) . 
 	" from scheduled date");
 	category();
+	
+	//Select all courses within this organization
+	$coursesGrabber = query("SELECT * FROM `courses` WHERE `organization` = '{$userData['organization']}' ORDER BY `position` ASC", "raw");
+	$coursesID = ",";
+	$courses = "- Select -,";
+	
+	while($course = fetch($coursesGrabber)) {
+		$coursesID .= $course['id'] . ",";
+		$courses .= $course['name'] . ",";
+	}
+	
+	directions("Course", true);
+	indent(dropDown("course", "course", rtrim($courses, ","), rtrim($coursesID, ","), false, false, false, false, "lessonData", "course"));
+	
 	customField("Lesson Settings", "lessonData");
 	echo "</blockquote>\n";
 	

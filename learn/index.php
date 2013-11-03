@@ -13,51 +13,82 @@ This is the overview page for the learning units in this system.
 	if (access("Edit Learning Unit")) {
 		$functions = "customVisible,library,tinyMCESimple";
 	} else {
-		$functions = "enroll";
+		$functions = "library";
 	}
 	
+/*
+Course management
+---------------------------------------------------------
+*/
+	
 //Create a course
-	if (access("Create Course")) {
-		if (!isset($_POST['id']) && isset($_POST['name']) && isset($_POST['description']) && isset($_POST['price'])) {
-			$position = lastItem("courses");
-			$name = escape($_POST['name']);
-			$description = escape($_POST['description']);
-			$price = escape($_POST['price']);
-			$organization = $userData['organization'];
-			
-			if (empty($price) || !is_numeric($price) || intval($price) == 0) {
-				$price = 0;
-			}
-			
-			query("INSERT INTO `courses` (
-				  `id`, `position`, `visible`, `name`, `description`, `price`, `organization`
-				  ) VALUES (
-				  NULL, '{$position}', 'on', '{$name}', '{$description}', '{$price}', '{$organization}'
-				  )");
-			
-			echo json_encode(array("id" => primaryKey(), "position" => $position));
-			exit;
+	if (!isset($_POST['id']) && isset($_POST['name']) && isset($_POST['description']) && isset($_POST['price']) && access("Create Course")) {
+		$position = lastItem("courses");
+		$name = escape($_POST['name']);
+		$description = escape($_POST['description']);
+		$price = escape($_POST['price']);
+		$organization = $userData['organization'];
+		
+		if (empty($price) || !is_numeric($price) || intval($price) == 0) {
+			$price = 0;
 		}
+		
+		query("INSERT INTO `courses` (
+			  `id`, `position`, `visible`, `name`, `description`, `price`, `organization`
+			  ) VALUES (
+			  NULL, '{$position}', 'on', '{$name}', '{$description}', '{$price}', '{$organization}'
+			  )");
+			  
+		$id = primaryKey();
+		
+		if (empty($price) || !is_numeric($price) || intval($price) == 0) {
+			$price = "Free of Charge";
+		} else {
+			$price = "\$" . number_format($price, 2);
+		}
+		
+		echo "<div class=\"showTools\" style=\"background-color: #FFF380;\" id=\"" . $id . "\" name=\"" . $position . "\">
+<p class=\"homeDivider\" id=\"" . $id . "\"><span>" . URL($_POST['name'], "index.php?course=" . $id) . "</span>\n";
+
+		if (access("Edit Course")) {
+			echo URL("", "javascript:;", "contentHide action draggable", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n" . 
+URL("", "javascript:;", "contentHide visible", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n" . 
+URL("", "javascript:;", "contentHide action mediumEdit editCourse", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n";
+		}
+		
+		if (access("Delete Course")) {
+			echo URL("", "javascript:;", "contentHide action smallDelete deleteCourse", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n";
+		}
+		
+echo "</p>
+<blockquote>
+<div id=\"description\">\n" . 
+$_POST['description'] . "
+</div>
+<br />
+<p><em>No learning units currently avaliable</em></p>
+<p id=\"price\"><strong>Price:</strong> <span>" . $price . "</span></p>
+</blockquote>
+</div>";
+		exit;
 	}
 	
 //Reorder courses
-	if (!isset($_GET['course']) && access("Edit Course")) {
-		if (isset($_POST['id']) && isset($_POST['currentPosition']) && isset($_POST['newPosition'])) {
-			$id = $_POST['id'];
-			$currentPosition = $_POST['currentPosition'];
-			$newPosition = $_POST['newPosition'];
-			
-			if ($currentPosition > $newPosition) {
-				query("UPDATE `courses` SET `position` = position + 1 WHERE `position` >= '{$newPosition}' AND `position` <= '{$currentPosition}'");
-			} elseif ($currentPosition < $newPosition) {
-				query("UPDATE `courses` SET `position` = position - 1 WHERE `position` <= '{$newPosition}' AND `position` >= '{$currentPosition}'");
-			} else {
-				exit;
-			}
-			
-			query("UPDATE `courses` SET `position` = '{$newPosition}' WHERE `id` = '{$id}'");
+	if (isset($_POST['id']) && isset($_POST['currentPosition']) && isset($_POST['newPosition']) && !isset($_GET['course']) && access("Edit Course")) {
+		$id = $_POST['id'];
+		$currentPosition = $_POST['currentPosition'];
+		$newPosition = $_POST['newPosition'];
+		
+		if ($currentPosition > $newPosition) {
+			query("UPDATE `courses` SET `position` = position + 1 WHERE `position` >= '{$newPosition}' AND `position` <= '{$currentPosition}' AND `organization` = '{$userData['organization']}'");
+		} elseif ($currentPosition < $newPosition) {
+			query("UPDATE `courses` SET `position` = position - 1 WHERE `position` <= '{$newPosition}' AND `position` >= '{$currentPosition}' AND `organization` = '{$userData['organization']}'");
+		} else {
 			exit;
 		}
+		
+		query("UPDATE `courses` SET `position` = '{$newPosition}' WHERE `id` = '{$id}' AND `organization` = '{$userData['organization']}'");
+		exit;
 	}
 	
 //Set course availability
@@ -66,46 +97,87 @@ This is the overview page for the learning units in this system.
 	}
 	
 //Edit a course
-	if (access("Edit Course")) {
-		if (isset($_POST['id']) && isset($_POST['name']) && isset($_POST['description']) && isset($_POST['price'])) {
-			$id = $_POST['id'];
-			$name = escape($_POST['name']);
-			$description = escape($_POST['description']);
-			$price = escape($_POST['price']);
+	if (isset($_POST['id']) && isset($_POST['name']) && isset($_POST['description']) && isset($_POST['price']) && access("Edit Course")) {
+		$id = $_POST['id'];
+		$name = escape($_POST['name']);
+		$description = escape($_POST['description']);
+		$price = escape($_POST['price']);
+		
+		if (empty($price) || !is_numeric($price) || intval($price) == 0) {
+			$price = 0;
+		}
+		
+		query("UPDATE `courses` SET `name` = '{$name}', `description` = '{$description}', `price` = '{$price}' WHERE `id` = '{$id}'");
+		
+		$position = query("SELECT * FROM `courses` WHERE `id` = '{$id}'");
+		
+		if (empty($price) || !is_numeric($price) || intval($price) == 0) {
+			$price = "Free of Charge";
+		} else {
+			$price = "\$" . number_format($price, 2);
+		}
+		
+echo "<p class=\"homeDivider\" id=\"" . $id . "\"><span>" . URL($_POST['name'], "index.php?course=" . $id) . "</span>\n" . 
+URL("", "javascript:;", "contentHide action draggable", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n" . 
+URL("", "javascript:;", "contentHide visible", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n" . 
+URL("", "javascript:;", "contentHide action mediumEdit editCourse", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n";
+		if (access("Delete Course")) {
+			echo URL("", "javascript:;", "contentHide action smallDelete deleteCourse", false, false, false, false, false, false, " id=\"" . $id . "\"") . "\n";
+		}
+		
+echo "</p>
+<blockquote>
+<div id=\"description\">\n" . 
+$_POST['description'] . "
+</div>
+<br />\n";
+
+		if (exist("learningunits", "course", $id)) {
+			$units = query("SELECT * FROM `learningunits` WHERE `course` = '{$id}'", "raw");
 			
-			if (empty($price) || !is_numeric($price) || intval($price) == 0) {
-				$price = 0;
+			echo "<p><strong>Learning units:</strong></p>\n";
+			echo "<blockquote>\n";
+			
+			while($unit = fetch($units)) {
+				echo URL($unit['name'], "lesson.php?id=" . $unit['id']) . "<br />\n";
 			}
 			
-			query("UPDATE `courses` SET `name` = '{$name}', `description` = '{$description}', `price` = '{$price}' WHERE `id` = '{$id}'");
-			exit;
+			echo "</blockquote>";
+		} else {
+			echo "<p><em>No learning units currently avaliable</em></p>";
 		}
+
+echo "\n<p id=\"price\"><strong>Price:</strong> <span>" . $price . "</span></p>
+</blockquote>";
+		exit;
 	}
 	
 //Delete a course
-	if(isset($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['type']) && $_GET['type'] == "course" && isset($_GET['id'])) {
+	if (isset($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
 		delete("courses", "index.php", "Delete Course");
 	}
 	
+/*
+Learning unit management
+---------------------------------------------------------
+*/
+	
 //Reorder learning units
-	if (isset($_GET['course']) && access("Edit Learning Unit")) {
-		if (isset($_POST['id']) && isset($_POST['currentPosition']) && isset($_POST['newPosition'])) {
-			$id = $_POST['id'];
-			$currentPosition = $_POST['currentPosition'];
-			$newPosition = $_POST['newPosition'];
-			
-			if ($currentPosition > $newPosition) {
-				query("UPDATE `learningunits` SET `position` = position + 1 WHERE `position` >= '{$newPosition}' AND `position` <= '{$currentPosition}'");
-			} elseif ($currentPosition < $newPosition) {
-				query("UPDATE `learningunits` SET `position` = position - 1 WHERE `position` <= '{$newPosition}' AND `position` >= '{$currentPosition}'");
-			} else {
-				exit;
-			}
-			
-			query("UPDATE `learningunits` SET `position` = '{$newPosition}' WHERE `id` = '{$id}'");
-			echo $id . " " . $currentPosition . " " . $newPosition;
+	if (isset($_POST['id']) && isset($_POST['currentPosition']) && isset($_POST['newPosition']) && isset($_GET['course']) && access("Edit Learning Unit")) {
+		$id = $_POST['id'];
+		$currentPosition = $_POST['currentPosition'];
+		$newPosition = $_POST['newPosition'];
+		
+		if ($currentPosition > $newPosition) {
+			query("UPDATE `learningunits` SET `position` = position + 1 WHERE `position` >= '{$newPosition}' AND `position` <= '{$currentPosition}' AND `organization` = '{$userData['organization']}'");
+		} elseif ($currentPosition < $newPosition) {
+			query("UPDATE `learningunits` SET `position` = position - 1 WHERE `position` <= '{$newPosition}' AND `position` >= '{$currentPosition}' AND `organization` = '{$userData['organization']}'");
+		} else {
 			exit;
 		}
+		
+		query("UPDATE `learningunits` SET `position` = '{$newPosition}' WHERE `id` = '{$id}' AND `organization` = '{$userData['organization']}'");
+		exit;
 	}
 	
 //Set learning unit avaliability
@@ -113,13 +185,8 @@ This is the overview page for the learning units in this system.
 		avaliability("learningunits", "index.php", "Edit Learning Unit");
 	}
 	
-//Delete a learning unit
-	if (isset($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['type']) && $_GET['type'] == "unit" && isset($_GET['id'])) {
-		delete("learningunits", "index.php", "Delete Learning Unit", true, false, "../data/learn/unit_{$_GET['id']}", "lesson_{$_GET['id']},test_{$_GET['id']}");
-	}
-
-//Forward to editor
-	if (access("Edit Learning Unit") && isset ($_GET['id']) && $_GET['edit'] == "true") {
+//Edit a learning unit
+	if (isset ($_GET['id']) && $_GET['edit'] == "true" && access("Edit Learning Unit")) {
 		$unitData = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}'");
 		
 		if (exist("learningunits", "id", $_GET['id'])) {
@@ -136,8 +203,62 @@ This is the overview page for the learning units in this system.
 		}
 	}
 	
+//Delete a learning unit
+	if (isset($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['type']) && $_GET['type'] == "unit" && isset($_GET['id'])) {
+		delete("learningunits", "index.php", "Delete Learning Unit", true, false, "../data/learn/unit_{$_GET['id']}", "lesson_{$_GET['id']},test_{$_GET['id']}");
+	}
+	
+/*
+Other processors
+---------------------------------------------------------
+*/
+	
 //Unset active sessions
 	unset($_SESSION['currentUnit'], $_SESSION['review']);
+	
+//Add courses to the cart
+	if (isset($_POST['addCourse']) && access("Purchase Learning Unit") && exist("courses", "id", $_POST['addCourse'])) {
+		if (!isset($_SESSION['cart'])) {
+			$_SESSION['cart'] = array();
+		}
+		
+		if (array_push($_SESSION['cart'], $_POST['addCourse'])) {
+			echo "success";
+		}
+		
+		exit;
+	}
+	
+//Enroll the user in the specified, free-of-charge course
+	if (isset($_POST['enroll'])) {
+		$enrollRequest = $_POST['enroll'];
+		$currentUnits = arrayRevert($userData['learningunits']);
+		
+		if (!is_array($currentUnits)) {
+			$currentUnits = array();
+		}
+		
+		$unitData = query("SELECT * FROM `learningunits` WHERE `id` = '{$enrollRequest}'");
+		$courseData = query("SELECT * FROM `courses` WHERE `id` = '{$unitData['course']}'");
+		$unitData = query("SELECT * FROM `learningunits` WHERE `course` = '{$unitData['course']}'", "raw");
+		
+		if (empty($courseData['price']) || intval($courseData['price']) == 0) {
+			while($unit = fetch($unitData)) {
+				$unitInfo = array("item" => $unit['id'], "lessonStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"), "submitted" => "");
+				$currentUnits[$unit['id']] = $unitInfo;
+			}
+		} else {
+			echo "failure";
+			exit;
+		}
+		
+		$units = arrayStore($currentUnits);
+		
+		query("UPDATE `users` SET `learningunits` = '{$units}' WHERE `id` = '{$userData['id']}'");
+		
+		echo "success";
+		exit;
+	}
 	
 //Top content
 	headers("Learning Module", $functions, true);
@@ -164,7 +285,6 @@ This is the overview page for the learning units in this system.
 		echo toolBarURL("Assign Users", "assign/index.php", "toolBarItem user", false, "Assign Users to Learning Unit");
 		echo "</div>\n<br />\n";
 	}
-
 	
 //Display the list of courses
 	if (!isset($_GET['course'])) {
@@ -203,22 +323,38 @@ This is the overview page for the learning units in this system.
 				echo "\n</div>\n";
 				echo "<br />\n";
 				
-				if (exist("learningunits", "course", $course['id'])) {
-					$units = query("SELECT * FROM `learningunits` WHERE `course` = '{$course['id']}'", "raw");
-					
-					echo "<p><strong>Learning units:</strong></p>\n";
-					echo "<blockquote>\n";
-					
-					while($unit = fetch($units)) {
-						echo URL($unit['name'], "lesson.php?id=" . $unit['id']) . "<br />\n";
+				if ((is_array(arrayRevert($userData['learningunits'])) && array_key_exists($course['id'], arrayRevert($userData['learningunits']))) || access("Edit Unowned Learning Units")) {
+					if (exist("learningunits", "course", $course['id'])) {
+						$units = query("SELECT * FROM `learningunits` WHERE `course` = '{$course['id']}'", "raw");
+						
+						echo "<p><strong>Learning units:</strong></p>\n";
+						echo "<blockquote>\n";
+						
+						while($unit = fetch($units)) {
+							echo URL($unit['name'], "lesson.php?id=" . $unit['id']) . "<br />\n";
+						}
+						
+						echo "</blockquote>\n";
+					} else {
+						echo "<p><em>No learning units currently avaliable</em></p>\n";
 					}
 					
-					echo "</blockquote>\n";
+					if (access("Edit Unowned Learning Units")) {
+						echo intval($course['price']) == 0 ? "<p id=\"price\"><strong>Price:</strong> <span>Free of Charge</span></p>\n" : "<p id=\"price\"><strong>Price:</strong> <span>$" . number_format($course['price'], 2) . "</span></p>\n";
+					}
 				} else {
-					echo "<p><em>No learning units currently avaliable</em></p>\n";
+					if (access("Purchase Learning Unit")) {
+						if (isset($_SESSION['cart']) && is_array($_SESSION['cart']) && in_array($course['id'], $_SESSION['cart'])) {
+							$class = "cartIn";
+						} else {
+							$class = "cartOut";
+						}
+						
+						echo "<span id=\"" . $course['id'] . "\" class=\"cartBase " . $class . "\"></span>\n";
+						echo intval($course['price']) == 0 ? "<p id=\"price\"><strong>Price:</strong> <span>Free of Charge</span></p>\n" : "<p id=\"price\"><strong>Price:</strong> <span>$" . number_format($course['price'], 2) . "</span></p>\n";
+					}
 				}
 				
-				echo intval($course['price']) == 0 ? "<p id=\"price\"><strong>Price:</strong> <span>Free of Charge</span></p>\n" : "<p id=\"price\"><strong>Price:</strong> <span>$" . number_format($course['price'], 2) . "</span></p>\n";
 				echo "</blockquote>\n";
 				echo "</div>\n";
 			}
@@ -227,12 +363,12 @@ This is the overview page for the learning units in this system.
 			
 		//The course editor dialog
 			if (access("Edit Course")) {
-				echo "<div id=\"manageDialog\" title=\"Search for Users\" class=\"contentHide\">\n";
-				echo "<span id=\"required\"></span>\n";
+				echo "<div id=\"manageDialog\" class=\"contentHide\">\n";
+				echo "<div align=\"center\">\n<span id=\"message\"></span>\n</div>\n";
 				echo "<table>\n";
 				echo "<tr>\n";
 				echo cell("<div align=\"right\">Name<span class=\"require\">*</span>:</div>", "100");
-				echo cell(textField("name", "name") . hidden("id", "id", ""));
+				echo cell(textField("name", "name", false, false, false, false, false, false, false, false, " class=\"required\"") . hidden("id", "id", ""));
 				echo "</tr>\n";
 				echo "<tr>\n";
 				echo cell("<div align=\"right\">Description<span class=\"require\">*</span>:</div>", "100");

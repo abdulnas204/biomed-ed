@@ -4,7 +4,7 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 **********************************************************************/
 
 //Developer Enhancement, to incorporate security
-	require_once('../../../core/index.php');
+	require_once('../../../server/index.php');
 
 //Developer Enhancement, to disallow unwanted access	
 	if (loggedIn()) {

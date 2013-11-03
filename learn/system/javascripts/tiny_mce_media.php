@@ -1,22 +1,12 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
-
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: November 16th, 2010
-Last updated: Janurary 9th, 2011
+LICENSE: See "license.php" located at the root installation
 
 This is the setup script for the TinyMCE Media widget.
 */
 	
 //Header functions
-	require_once("../../../system/core/index.php");
+	require_once("../../../system/server/index.php");
 
 //Select the API key for the spell checker
 	$api = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");

@@ -6,7 +6,7 @@ This is the logo management page.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
+	require_once('../../system/server/index.php');
 	headers("Shortcut Icon Management", "validate", true);
 	lockAccess();
 	

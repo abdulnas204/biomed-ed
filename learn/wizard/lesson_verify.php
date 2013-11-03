@@ -1,26 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: August 13th, 2010
-Last updated: December 4th, 2010
-
-This is the lesson verification page for the learning unit 
-generator, which allows creators to fully sample their 
-lesson prior to deployment.
+This is the lesson verification page for the learning unit generator, which allows creators to fully sample their lesson prior to deployment.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');	
 	$monitor = monitor("Verify Content", "navigationMenu,plugins");
 	
 //Test to see if a test exists

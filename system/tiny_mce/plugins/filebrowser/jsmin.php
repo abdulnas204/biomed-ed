@@ -60,7 +60,7 @@ class JSMin {
 
   // -- Public Static Methods --------------------------------------------------
   
-  function minify($js) {
+  public static function minify($js) {
     $jsmin = new JSMin($js);
     return $jsmin->jsminify();
   }

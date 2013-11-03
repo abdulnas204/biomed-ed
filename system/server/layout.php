@@ -7,7 +7,7 @@ This script is used to construct the layout of a page.
 
 //Include the start of a page
 	function headers($title, $functions = false, $toolTip = false, $bodyParameters = false, $publicNavigation = false, $hideHTML = false, $customScript = false) {
-		global $root, $userData, $rootUserName, $protocol;
+		global $root, $userData, $rootUserName, $protocol, $connNavigation;
 		
 	//Check access to this page
 		maintain();
@@ -114,7 +114,7 @@ This script is used to construct the layout of a page.
 
 <!-- The top content of the page //-->
 <div class=\"header\">
-  <!-- User's login status //-->
+  <!-- Addon tools //-->
   <div class=\"loginStatus\">";
   
   //Include the user login status
@@ -129,16 +129,39 @@ This script is used to construct the layout of a page.
 		}
 	} else {
 		$HTML .= "
-    " . URL("Register", $root . "users/register.php") . " | " . URL("Login", "javascript:;", false, false, false, false, false, false, false, " id=\"login\"");
+    " . URL("Register", $root . "users/register.php") . " | " . URL("Login", "javascript:;", "login");
 	}
 	
 	$HTML .= "
   </div>
   
   <!-- Sister project navigation //-->
-  <ul class=\"tabMenu\">
-    <li><a href=\"http://localhost/biomed-ed/\" class=\"first\">Home</a></li><li><a class=\"current\">Certification Preparation</a></li><li><a>About Us</a></li>
-  </ul>
+  <div class=\"tabMenu\">
+    ";
+  	
+//Use mysql_query(), because query() only runs queries on the main application database, and not the tabbed navigation database
+	$tabGrabber = mysql_query("SELECT * FROM `tabs` WHERE `visible` = 'on' ORDER BY `position` ASC", $connNavigation);
+	$count = 1;
+	
+	while($tab = fetch($tabGrabber)) {
+		$class = "";
+		
+		if ($count == 1) {
+			$class = "first";
+		}
+		
+		if ($tab['url'] == $_SERVER['HTTP_HOST']) {
+			$class .= " current";
+		}
+		
+		$HTML .= "<a href=\"http://www." . $tab['url'] . "\" class=\"" . $class . "\">" . $tab['name'] . "</a>";
+		$count++;
+	}
+	
+	unset($count);
+	
+    $HTML .= "
+  </div>
 	  
   <!-- The banner content //-->  
   <div style=\"padding-top:" . $siteInfo['paddingTop'] . "px; padding-bottom:" . $siteInfo['paddingBottom'] . "px; padding-left:" .  $siteInfo['paddingLeft'] . "px; padding-right:" . $siteInfo['paddingRight'] . "px;\">";
@@ -165,8 +188,7 @@ This script is used to construct the layout of a page.
   
   <!-- Site navigation //-->
   <div class=\"navigation\">
-    <p>
-      ";
+    ";
 			
    if ($publicNavigation == false) {
 	   if (loggedIn()) {
@@ -240,7 +262,6 @@ This script is used to construct the layout of a page.
 	}
 	
 	$HTML =  rtrim($HTML) . "
-    </p>
   </div>
 </div>
     
@@ -257,6 +278,8 @@ This script is used to construct the layout of a page.
 		}
 		
 	//Construct the HTML
+		header("p3p:CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"");
+		
 		echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
 		
 <!--
@@ -297,6 +320,8 @@ Third-party works are accredited where necessary.
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/themes/" . $siteInfo['style'] . "\" />
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "learn/system/styles/style.css\" />
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "cms/system/styles/style.css\" />
+<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "users/system/styles/style.css\" />
+<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "portal/system/styles/style.css\" />
 ";
 
 echo $scripts . $script . "
@@ -416,7 +441,5 @@ echo $scripts . $script . "
 		echo "
 </body>
 </html>";
-
-		ob_end_flush();
 	}
 ?>

@@ -6,7 +6,7 @@ This is the site information management page, which manages meta tags and conten
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
+	require_once('../../system/server/index.php');
 	headers("Site Information", "tinyMCESimple,validate", true);
 	lockAccess();
 	

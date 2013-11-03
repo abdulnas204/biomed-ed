@@ -6,21 +6,30 @@ This is the home page for logged in users, which displays information relavent t
 */
 
 //Header functions
-	require_once('../system/server/index.php');	
-	headers("Home", false, true);
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
+	
+	headers("Home", "portlet", true);
 	
 //Title
 	title("Home", "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above.");
 	
-//Locate and load all the plugins for this page
-	$pluginsDirectory = opendir("../");
+//Locate and load all the addon plugins for this page
+	$addons = query("SELECT * FROM `addons` WHERE `portalPlugin` = '1' ORDER BY `position` ASC", "raw");
 	
-	while ($plugins = readdir($pluginsDirectory)) {
-		if ($plugins !== "." && $plugins !== "..") {
-			if (is_dir("../" . $plugins) && file_exists("../" . $plugins . "/system/php/plugin.php")) {
-				require("../" . $plugins . "/system/php/index.php");
-				require("../" . $plugins . "/system/php/functions.php");
-				require("../" . $plugins . "/system/php/plugin.php");
+	if ($addons) {
+		while($addon = fetch($addons)) {
+		//Use output buffering to see if the included script generated any content
+			ob_start();
+			include("addons/" . $addon['pluginRoot'] . "index.php");
+			$output = ob_get_clean();
+			
+		//Only display this plugin if output was generated
+			if (!empty($output)) {
+				echo "<div class=\"addon\" style=\"background-image:url(addons/" . $addon['pluginRoot'] . "icon.png)\">\n";
+				echo "<h3>" . $addon['name'] . "</h3>\n";
+				echo $output;
+				echo "\n</div>\n";
 			}
 		}
 	}

@@ -7,6 +7,10 @@
  *
  * http://docs.jquery.com/UI/Theming/API
  */
+ 
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
 
 /* Layout helpers
 ----------------------------------*/
@@ -570,3 +574,8 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
  */
 .ui-progressbar { height:2em; text-align: left; }
 .ui-progressbar .ui-progressbar-value {margin: -1px; height:100%; }
+
+/* Developer Enhancement */
+.portlet { margin: 0 1em 1em 0; }
+.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; text-align:center; }
+.portlet-content { padding: 0 5px 5px 5px; }
