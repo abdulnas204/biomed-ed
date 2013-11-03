@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -191,12 +191,12 @@
 	  
 	  successMessage($message);
   } else {
-	  echo "<br />";
+	  echo "&nbsp;";
   }
 ?>
 <?php
 	  if ($lesson == "exist") {
-		  echo "<table class=\"dataTable\">";
+		  echo "<table align=\"center\" class=\"dataTable\">";
 			  echo "<tbody>";
 				  echo "<tr>";
 					  echo "<th width=\"75\" class=\"tableHeader\">Order</th>";
@@ -223,7 +223,7 @@
 						  echo "<input type=\"hidden\" name=\"currentPosition\" value=\"" . $lessonData['position'] . "\" />";
 						  echo "<input type=\"hidden\" name=\"id\" value=\"" . $lessonData['id'] . "\" />";
 						  echo "<input type=\"hidden\" name=\"action\" value=\"reorder\" />";
-						  echo "<td width=\"75\">";
+						  echo "<td width=\"75\"><div align=\"center\">";
 								  echo "<select name=\"position\" onchange=\"this.form.submit();\">";
 								  $lessonCount = mysql_num_rows($dropDownDataGrabber);
 								  for ($count=1; $count <= $lessonCount; $count++) {
@@ -234,7 +234,7 @@
 									  echo ">$count</option>";
 								  }
 								  echo "</select>";
-							  echo "</td>";
+							  echo "</div></td>";
 						  echo "<td width=\"150\">" . $lessonData['type'] . "</td>";
 						  echo "<td width=\"250\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?page=" . $lessonData['position'] . "','','status=yes,scrollbars=yes,resizable=yes,width=800,height=600')\" onmouseover=\"Tip('Preview the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
 						  echo "</a></td>";
@@ -250,8 +250,8 @@
 							  case "Custom Content" : echo "manage_content.php?type=custom"; break;
 							  case "Embedded Content" : echo "manage_content.php?type=embedded"; break;
 						  }
-						  echo "&id=" .  $lessonData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>";
-						  echo "<td width=\"75\"><a class=\"action delete\" href=\"lesson_content.php?id=" .  $lessonData['id'] . "&action=delete\" onmouseover=\"Tip('Delete the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\" onclick=\"return confirm ('This action cannot be undone. Continue?');\"></a></td>";
+						  echo "&id=" .  $lessonData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">&nbsp;</a></td>";
+						  echo "<td width=\"75\"><a class=\"action delete\" href=\"lesson_content.php?id=" .  $lessonData['id'] . "&action=delete\" onclick=\"return confirm ('This action cannot be undone. Continue?');\">&nbsp;</a></td>";
 					  echo "</form>";
 					  echo "</tr>";
 				  }
@@ -259,7 +259,7 @@
 		  echo "</table>";
 		  echo "<br />";
 	  } else {
-		  echo "<div class=\"noResults\">There are no pages in this lesson. <a href=\"manage_content.php\">Create a new page now</a>.</div>";
+		  echo "<br /></br /><br /></br /><div align=\"center\">There are no pages in this lesson. <a href=\"manage_content.php\">Create a new page now</a>.</div><br /></br /><br /></br /><br /></br />";
 	  }
 ?>
 <blockquote>
@@ -267,10 +267,8 @@
     <?php
       //Selectively display the buttons
             if (isset ($_SESSION['review'])) {
-				if ($lesson !== "empty") {
-					submit("submit", "Modify Content");
-					echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','modify.php');return document.MM_returnValue\" />";
-				}
+                submit("submit", "Modify Content");
+                echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','modify.php');return document.MM_returnValue\" />";
             } else {
 				submit("back", "&lt;&lt; Previous Step");
 				if ($lesson !== "empty") {

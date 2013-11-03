@@ -18,7 +18,7 @@
 	//If the organization is being updated
 		if (isset($id)) {
 			$name = mysql_real_escape_string($_POST['name']);
-			$admin = $_POST['admin'];
+			
 			$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$id}'", $connDBA);
 			$organization = mysql_fetch_array($organizationGrabber);
 			$admin = $organization['admin'];
@@ -29,13 +29,13 @@
 			$adminGrabber = mysql_query("SELECT * FROM `users` WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 			if ($adminData = mysql_fetch_array($adminGrabber)) {
 				if ($adminData['role'] == "Site Administrator" || $adminData['role'] == "Site Manager") {
-					header ("Location: manage_organization.php?message=errorAssign");
+					header ("Location: index.php?message=errorAssign");
 					exit;
 				} else {
 					mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$name}' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 				}
 			} else {
-				header ("Location: manage_organization.php?message=noUser");
+				header ("Location: index.php?message=noUser");
 				exit;
 			}
 			
@@ -59,13 +59,13 @@
 			$adminGrabber = mysql_query("SELECT * FROM `users` WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 			if ($adminData = mysql_fetch_array($adminGrabber)) {
 				if ($adminData['role'] == "Site Administrator" || $adminData['role'] == "Site Manager") {
-					header ("Location: manage_organization.php?message=errorAssign");
+					header ("Location: index.php?message=errorAssign");
 					exit;
 				} else {
 					mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$name}' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 				}
 			} else {
-				header ("Location: manage_organization.php?message=noUser");
+				header ("Location: index.php?message=noUser");
 				exit;
 			}
 			
@@ -75,49 +75,12 @@
 		}
 	}
 ?>
-<?php
-	if (isset($_GET['checkName'])) {
-		$inputNameSpaces = $_GET['checkName'];
-		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-		$checkName = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$inputNameSpaces}'", $connDBA);
-		
-		if($name = mysql_fetch_array($checkName)) {	
-			if (isset($_GET['id'])) {
-				$organizationID = $_GET['id'];
-				$currentOrganizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
-				$currentOrganization = mysql_fetch_array($currentOrganizationGrabber);
-				
-				if (strtolower($currentOrganization['organization']) != strtolower($inputNameSpaces)) {
-					echo "<div class=\"error\" id=\"errorWindow\">An organization with this name already exists</div>";
-				} else {
-					echo "<p>&nbsp;</p>";
-				}
-			} else {
-				echo "<div class=\"error\" id=\"errorWindow\">An organization with this name already exists</div>";
-			}
-		} else {
-			echo "<p>&nbsp;</p>";
-		}
-		
-		echo "<script type=\"text/javascript\">validateName()</script>";
-		die();
-	}
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php
-	if (isset($id)) {
-		$title = "Edit the " . $organization['organization'] . " Organization";
-	} else {
-		$title = "Create New Organization";
-	}
-	
-	title($title);
-?>
+<?php title("Create New Organization"); ?>
 <?php headers(); ?>
 <?php validate(); ?>
-<?php liveError(); ?>
 <script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
 <script src="../../javascripts/autoSuggest/runAutoSuggest.js" type="text/javascript"></script>
@@ -131,27 +94,18 @@
 
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2><?php echo $title; ?></h2>
+<h2>Create New Organization</h2>
 <p>Create a new organization by filling in the information below. The organization's complete details and payment method will be setup when the organization administrator first logs in.</p>
-<?php errorWindow("database", "An organization with this name already exists", "error", "identical", "true"); ?>
-<?php
-//If the user is given an error that an assigned user does not exist
-	if (isset($_GET['message']) && $_GET['message'] == "noUser") {
-		errorMessage("The user you are attempting to assign to an organization does not exist.");
-//If the user is given an error that an assigned organization does not exist
-	} elseif (isset($_GET['message']) && $_GET['message'] == "errorAssign") {
-		errorMessage("Site administrators and site managers cannot be assigned to an organization. Please change their role if you wish to assign them.");
-	}
-?>
+<p>&nbsp;</p>
 <form name="manageOrganization" method="post" action="manage_organization.php<?php if (isset($id)) {echo"?id=" . $id;} ?>" id="validate" onsubmit="return errorsOnSubmit(this);">
-<div class="catDivider one">Organization Name</div>
+<div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign Organization Name</div>
 <div class="stepContent">
   <blockquote>
     <p>
-      Create the Organization name:</p>
+      Assign the Organization a name:</p>
     <blockquote>
       <p>
-        <input name="name" type="text" id="name" size="50" autocomplete="off" class="validate[required]" onblur="checkName(this.name, 'manage_organization'<?php if (isset ($id)) {echo ", 'id=" . $id . "'";}?>)"<?php
+        <input name="name" type="text" id="name" size="50" autocomplete="off" tabindex="1" class="validate[required]"<?php
 			if (isset ($id)) {
 				echo " value=\"" . stripslashes($organization['organization']) . "\"";
 			}
@@ -160,27 +114,29 @@
     </blockquote>
   </blockquote>
 </div>
-<div class="catDivider two">Assign Administrator</div>
+<div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Assign Administrator</div>
 <div class="stepContent">
 <blockquote>
-<p>Assign the organization an administrator. Begin by typing the desired user's  name, and a list of suggested users will appear under the text field. Click on the user's name from the list to apply. If the user does not appear in the list, he or she may not be in the system, and may need to be <a href="../users/manage_user.php" onclick="GP_popupConfirmMsg('You are about to leave this page, click \&quot;OK\&quot; to continue.');return document.MM_returnValue">added to the system</a>.</p>
+<p>Assign the organization an administrator. Begin by typing the desired user's first name, and a list of suggested users will appear under the text field. Click on the user's name from the list to apply. If the user does not appear in the list, he or she may not be in the system, and may need to be <a href="../users/manage_user.php" onclick="GP_popupConfirmMsg('You are about to leave this page, click \&quot;OK\&quot; to continue.');return document.MM_returnValue">added to the system</a>.</p>
 <p>The user you assign will be automatically give the &quot;Organization Administrator&quot; role.</p>
 	<blockquote>
-     <div id="adminSuggest">
-        <input name="admin" id="admin" type="text" size="50" autocomplete="off" class="validate[required]"<?php
+      <div id="adminSuggest">
+        <input name="admin" id="admin" type="text" size="50" autocomplete="off" tabindex="2" class="validate[required]"<?php
 			if (isset ($id)) {
 				echo " value=\"" . $organization['admin'] . "\"";
 			}
 		?> />
         <div>
         <div id="suggestions" spry:region="data">
-        <div spry:repeat="data" spry:suggest="{name}">{name}</div>
+        <span spry:repeat="data" spry:hover="hover" spry:suggest="{name}">
+            <div>{name}</div>
+        </span>
         </div>
         </div>
       </div>
-      <script type="text/javascript">
-		 var organizationSuggestions = new Spry.Widget.AutoSuggest("adminSuggest", "suggestions", "data", "name", {containsString: true});
-	  </script>
+        <script type="text/javascript">
+           var dataSuggestions = new Spry.Widget.AutoSuggest("adminSuggest", "suggestions", "data", "name");
+        </script>
     </blockquote>
 </blockquote>
 </div>

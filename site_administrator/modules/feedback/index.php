@@ -129,9 +129,9 @@
       <h2>Feedback</h2>
       <p>Content may be added to the test by using the guide below.</p>
       <p>&nbsp;</p>
-<div class="toolBar noPadding">
+<div class="toolBar">
          <form name="jump" id="validate" onsubmit="return errorsOnSubmit(this);">
-                  <span class="toolBarItem noLink">Add: 
+                  Add: 
                   <select name="menu" id="menu">
                     <option value="">- Select Question Type -</option>
                     <option value="questions/description.php">Description</option>
@@ -139,66 +139,60 @@
                     <option value="questions/short_answer.php">Short Answer</option>
                     <option value="questions/written_response.php">Written Response</option>
                   </select>
-                  
-                  <input type="button" onclick="location=document.jump.menu.options[document.jump.menu.selectedIndex].value;" value="Go" /></span>
-                  <a class="toolBarItem home" href="../index.php">Back to Modules</a><a class="toolBarItem settings" href="settings.php">Customize Settings</a>
+                  <?php formErrors(); ?>
+                  <input type="button" onclick="location=document.jump.menu.options[document.jump.menu.selectedIndex].value;" value="Go" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.php"><img src="../../../images/admin_icons/home.png" alt="Back" width="24" height="24"/></a> <a href="../index.php">Back to Modules</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a> <a href="settings.php">Customize Settings</a>
          </form>
 </div>
 <?php
 //If an inserted alert is shown
   if (isset ($_GET['inserted'])) {
-	  $message = "The <strong>";
+	  echo "<br/ ><div align=\"center\"><div class=\"success\">The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['inserted']) {
-		  case "description" : $message .= "description"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "written" : $message .= "written response"; break;
+		  case "description" : echo "description"; break;
+		  case "choice" : echo "multiple choice"; break;
+		  case "answer" : echo "short answer"; break;
+		  case "written" : echo "written response"; break;
 	  }
-	  $message .= "</strong> question was successfully inserted";
-	  
-	  successMessage($message);
+	  echo "</strong> question was successfully inserted</div></div><br />";
 //If an updated alert is shown
   } elseif (isset ($_GET['updated'])) {
-	  $message = "The <strong>";
+	  echo "<br/ ><div align=\"center\"><div class=\"success\">The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['updated']) {
-		  case "description" : $message .= "description"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "written" : $message .= "written response"; break;
+		  case "description" : echo "description"; break;
+		  case "choice" : echo "multiple choice"; break;
+		  case "answer" : echo "short answer"; break;
+		  case "written" : echo "written response"; break;
 	  }
-	  $message .= "</strong> question was successfully updated";
-	  
-	  successMessage($message);
+	  echo "</strong> question was successfully updated</div></div><br />";
 //If an deleted alert is shown  
   } elseif (isset ($_GET['deleted'])) {
-	  $message = "The <strong>";
+	  echo "<br/ ><div align=\"center\"><div class=\"success\">The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['deleted']) {
-		  case "description" : $message .= "description"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "written" : $message .= "written response"; break;
+		  case "description" : echo "description"; break;
+		  case "choice" : echo "multiple choice"; break;
+		  case "answer" : echo "short answer"; break;
+		  case "written" : echo "written response"; break;
 	  }
-	  $message .= "</strong> question was successfully deleted";
-	  
-	  successMessage($message);
+	  echo "</strong> question was successfully deleted</div></div><br />";
   } else {
-	  echo "<br />";
+	  echo "&nbsp;";
   }
 ?>
 <?php
 //The test questions
 	if ($feedBack == "exist") {
-			echo "<table class=\"dataTable\">";
+		echo "<div align=\"center\">";
+			echo "<table align=\"center\" class=\"dataTable\">";
 			echo "<tbody>";
 				echo "<tr>";
-					echo "<th width=\"100\" class=\"tableHeader\">Order</th>";
-					echo "<th width=\"150\" class=\"tableHeader\">Type</th>";
-					echo "<th class=\"tableHeader\">Question</th>";
-					echo "<th width=\"50\" class=\"tableHeader\">Edit</th>";
-					echo "<th width=\"50\" class=\"tableHeader\">Delete</th>";
+					echo "<th width=\"100\" class=\"tableHeader\"><strong>Order</strong></th>";
+					echo "<th width=\"150\" class=\"tableHeader\"><strong>Type</strong></th>";
+					echo "<th class=\"tableHeader\"><strong>Question</strong></th>";
+					echo "<th width=\"50\" class=\"tableHeader\"><strong>Edit</strong></th>";
+					echo "<th width=\"50\" class=\"tableHeader\"><strong>Delete</strong></th>";
 				echo "</tr>";
 				
 			//Select data for the table	
@@ -214,7 +208,7 @@
 						echo "<form action=\"index.php\">";
 						echo "<input type=\"hidden\" name=\"currentPosition\" value=\"" . $feedBackData['position'] . "\" />";
 						echo "<input type=\"hidden\" name=\"id\" value=\"" . $feedBackData['id'] . "\" />";
-						echo "<td width=\"100\">";
+						echo "<td width=\"100\"><div align=\"center\"><div>";
 								echo "<select name=\"position\" onchange=\"this.form.submit();\">";
 								$feedBackCount = mysql_num_rows($dropDownDataGrabber);
 								for ($count=1; $count <= $feedBackCount; $count++) {
@@ -225,10 +219,10 @@
 									echo ">$count</option>";
 								}
 								echo "</select>";
-							echo "</td>";
-						echo "<td width=\"150\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $feedBackData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $feedBackData['type'] . "</a></td>";
-						echo "<td>" . commentTrim(55, $feedBackData['question']) . "</td>";
-						echo "<td width=\"50\"><a class=\"action edit\" href=\"";
+							echo "</div></div></td>";
+						echo "<td width=\"150\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $feedBackData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $feedBackData['type'] . "</a></div></td>";
+						echo "<td align=\"center\"><div align=\"center\">" . commentTrim(55, $feedBackData['question']) . "</div></td>";
+						echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"";
 						
 						switch ($feedBackData['type']) {
 							case "Description" : echo "questions/description.php"; break;
@@ -237,17 +231,18 @@
 							case "Written Response" : echo "questions/written_response.php"; break;
 						}
 							
-						echo "?question=" . $feedBackData['position'] . "&id=" . $feedBackData['id'] . "\" onmouseover=\"Tip('Edit this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\"></a></td>";
-						echo "<td width=\"50\"><a class=\"action delete\" href=\"index.php?question=" .  $feedBackData['position'] . "&id=" .  $feedBackData['id'] . "\" onmouseover=\"Tip('Delete this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\" onclick=\"return confirm ('This action cannot be undone. Continue?');\"></a></td>";
+						echo "?question=" . $feedBackData['position'] . "&id=" . $feedBackData['id'] . "\">" . "<img src=\"../../../images/admin_icons/edit.png\" alt=\"Edit\" border=\"0\" onmouseover=\"Tip('Edit this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
+						echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"index.php?question=" .  $feedBackData['position'] . "&id=" .  $feedBackData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\">" . "<img src=\"../../../images/admin_icons/delete.png\" alt=\"Delete\" border=\"0\" onmouseover=\"Tip('Delete this <strong>" . $feedBackData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
 					echo "</form>";
 					echo "</tr>";
 				}
 			echo "</tbody>";
-		echo "</table>";
+		echo "</table></div>";
 	} else {
-		echo "<div class=\"noResults\">There are no feedback questions. Questions can be created by selecting a question type from the drop down menu above, and pressing &quot;Go&quot;.</div>";
+		echo "<br /></br /><br /></br /><div align=\"center\">There are no feedback questions. Questions can be created by selecting a question type from the drop down menu above, and pressing &quot;Go&quot;.</div><br /></br /><br /></br /><br /></br />";
 	}
 ?>
+<p>&nbsp;</p>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

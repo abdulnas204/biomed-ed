@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -32,22 +32,19 @@
 	$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` ORDER BY position ASC", $connDBA);
 	if (mysql_fetch_array($categoryGrabber)) {
 	//Use the URL to narrow the categories down on request
-		if (isset ($_GET['id'])) {
-			$id = $_GET['id'];
-			$categoryCheck = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'", $connDBA);
-			$testCheck = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", $connDBA);
-			$testImport = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", $connDBA);
+		if (isset ($_GET['category'])) {
+			$category = urldecode($_GET['category']);
+			$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+			$categoryCheck = mysql_query("SELECT * FROM `modulecategories` WHERE `category` = '{$category}'", $connDBA);
+			$testCheck = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}' ORDER BY id ASC", $connDBA);
+			$testImport = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}' ORDER BY id ASC", $connDBA);
 			
 			if (!mysql_fetch_array($categoryCheck)) {
-				header ("Location: index.php");
+				header ("Location: question_bank.php");
 				unset($_SESSION['categoryName']);
 				exit;
-			} else {
-				$bankTitleGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'", $connDBA);
-				$bankTitle = mysql_fetch_array($bankTitleGrabber);
 			}
-			
-			$_SESSION['categoryName'] = $id;
+			$_SESSION['categoryName'] = urlencode($category);
 		}
 	
 		$categoryResult = 1;
@@ -135,8 +132,8 @@
 ?>
 <?php
 //Assign the page title
-	if (isset ($_GET['id'])) {
-		$title = stripslashes($bankTitle['category']) . " Bank";
+	if (isset ($_GET['category'])) {
+		$title = urldecode($_GET['category']) . " Bank";
 	} else {
 		$title = "Question Bank";
 	}
@@ -153,10 +150,10 @@
 <body<?php bodyClass(); ?>>
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2><?php echo $title; ?></h2>
+      <h2><?php echo $title; ?></h2>
 <?php
-	if (isset ($_GET['id'])) {
-		echo "<p>&nbsp;</p><div class=\"toolBar\"><a class=\"toolBarItem editTool\" href=\"javascript:void\" onclick=\"MM_openBrWindow('../../question_bank/index.php?id=" . $_GET['id'] . "','','status=yes,scrollbars=yes,width=900,height=500')\">Edit Questions in this Category</a><a class=\"toolBarItem back\" href=\"question_bank.php\">Back to Module Categories</a></div>";
+	if (isset ($_GET['category'])) {
+		echo "<p>&nbsp;</p><div class=\"toolBar\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('../../question_bank/index.php?category=" . urlencode($_GET['category']) . "','','status=yes,scrollbars=yes,width=900,height=500')\"><img src=\"../../../../images/admin_icons/edit.png\" alt=\"Edit\"/></a> <a href=\"javascript:void\" onclick=\"MM_openBrWindow('../../question_bank/index.php?category=" . urlencode($_GET['category']) . "','','status=yes,scrollbars=yes,width=900,height=500')\">Edit Questions in this Category</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"question_bank.php\"><img src=\"../../../../images/common/back.png\" alt=\"Back\"/></a> <a href=\"question_bank.php\">Back to Module Categories</a></div>";
 	 }
 ?>
 <?php
@@ -199,16 +196,16 @@
 ?>
 <?php
 	if ($categoryResult !== 0) {
-		if (!isset ($_GET['id'])) {
+		if (!isset ($_GET['category'])) {
 			echo "<p>Please select a category from the list below.</p><blockquote>";
 			
 			$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` ORDER BY position ASC", $connDBA);
 			while ($category = mysql_fetch_array($categoryGrabber)) {
-				$currentCategory = $category['id'];
+				$currentCategory = $category['category'];
 				$questionGrabber = mysql_query("SELECT * FROM `questionBank` WHERE `category` = '$currentCategory'", $connDBA);
 				$questionValue = mysql_num_rows($questionGrabber);
 				
-				echo "<a href=\"question_bank.php?id=" . $category['id'] . "\">" . stripslashes($category['category']) . "</a> : ";
+				echo "<a href=\"question_bank.php?category=" . urlencode($category['category']) . "\">" . $category['category'] . "</a> : ";
 				if ($questionValue == 1) {
 					echo $questionValue . " Question<br /><br />";
 				} else {
@@ -219,20 +216,19 @@
 			echo "<br /><br /><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','../test_content.php');return document.MM_returnValue\" value=\"Back to Test Questions\" /></blockquote>";
 		}
 		
-		if (isset ($_GET['id'])) {	
-			echo "<br />";
+		if (isset ($_GET['category'])) {
+			echo "<br /><br />";								
 			if (mysql_fetch_array($testCheck)) {
-				echo "<div class=\"catDivider one\">Select Questions</div><div class=\"stepContent\"><blockquote><table class=\"dataTable\"><tbody><tr><th width=\"50\" class=\"tableHeader\">Import</th><th width=\"150\" class=\"tableHeader\">Type</th><th width=\"100\" class=\"tableHeader\">Point Value</th><th class=\"tableHeader\">Question</th></tr>";
+				echo "<div class=\"catDivider\"><img src=\"../../../../images/numbering/1.gif\" alt=\"1.\" width=\"22\" height=\"22\"> Select Questions</div><div class=\"stepContent\"><div align=\"center\"><blockquote><table align=\"center\" class=\"dataTable\" width=\"90%\"><tbody><tr><th width=\"50\" class=\"tableHeader\"><strong>Import</strong></th><th width=\"150\" class=\"tableHeader\"><strong>Type</strong></th><th width=\"100\" class=\"tableHeader\"><strong>Point Value</strong></th><th class=\"tableHeader\"><strong>Question</strong></th></tr>";
 				
 			//Loop through the items
 				$count = 1;	
 				while ($testData = mysql_fetch_array($testImport)) {
 					echo "<tr";
 					if ($count++ & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-					$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
 					$currentID = $testData['id'];
 					$checkboxImport = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE `linkID` = '{$currentID}'", $connDBA);
-					echo "<td width=\"50\"><form name=\"importForm\" action=\"question_bank.php?id=" . $_GET['id'] . "\" method=\"post\"><input type=\"hidden\" name=\"id\" value=\"" .$testData['id'] . "\"><input type=\"checkbox\" name=\"import\" id=\"import" . $testData['id'] . "\" value=\"" . $testData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if (mysql_fetch_array($checkboxImport)) {echo " checked=\"checked\"";} echo "></form></td><td width=\"150\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $testData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $testData['type'] . "</a></td><td width=\"100\"><div";
+					echo "<td width=\"50\"><form name=\"importForm\" action=\"question_bank.php?category=" . urlencode($_GET['category']) . "\" method=\"post\"><div align=\"center\"><input type=\"hidden\" name=\"id\" value=\"" .$testData['id'] . "\"><input type=\"checkbox\" name=\"import\" id=\"import" . $testData['id'] . "\" value=\"" . $testData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if (mysql_fetch_array($checkboxImport)) {echo " checked=\"checked\"";} echo "></div></form></td><td width=\"150\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $testData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $testData['type'] . "</a></div></td><td width=\"100\" align=\"center\"><div align=\"center\"";
 					if ($testData['extraCredit'] == "on") {
 						echo " class=\"extraCredit\"";
 					}
@@ -243,15 +239,15 @@
 						echo " Points";
 					}
 					
-					echo "</div></td><td>" . commentTrim(85, $testData['question']) . "</td></tr>";
+					echo "</div></td><td align=\"center\"><div align=\"center\">" . commentTrim(85, $testData['question']) . "</div></td></tr>";
 				}
-				echo "</tbody></table></blockquote></div><div class=\"catDivider two\">Submit</div><div class=\"stepContent\"><p><blockquote><input name=\"submit\" type=\"button\" id=\"submit\" onclick=\"MM_goToURL('parent','../test_content.php');return document.MM_returnValue\" value=\"Submit\" /><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote></p></div>";
+				echo "</tbody></table></blockquote></div></div><div class=\"catDivider\"><img src=\"../../../../images/numbering/2.gif\" alt=\"2.\" width=\"22\" height=\"22\"> Submit</div><div class=\"stepContent\"><p><blockquote><input name=\"submit\" type=\"button\" id=\"sbumit\" onclick=\"MM_goToURL('parent','../test_content.php');return document.MM_returnValue\" value=\"Submit\" /><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote></p></div><br /><br />";
 			} else {
-				echo "<div class=\"noResults\">There are no questions in this bank. Click the link above which says &quot;Edit Questions in this Category&quot; to add questions.</div><br /></br /><blockquote><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote>";
+				echo "<br /></br /><br /></br /><div align=\"center\">There are no questions in this bank. Click the link above which says &quot;Edit Questions in this Category&quot; to add questions.</div><br /></br /><blockquote><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote><br /></br /><br /></br />";
 			}
 		}
 	} else {
-		echo "<div class=\"noResults\">There are no categories to add questions into.</div></br /><br /><blockquote><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote>";
+		echo "<br /></br /><br /></br /><div align=\"center\">There are no categories to add questions into.</div><br /></br /><br /><blockquote><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','question_bank.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote></br /><br /></br />";
 	}
 ?>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>

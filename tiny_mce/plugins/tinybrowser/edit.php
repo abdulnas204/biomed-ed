@@ -1,7 +1,4 @@
 <?php
-/**********************************************************************
-Developer enhancements are denoted by a //Developer Enhancement comment
-**********************************************************************/
 require_once('config_tinybrowser.php');
 // Set language
 if(isset($tinybrowser['language']) && file_exists('langs/'.$tinybrowser['language'].'.php'))
@@ -14,6 +11,16 @@ else
 	}
 require_once('fns_tinybrowser.php');
 
+// Check session, if it exists
+if(session_id() != '')
+	{
+	if(!isset($_SESSION[$tinybrowser['sessioncheck']]))
+		{
+		echo TB_DENIED;
+		exit;
+		}
+	}
+	
 if(!$tinybrowser['allowedit'] && !$tinybrowser['allowdelete'])
 	{
 	echo TB_EDDENIED;
@@ -343,7 +350,7 @@ else
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<title>Server Files :: Edit</title>
+<title>TinyBrowser :: <?php echo TB_EDIT; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="Pragma" content="no-cache" />
 <?php
@@ -496,21 +503,8 @@ for($i=$showpagestart;$i<$showpageend;$i++)
 			// get file extension
 			$nameparts = explode('.',$file['name'][$i]);
 			$ext = end($nameparts);
-			//Developer Enhancement
-			form_hidden_input('renameext['.$i.']',"." . $ext);
-			//Developer Enhancement
-			$stripDot = explode(".", $file['name'][$i]);
-			$stripDotCount = count($stripDot);
-			$strippedFileName = "";
-			for ($count = 0; $count <= $stripDotCount - 2; $count ++) {
-				if ($count != 0) {
-					$strippedFileName .= "." . $stripDot[$count];
-				} else {
-					$strippedFileName .= $stripDot[$count];
-				}
-			}
-			//Developer Enhancement
-			form_text_input('renamefile['.$i.']',false,$strippedFileName,30,120); echo "." . $ext;
+			form_hidden_input('renameext['.$i.']',$ext);
+			form_text_input('renamefile['.$i.']',false,basename($file['name'][$i],$ext),30,120); echo $ext;
 			break;
 		case 'resize':
 			form_text_input('resizefile['.$i.']',false,'',4,4); form_select($selectresize,'resizetype['.$i.']',false,'',false);

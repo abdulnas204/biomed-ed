@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -52,26 +52,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<?php title("Preview Page : " . $lesson['title']); ?>
-<?php headers(); ?>
+<title>Preview Page</title>
 </head>
 
-<body class="overrideBackground">
+<body>
+<h2>Preview Page</h2>
 <?php
 //Display the lesson
 	if (isset ($_SESSION['currentModule'])) {
-	//Display the title
-		echo "<h2 class=\"preview\">Preview Page : " . 	$lesson['title'] . "</h2>";
-		
 	//Display the navigation, only on the lesson preview page
 		/*
 		echo "<br /><br /><div class=\"layoutControl\">";
 		if (isset($previousPage)) {
-			echo "<div class=\"contentLeft\"><div class=\"previousPage\" align=\"left\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><span class=\"pageTitle\">" . $previousPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"contentLeft\"><div align=\"left\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><strong>" . $previousPage['title'] . "</strong></a></div></div>";
 		}
 		
 		if (isset($nextPage)) {
-			echo "<div class=\"dataRight\"><div class=\"nextPage\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><span class=\"pageTitle\">" . $nextPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"dataRight\"><div align=\"right\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><strong>" . $nextPage['title'] . "</strong></a></div></div>";
 		}
 		echo "</div>";
 		*/
@@ -141,11 +138,11 @@
 		/*
 		echo "<br /><br /><div class=\"layoutControl\">";
 		if (isset($previousPage)) {
-			echo "<div class=\"contentLeft\"><div class=\"previousPage\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><span class=\"pageTitle\">" . $previousPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"contentLeft\"><div align=\"left\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><strong>" . $previousPage['title'] . "</strong></a></div></div>";
 		}
 		
 		if (isset($nextPage)) {
-			echo "<div class=\"dataRight\"><div class=\"nextPage\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><span class=\"pageTitle\">" . $nextPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"dataRight\"><div align=\"right\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><strong>" . $nextPage['title'] . "</strong></a></div></div>";
 		}
 		echo "</div>";
 		*/

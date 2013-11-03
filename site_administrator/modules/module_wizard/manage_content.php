@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -252,7 +252,7 @@
 <p>Select what kind of page you will be inserting. A <strong>custom content page</strong> is just like a regular web page, with text and images. An <strong>embedded media page</strong> will contain something, such as a video or PDF, as the main content.</p>
 <p>&nbsp;</p>
 <form action="manage_content.php" method="post" name="pageType" id="validate" onsubmit="return errorsOnSubmit(this);">
-  <div class="catDivider one">Select Question Type</div>
+  <div class="catDivider"><img src="../../../images/numbering/1.gif" width="22" height="22" alt="1." /> Select Question Type</div>
 <div class="stepContent">
   <blockquote>
     <p>
@@ -264,7 +264,7 @@
     </p>
   </blockquote>
 </div>
-<div class="catDivider two">Submit</div>
+<div class="catDivider"><img src="../../../images/numbering/2.gif" width="22" height="22" alt="2." /> Submit</div>
 <div class="stepContent">
   <blockquote>
     <p><?php submit("submitType", "Submit"); ?> 
@@ -298,7 +298,7 @@
 		?> />
       </p>
     </blockquote>
-    <p>Content<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The main content of th page')" onmouseout="UnTip()" /></p>
+    <p>Content<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The main content of the page')" onmouseout="UnTip()" /></p>
     <blockquote>
     <p><span id="contentCheck">
       <textarea name="content" id="content2" cols="45" rows="5" /><?php
@@ -317,7 +317,7 @@
     <p>
       <?php submit("submitCustom", "Submit"); ?>
       <input type="reset" name="resetCustom" id="resetCustom" value="Reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" />
-      <input type="button" name="cancelCustom" id="cancelCustom" value="Cancel" onclick="MM_goToURL('parent','lesson_content.php');return document.MM_returnValue" />
+      <input type="button" name="cancelCustom" id="cancelCustom" value="Cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" />
     </p>
     <?php formErrors(); ?>
   </blockquote>
@@ -341,7 +341,7 @@
 	}
 ?>
 <form action="manage_content.php?type=embedded<?php if (isset ($_GET['id'])) {echo "&id=" . $_GET['id'];} ?>" method="post" name="embeddedContent" id="validate" enctype="multipart/form-data" onsubmit="return errorsOnSubmit(this, 'false', 'file', <?php if (!isset($pageData)) {echo "'true'";} else {echo "'false'";} ?>, 'pdf.doc.docx.xls.xlsx.ppt.pptx.txt.rtf.wav.mp3.avi.wmv.flv.mov.mp4.swf');">
-<div class="catDivider one">Title and Comments</div>
+<div class="catDivider"><img src="../../../images/numbering/1.gif" width="22" height="22" alt="1." /> Title and Comments</div>
 <div class="stepContent">
   <blockquote>
     <p>Title<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The title of this page')" onmouseout="UnTip()" /></p>
@@ -355,7 +355,7 @@
 		?> />
       </p>
     </blockquote>
-    <p>Comments: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Comments can be added here to display at the bottom of the page.<br />For example, if the embedded content is pointing a user to a web link, the link can be entered here for easy access.')" onmouseout="UnTip()" /></p>
+    <p>Comments: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Comments can be added here to display at the bottom of the page.<br />For example, if the embedded content is pointing a student to a web link, the link can be entered here for easy access.')" onmouseout="UnTip()" /></p>
     <blockquote>
       <p>
         <textarea name="comments" id="comments" cols="45" rows="5"><?php
@@ -368,9 +368,9 @@
     </blockquote>
   </blockquote>
 </div>
-<div class="catDivider two">Content</div>
+<div class="catDivider"><img src="../../../images/numbering/2.gif" width="22" height="22" alt="2." /> Content</div>
 <div class="stepContent">
-<?php errorWindow("extension", "This is an unsupported file type. Supported types have one of the following extensions: &quot;.PDF&quot;, &quot;.DOC&quot;, &quot;.DOCX&quot;, &quot;.XLS&quot;, &quot;.XLSX&quot;, &quot;.PPT&quot;, &quot;.PPTX&quot;, &quot;.TXT&quot;, &quot;.RTF&quot;, &quot;.WAV&quot;, &quot;.MP3&quot;, &quot;.AVI&quot;, &quot;.WMV&quot;, &quot;.FLV&quot;, &quot;.MOV&quot;, &quot;.MP4&quot;, or &quot;.SWF&quot;."); ?>
+<?php errorWindow("extension", "This is an unsupported file type. Supported types have one of the following extensions: \".PDF\", \".DOC\", \".DOCX\", \".XLS\", \".XLSX\", \".PPT\", \".PPTX\", \".TXT\", \".RTF\", \".WAV\", \".MP3\", \".AVI\", \".WMV\", \".FLV\", \".MOV\", \".MP4\", or \".SWF\"."); ?>
   <blockquote>
     <p>Upload content<?php if (!isset($pageData)) {echo "<span class=\"require\">*</span>";} ?>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Upload a file containing the lesson content of the module. Accepted file formats are:<br /><br /><strong>PDF</strong> - Adobe&reg; Acrobat Document<br /><strong>DOC or DOCX</strong> - Microsoft&reg; Word Document<br /><strong>XLS or XLSX</strong> - Microsoft&reg; Excel Spreadsheet<br /><strong>PPT or PPTX</strong> - Microsoft&reg; PowerPoint Presentation<br /><strong>TXT or RTF</strong> - Standard Text Documents<br /><strong>WAV or MP3</strong> - Sound Files<br /><strong>AVI, WMV, FLV, MOV, or MP4</strong> - Video Files<br /><strong>SWF</strong> - Adobe&reg; Flash Application<br />')" onmouseout="UnTip()" /></p>
     <blockquote>
@@ -402,13 +402,13 @@
     </blockquote>
   </blockquote>
 </div>
-<div class="catDivider three">Submit</div>
+<div class="catDivider"><img src="../../../images/numbering/3.gif" width="22" height="22" alt="3." /> Submit</div>
 <div class="stepContent">
   <blockquote>
     <p>
       <?php submit("submitEmbedded", "Submit"); ?>
       <input type="reset" name="resetEmbedded" id="resetEmbedded" value="Reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" />
-      <input type="button" name="cancelEmbedded" id="cancelEmbedded" value="Cancel" onclick="MM_goToURL('parent','lesson_content.php');return document.MM_returnValue" />
+      <input type="button" name="cancelEmbedded" id="cancelEmbedded" value="Cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" />
     </p>
     <?php formErrors(); ?>
   </blockquote>

@@ -75,7 +75,7 @@
 			echo "?id=" . $feedBackData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider one">Content</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
       <div class="stepContent">
       <blockquote>
         <p>Description content<span class="require">*</span>: </p>
@@ -91,7 +91,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider two">Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

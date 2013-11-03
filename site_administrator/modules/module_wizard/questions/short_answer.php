@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -133,7 +133,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="shortAnswer" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider one">Question</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -148,7 +148,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider two">Question Settings</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -256,7 +256,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider three">Answer</div>
+      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
       <div class="stepContent">
       <blockquote>
         <p>Provide correct answer(s)<span class="require">*</span>: <a href="../help.php?tab=5" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a></p>
@@ -284,7 +284,7 @@
         </p>
       </blockquote>
       </div>
-      <div class="catDivider four">Feedback</div>
+      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer: </p>
@@ -320,7 +320,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider five">Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

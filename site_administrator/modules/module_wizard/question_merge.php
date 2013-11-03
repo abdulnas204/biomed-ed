@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -119,14 +119,14 @@
 		$choiceType = $importQuestions['choiceType'];
 		$case = $importQuestions['case'];
 		$tags = $importQuestions['tags'];
-		$question = mysql_real_escape_string(stripslashes($importQuestions['question']));
-		$questionValue = mysql_real_escape_string(stripslashes($importQuestions['questionValue']));
-		$answer = mysql_real_escape_string(stripslashes($importQuestions['answer']));
-		$answerValue = mysql_real_escape_string(stripslashes($importQuestions['answerValue']));
+		$question = $importQuestions['question'];
+		$questionValue = $importQuestions['questionValue'];
+		$answer = $importQuestions['answer'];
+		$answerValue = $importQuestions['answerValue'];
 		$fileURL = $importQuestions['fileURL'];
-		$correctFeedback = mysql_real_escape_string(stripslashes($importQuestions['correctFeedback']));
-		$incorrectFeedback = mysql_real_escape_string(stripslashes($importQuestions['incorrectFeedback']));
-		$partialFeedback = mysql_real_escape_string(stripslashes($importQuestions['partialFeedback']));
+		$correctFeedback = $importQuestions['correctFeedback'];
+		$incorrectFeedback = $importQuestions['incorrectFeedback'];
+		$partialFeedback = $importQuestions['partialFeedback'];
 		
 		$insertQuestionQuery = "UPDATE moduletest_{$currentTable} SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE id = '{$questionID}'";
 							

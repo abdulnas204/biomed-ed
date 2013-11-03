@@ -10,10 +10,6 @@
  * Licenced under the MIT Licence
  */
  
-/**********************************************************************
-Developer enhancements are denoted by a //Developer Enhancement comment
-**********************************************************************/
- 
 (function($) {
 	
 	$.fn.validationEngine = function(settings) {
@@ -192,8 +188,6 @@ $.validationEngine = {
 		/* VALIDATION FUNCTIONS */
 		function _required(caller,rules){   // VALIDATE BLANK FIELD
 			callerType = $(caller).attr("type");
-			//Developer Enhancement
-			//if (callerType == "text" || callerType == "password" || callerType == "textarea"){
 			if (callerType == "text" || callerType == "password" || callerType == "textarea" || callerType == "file"){
 								
 				if(!$(caller).val()){
@@ -482,9 +476,6 @@ $.validationEngine = {
 		if($.validationEngine.settings.promptPosition == "topRight"){callerleftPosition +=  callerWidth -30; callerTopPosition += -inputHeight -10; }
 		if($.validationEngine.settings.promptPosition == "topLeft"){ callerTopPosition += -inputHeight -10; }
 		
-		if($.validationEngine.settings.promptPosition == "centerRight"){ callerleftPosition +=  callerWidth +13; }
-		
-		//Developer Enhancement
 		if($.validationEngine.settings.promptPosition == "centerRight"){ callerleftPosition +=  callerWidth +13; }
 		
 		if($.validationEngine.settings.promptPosition == "bottomLeft"){

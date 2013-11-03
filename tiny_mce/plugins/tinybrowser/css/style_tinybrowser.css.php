@@ -1,5 +1,5 @@
 <?php
-require_once('../config_tinybrowser.php');
+require_once("../config_tinybrowser.php");
 
 header ("Content-type: text/css");
 ?>

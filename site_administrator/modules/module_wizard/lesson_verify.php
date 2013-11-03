@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -97,13 +97,13 @@
 //Display the lesson
 	if (isset ($_SESSION['currentModule'])) {
 	//Display the navigation
-		echo "<br /><br /><div class=\"layoutControl\">";
+		echo "<div class=\"layoutControl\">";
 		if (isset($previousPage)) {
-			echo "<div class=\"contentLeft\"><div class=\"previousPage\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><span class=\"pageTitle\">" . $previousPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"contentLeft\"><div align=\"left\"><a href=\"lesson_verify.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><strong>" . $previousPage['title'] . "</strong></a></div></div>";
 		}
 		
 		if (isset($nextPage)) {
-			echo "<div class=\"dataRight\"><div class=\"nextPage\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><span class=\"pageTitle\">" . $nextPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"dataRight\"><div align=\"right\"><a href=\"lesson_verify.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><strong>" . $nextPage['title'] . "</strong></a></div></div>";
 		}
 		echo "</div>";
 		
@@ -170,11 +170,11 @@
 	//Display the navigation
 		echo "<br /><br /><div class=\"layoutControl\">";
 		if (isset($previousPage)) {
-			echo "<div class=\"contentLeft\"><div class=\"previousPage\"><a href=\"preview_page.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><span class=\"pageTitle\">" . $previousPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"contentLeft\"><div align=\"left\"><a href=\"lesson_verify.php?page=" . $previousPage['position'] . "\">&lt;&lt; Previous Page<br /><strong>" . $previousPage['title'] . "</strong></a></div></div>";
 		}
 		
 		if (isset($nextPage)) {
-			echo "<div class=\"dataRight\"><div class=\"nextPage\"><a href=\"preview_page.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><span class=\"pageTitle\">" . $nextPage['title'] . "</span></a></div></div>";
+			echo "<div class=\"dataRight\"><div align=\"right\"><a href=\"lesson_verify.php?page=" . $nextPage['position'] . "\">Next Page &gt;&gt;<br /><strong>" . $nextPage['title'] . "</strong></a></div></div>";
 		}
 		echo "</div>";
 	}

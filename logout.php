@@ -1,7 +1,11 @@
 <?php require_once('Connections/connDBA.php'); ?>
 <?php
-//Logout the user
+//Logout the user, destroy all attached sessions and cookies, and update the database to inactive user
+	$cookie = $_COOKIE['userStatus'];
+	
 	session_destroy();
+	mysql_query("UPDATE `users` SET `active` = '0' WHERE `sysID` = '{$cookie}' LIMIT 1");
+	setcookie("userStatus", "", time()-1000000000); 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

@@ -8,13 +8,7 @@ var validateName = function () {
 	}
 }
 
-var checkName = function (field, url, additionalParameters) {
-	if (additionalParameters == false || !additionalParameters) {
-		var addToURL = "";
-	} else {
-		var addToURL = "&" + additionalParameters;
-	}
-	
+var checkName = function (field, url) {
 	var enteredName = document.getElementById(field).value;
-	window.Spry.Utils.updateContent('errorWindow', url + '.php?checkName=' + enteredName + addToURL);
+	window.Spry.Utils.updateContent('errorWindow', url + '.php?checkName=' + enteredName);
 }

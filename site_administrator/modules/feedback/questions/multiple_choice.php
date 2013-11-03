@@ -80,7 +80,7 @@
 			echo "?id=" . $testData['id'];
 		}
     ?>" method="post" name="choice" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider one">Question</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -95,7 +95,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider two">Settings</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
       <div class="stepContent">
         <blockquote>
           <p>Question type:</p>
@@ -109,7 +109,7 @@
           </blockquote>
         </blockquote>
       </div>
-      <div class="catDivider three">Question Content</div>
+      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
       <div class="stepContent">
       <blockquote>
       <p>Question content<span class="require">*</span>:</p>
@@ -132,13 +132,13 @@
 				}
 			?>
         </blockquote>
-         <p><input value="Add Another Option" type="button" onclick="appendRow('values', '<input type=\'text\' name=\'questionValue[]\' autocomplete=\'off\' id=\'c', '\' size=\'50\' class=\'validate[required]\' /><!--', '//-->')" />
+         <p><input value="Add Another Option" type="button" onclick="appendRow('values', '<input type=\'text\' name=\'questionValue[]\' autocomplete=\'off\' id=\'c', '\' size=\'50\' class=\'validate[required]\' />'<!--', '//-->)" />
           <input value="Remove Last Option" type="button" onclick="deleteLastRow('values')" />
         </p>
       </div>
       </blockquote>
       </div>
-      <div class="catDivider four">Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

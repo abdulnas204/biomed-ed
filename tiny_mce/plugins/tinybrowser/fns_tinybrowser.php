@@ -361,13 +361,6 @@ if($level==0 && is_dir($root.$tree.$branch))
 $level++;
 
 $dh = opendir($root.$tree.$branch);
-
-//Developer Enhancement, to rid of the depreciated sql_regcase function
-	function sqlRegcase($input) {
-		$output = preg_replace("/(from|select|insert|delete|where|drop table|show tables|#|\*|–|\\\\)/i", "", $input);
-		return $output;
-	}
-	
 while (($dirname = readdir($dh)) !== false)
 	{
 	if($dirname != '.' && $dirname != '..' && is_dir($root.$tree.$branch.$dirname) && $dirname != '_thumbs')
@@ -375,7 +368,7 @@ while (($dirname = readdir($dh)) !== false)
 		$filenum=0;
 		foreach($filetypes as $filetype)
 		   {
-			$filenum = $filenum + count(glob($root.$tree.$branch.$dirname.'/'.sqlRegcase($filetype),GLOB_NOSORT));
+			$filenum = $filenum + count(glob($root.$tree.$branch.$dirname.'/'.sql_regcase($filetype),GLOB_NOSORT));
 			}
 		$indent = '';
 		for($i=0;$i<$level;$i++) { $indent .= ' &nbsp; '; }

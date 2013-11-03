@@ -13,7 +13,7 @@
 		
 		echo "var tinyMCELinkList = new Array(";
 		while ($page = mysql_fetch_array($pageDataGrabber)) {
-			echo "[\"" . $page['title'] . "\", \"" . $root . "index.php?page=" . $page['id'] . "\"]";
+			echo "[\"" . $page['title'] . "\", \"" . $root . "index.php?id=" . $page['id'] . "\"]";
 			
 			if ($page['position'] != $pageCount) {
 				echo ", ";

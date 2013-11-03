@@ -1,16 +1,4 @@
 <?php
-//Developer Enhancement, to detirmine the folder root
-	$strippedRootExplode = explode("/", $_SERVER['REQUEST_URI']);
-	$strippedRootCount = count($strippedRootExplode);
-	$strippedRoot = "";
-	
-	foreach ($strippedRootExplode as $appendString) {
-		if ($appendString != "tiny_mce") {
-			$strippedRoot .= $appendString . "/";
-		} else {
-			break;
-		}
-	}
 /*
 TinyBrowser 1.41 - A TinyMCE file browser (C) 2008  Bryn Jones
 (author website - http://www.lunarvis.com)
@@ -58,9 +46,9 @@ $tinybrowser['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'],'/');
 $tinybrowser['unixpermissions'] = 0777;
 
 // File upload paths (set to absolute by default)
-$tinybrowser['path']['image'] = $strippedRoot . 'files/images/'; // Image files location - also creates a '_thumbs' subdirectory within this path to hold the image thumbnails
-$tinybrowser['path']['media'] = $strippedRoot . 'files/media/'; // Media files location
-$tinybrowser['path']['file']  = $strippedRoot . 'files/other/'; // Other files location
+$tinybrowser['path']['image'] = '/biomed-ed/files/images/'; // Image files location - also creates a '_thumbs' subdirectory within this path to hold the image thumbnails
+$tinybrowser['path']['media'] = '/biomed-ed/files/media/'; // Media files location
+$tinybrowser['path']['file']  = '/biomed-ed/files/other/'; // Other files location
 
 // File link paths - these are the paths that get passed back to TinyMCE or your application (set to equal the upload path by default)
 $tinybrowser['link']['image'] = $tinybrowser['path']['image']; // Image links
@@ -90,7 +78,7 @@ $tinybrowser['thumbquality'] = 80;
 $tinybrowser['dateformat'] = 'd/m/Y H:i';
 
 // Permitted file extensions
-$tinybrowser['filetype']['image'] = '*.jpg, *.jpeg, *.gif, *.png, *.bmp'; // Image file types
+$tinybrowser['filetype']['image'] = '*.jpg, *.jpeg, *.gif, *.png'; // Image file types
 $tinybrowser['filetype']['media'] = '*.swf, *.dcr, *.mov, *.qt, *.mpg, *.mp3, *.mp4, *.mpeg, *.avi, *.wmv, *.wm, *.asf, *.asx, *.wmx, *.wvx, *.rm, *.ra, *.ram'; // Media file types
 $tinybrowser['filetype']['file']  = '*.*'; // Other file types
 

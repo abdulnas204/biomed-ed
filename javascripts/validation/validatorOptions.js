@@ -6,9 +6,9 @@
 		newLang: function() {
 			$.validationEngineLanguage.allRules = 	{"required":{    			// Add your regex rules here, you can take telephone as an example
 						"regex":"none",
-						"alertText":"* Required (Click to hide)",
-						"alertTextCheckboxMultiple":"* Required (Click to hide)",
-						"alertTextCheckboxe":"* Required (Click to hide)"},
+						"alertText":"* This field is required",
+						"alertTextCheckboxMultiple":"* Please select an option",
+						"alertTextCheckboxe":"* This checkbox is required"},
 					"length":{
 						"regex":"none",
 						"alertText":"*Between ",
@@ -36,9 +36,9 @@
 					"onlyNumber":{
 						"regex":"/^[0-9\ ]+$/",
 						"alertText":"* Numbers only"},	
-					"noSpecialCharacters":{
-						"regex":"/^[0-9a-zA-Z ]+$/",
-						"alertText":"* No special characters allowed"},	
+					"noSpecialCaracters":{
+						"regex":"/^[0-9a-zA-Z]+$/",
+						"alertText":"* No special caracters allowed"},	
 					"ajaxUser":{
 						"file":"validateUser.php",
 						"extraData":"name=eric",
@@ -46,7 +46,7 @@
 						"alertTextLoad":"* Loading, please wait",
 						"alertText":"* This user is already taken"},	
 					"ajaxName":{
-						"file": document.location.href + "?validate=true",
+						"file":"validateUser.php",
 						"alertText":"* This name is already taken",
 						"alertTextOk":"* This name is available",	
 						"alertTextLoad":"* Loading, please wait"},		

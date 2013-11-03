@@ -43,14 +43,14 @@
 		echo "<p>&nbsp;</p>";
 	}
 ?>
-<div class="catDivider one">Modify Module</div>
+<div class="catDivider"><img src="../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Modify Module</div>
 <div class="stepContent">
 <blockquote>
   <p><a href="lesson_settings.php">Module Settings</a><br/ >
   <a href="lesson_content.php">Module Content</a></p>
 </blockquote>
 </div>
-<div class="catDivider two">Modify Test</div>
+<div class="catDivider"><img src="../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Modify Test</div>
 <div class="stepContent">
 <blockquote>
     <?php
@@ -64,7 +64,7 @@
   ?>
 </blockquote>
 </div>
-<div class="catDivider three">Finish</div>
+<div class="catDivider"><img src="../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
 <div class="stepContent">
   <p>
     <blockquote>

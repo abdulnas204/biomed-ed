@@ -9,15 +9,15 @@
 			if ($testDataCheck['type'] == "Description") {
 				$testData = $testDataCheck;
 			} else {
-				header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
+				header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
 				exit;
 			}
 		} else {
-			header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
+			header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
 			exit;
 		}
 	} elseif (isset ($_GET['question']) || isset ($_GET['id'])) {
-		header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
+		header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
 		exit;
 	}
 //Process the form
@@ -32,7 +32,7 @@
 			$updateDescriptionQuery = "UPDATE questionbank SET `question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}' WHERE id = '{$update}'";
 							
 			$updateDescription = mysql_query($updateDescriptionQuery, $connDBA);
-			header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&updated=description");
+			header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&updated=description");
 			exit;
 	//If the page is inserting an item		
 		} else {						
@@ -75,10 +75,10 @@
 					}
 				}
 				
-				header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&inserted=description&export=true&exportID=" . $linkID);
+				header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=essay&export=true&exportID=" . $linkID);
 				exit;
 			} else {
-				header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&inserted=description");
+				header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=description");
 				exit;
 			}
 		}
@@ -105,7 +105,7 @@
 			echo "?id=" . $testData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider one">Content</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
       <div class="stepContent">
       <blockquote>
         <p>Description content<span class="require">*</span>: </p>
@@ -121,22 +121,22 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider two">Settings</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
       <div class="stepContent">
         <blockquote>
          <p>Category<span class="require">*</span>: </p>
          <blockquote>
            <select name="category" id="category" class="validate[required]">
-            <?php
+             <?php
             //Select all of the category items
                 $categoryGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
                 //If the module is being edited
                 if (isset($update)) {
                     echo "<option value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" .  $category['id'] . "\"";
+                        echo "<option value=\"" .  stripslashes(htmlentities($category['category'])) . "\"";
                         
-                        if ($category['id'] == $testData['category']) {
+                        if ($category['category'] == $testData['category']) {
                             echo " selected=\"selected\"";
                         }
                         
@@ -145,9 +145,9 @@
                 } else {
                     echo "<option selected=\"selected\" value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" . $category['id'] . "\"";
+                        echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
 						
-						if ($category['id'] == $_SESSION['bankCategory']) {
+						if ($category['category'] == urldecode($_SESSION['bankCategory'])) {
 							echo " selected=\"selected\"";
 						}
 						
@@ -155,7 +155,7 @@
                     }
                 }
             ?>
-            </select>
+           </select>
          </blockquote>
 <p>Tags (Seperate with commas):</p>
         <blockquote>
@@ -170,13 +170,13 @@
         </blockquote>
         </blockquote>
       </div>
-      <div class="catDivider three">Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
           <?php submit("submit", "Submit"); ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?id=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
+          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
         </p>
         <?php formErrors(); ?>
       </blockquote>

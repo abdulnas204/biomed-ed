@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this step has not yet been reached in the module setup
+//Restrict access to this page, if this is not has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -114,7 +114,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider one">Content</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
       <div class="stepContent">
       <blockquote>
         <p>Description content<span class="require">*</span>: </p>
@@ -130,7 +130,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider two">Settings</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
       <div class="stepContent">
         <blockquote>
          <p>Tags (Seperate with commas):</p>
@@ -146,7 +146,7 @@
         </blockquote>
         </blockquote>
       </div>
-      <div class="catDivider three">Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

@@ -1,5 +1,4 @@
 <?php require_once('../../Connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
 <?php
 //Grant access to this page an id is defined and the user exists
 	if (isset ($_GET['id'])) {
@@ -80,14 +79,14 @@
         <td width="200"><div align="right">
           <?php if ($user['emailAddress2'] == "" && $user['emailAddress3'] == "") {echo "Email Address:";} else {echo "Primary Email Address:";} ?>
       </div></td>
-      <td><?php echo "<a href=\"../communication/send_email.php?id=" . $user['id'] . "&address=1\">" . $user['emailAddress1'] . "</a>"; ?></td>
+      <td><?php echo "<a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=1\">" . $user['emailAddress1'] . "</a>"; ?></td>
       </tr>
       <?php
       //If a second email address is configured
             if ($user['emailAddress2'] != "") {
                 echo "<tr>
                     <td><div align=\"right\">Secondary Email Address:</div></td>
-                    <td><a href=\"../communication/send_email.php?id=" . $user['id'] . "&address=2\">" . $user['emailAddress2'] . "</a></td>
+                    <td><a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=2\">" . $user['emailAddress2'] . "</a></td>
                 </tr>";
             }
       ?>
@@ -96,7 +95,7 @@
             if ($user['emailAddress3'] != "") {
                 echo "<tr>
                     <td><div align=\"right\">Tertiary Email Address:</div></td>
-                    <td><a href=\"../communication/send_email.php?id=" . $user['id'] . "&address=3\">" . $user['emailAddress3'] . "</a></td>
+                    <td><a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=3\">" . $user['emailAddress3'] . "</a></td>
                 </tr>";
             }
       ?>
@@ -175,13 +174,9 @@
 							  </tr>";
 						}
 						
-						$organizationID = $user['organization'];
-						$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
-						$organization = mysql_fetch_array($organizationGrabber);
-						
 						echo "<tr>
 								<td width=\"200\"><div align=\"right\">Assigned Organization:</div></td>
-								<td>" . $organization['organization'] . "</td>
+								<td>" . $user['organization'] . "</td>
 							  </tr>
 						</table>
 					</div>

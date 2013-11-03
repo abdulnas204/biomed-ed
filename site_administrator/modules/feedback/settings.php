@@ -46,12 +46,12 @@
 <h2>Feedback Settings</h2>
 <p>Set which modules require a user to respond to the feedback questions. These settings are also customizable in the Module Setup Wizard.</p>
 <p>&nbsp;</p>
-<div class="toolBar"><a class="toolBarItem back" href="settings.php">Back to Feedback</a><a class="toolBarItem home" href="../index.php">Back to Modules</a>
+<div class="toolBar"><a href="settings.php"><img src="../../../images/common/back.png" alt="Settings" width="24" height="24" /></a> <a href="index.php">Back to Feedback</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.php"><img src="../../../images/admin_icons/home.png" alt="Back" width="24" height="24"/></a> <a href="../index.php">Back to Modules</a>
          </form>
 </div><br /><br />
 <?php
 	  if ($modules == "exist") {
-		  echo "<div class=\"catDivider one\">Set Feedback Options</div><div class=\"stepContent\"><blockquote>";
+		  echo "<div class=\"catDivider\"><img src=\"../../../images/numbering/1.gif\" alt=\"1.\" width=\"22\" height=\"22\" /> Set Feedback Options</div><div class=\"stepContent\"><blockquote>";
 			  echo "<table>";
 			  echo "<tbody>";
 			  
@@ -66,9 +66,9 @@
 					  echo "</tr>";
 				  }
 			  echo "</tbody>";
-		  echo "</table></blockquote></div><div class=\"catDivider two\">Submit</div><div class=\"stepContent\"><blockquote><input name=\"submit\" type=\"button\" id=\"submit\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Submit\" /><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote></div>";
+		  echo "</table></blockquote></div><div class=\"catDivider\"><img src=\"../../../images/numbering/2.gif\" alt=\"2.\" width=\"22\" height=\"22\" /> Submit</div><div class=\"stepContent\"><blockquote><input name=\"submit\" type=\"button\" id=\"submit\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Submit\" /><input name=\"cancel\" type=\"button\" id=\"cancel\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Cancel\" /></blockquote></div>";
 	  } else {
-		  echo "<div class=\"noResults\">There are no modules to configure.</div>";
+		  echo "<br /></br /><br /></br /><div align=\"center\">There are no modules to configure.</div><br /></br /><br /></br /><br /></br />";
 	  }
 ?>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
