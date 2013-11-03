@@ -8,8 +8,8 @@
 	$testData = mysql_fetch_array($testDataGrabber);
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll']) && is_numeric($_POST['questionBank'])) {
-		$testName = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['testName']));
+	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll'])) {
+		$testName = mysql_real_escape_string($_POST['testName']);
 		$directions = mysql_real_escape_string($_POST['directions']);
 		$score = $_POST['score'];
 		$attempts = $_POST['attempts'];
@@ -145,18 +145,22 @@
 	echo "<blockquote><p>";
 	radioButton("randomizeAll", "randomizeAll", "Sequential Order,Randomize", "Sequential Order,Randomize", false, false, false, false, "testData", "randomizeAll");
 	echo "</p></blockquote>";
-	directions("Automatically pull questions from bank", false, "Set whether questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added");
-	echo "<blockquote><p>";
-	radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
-	echo "<br /><br />";
 	
-	if (exist("questionbank", "category", $testData['category']) == true) {
-		echo "The question bank has test questions for this category.";
-	} else {
-		echo "The question bank does not have any test questions for this category.";
+	if (access("modifyAllModules")) {
+		directions("Automatically pull questions from bank", false, "Set whether questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added");
+		echo "<blockquote><p>";
+		radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
+		echo "<br /><br />";
+		
+		if (exist("questionbank", "category", $testData['category']) == true) {
+			echo "The question bank has test questions for this category.";
+		} else {
+			echo "The question bank does not have any test questions for this category.";
+		}
+		
+		echo "</p></blockquote>";
 	}
 	
-	echo "</p></blockquote>";
 	directions("After the test is taken display", false, "Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Display a breakdown of points that the user recieved on each quesiton<br/><strong>Selected Answers:</strong> The answer(s) the user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>");
 	echo "<blockquote><p>";
 	$values = unserialize($testData['display']);

@@ -206,13 +206,38 @@
 //Process the form
 	if (isset($_POST['submit']) && !empty ($_POST['title']) && !empty($_POST['toDetirmine']) && !empty($_POST['toImport']) && !empty($_POST['content'])) {
 		$title = mysql_real_escape_string($_POST['title']);
-		$toDetirmine = rtrim($_POST['toDetirmine']);
 		$toImport = $_POST['toImport'];
 		$fromDate = $_POST['from'];
 		$fromTime = $_POST['fromTime'];
 		$toDate = $_POST['to'];
 		$toTime = $_POST['toTime'];
 		$content = mysql_real_escape_string($_POST['content']);
+		
+		switch (rtrim($_POST['toDetirmine'])) {
+			case "users" :
+				$toDetirmine = "Selected Users";
+				break;
+			
+			case "organizations" && access("manageAllCommunication") :
+				$toDetirmine = "Selected Organizations";
+				break;
+			
+			case "roles" : 
+				$toDetirmine = "Selected Roles";
+				break;
+				
+			case "all" :
+				$toDetirmine = "All Users";
+				break;
+				
+			case "allOrganizations" && access("manageAllCommunication") :
+				$toDetirmine = "All Organizations";
+				break;
+				
+			default :
+				redirect("manage_announcement.php");
+				break;
+		}
 	
 	//Ensure times are not inferior, the dates are the same, and all dates are set
 		if (empty($fromDate) || empty($toDate) || empty($_POST['toggleAvailability'])) {
@@ -344,14 +369,8 @@
 			button("allLeft", "allLeft", "&lt;&lt; All", "button", false, " onclick=\"opt.transferAllLeft()\"");
 			echo "</div></div></div></blockquote>";
 		} else {
-			$type = str_replace("all", "", $_GET['type']);
-			
-			if (empty($type)) {
-				$type = "users";
-			}
-			
 			directions("To", false);
-			hidden("toDetirmine", "toDetirmine", "All " . ucfirst($type));
+			hidden("toDetirmine", "toDetirmine", $_GET['type']);
 			hidden("toImport", "toImport", "all" . ucfirst($type));
 			echo "<blockquote><p><strong>This announcement will be sent to all registered " . strtolower($type) . ".</strong></p></blockquote>";
 		}

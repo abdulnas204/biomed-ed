@@ -27,23 +27,30 @@
 	//Forward to editor
 		if (isset ($_GET['id']) && $_GET['action'] == "edit") {
 			$id = $_GET['id'];
+			$organizationPrep = userData();
+			$organization = $organizationPrep['organization'];
+			$moduleData = exist("moduledata", "id", $_GET['id']);
 			
-			$sessionSetGrabber = mysql_query("SELECT * FROM `moduledata` WHERE id = '{$id}'", $connDBA);
-			$sessionSet = mysql_fetch_array($sessionSetGrabber);
-			
-			if (!$sessionSetGrabber) {
-				redirect("index.php");
+			if (exist("moduledata", "id", $_GET['id']) && $moduleData['organization'] == $organization) {
+				$sessionSetGrabber = mysql_query("SELECT * FROM `moduledata` WHERE id = '{$id}'", $connDBA);
+				$sessionSet = mysql_fetch_array($sessionSetGrabber);
+				
+				if (!$sessionSetGrabber) {
+					redirect("index.php");
+				}
+				
+				$_SESSION['currentModule'] = $sessionSet['id'];
+				$_SESSION['review'] = "review";
+				
+				redirect("module_wizard/lesson_settings.php");
+			} else {
+				redirect("overview.php?id=" . $_GET['id']);
 			}
-			
-			$_SESSION['currentModule'] = $sessionSet['id'];
-			$_SESSION['review'] = "review";
-			
-			redirect("module_wizard/lesson_settings.php");
 		}
-	
-	//Unset old sessions
-		unset($_SESSION['currentModule'], $_SESSION['review'], $_SESSION['questionBank'], $_SESSION['categoryName'], $_SESSION['cart']);
 	}
+	
+//Unset active sessions
+	unset($_SESSION['currentModule'], $_SESSION['review']);
 	
 //Title
 	$access = array("Site Administrator", "Site Manager");
@@ -69,7 +76,7 @@
 		$modules = array();
 	}
 	
-	if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
+	if (!access("buyModule") || (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 		$content = "Below is a list of all modules. Click the checkbox beside each module you would like the purchase, then click &quot;Add to Cart&quot;.";
 	} else {
 		$content = "Below is a list of all modules.";
@@ -78,22 +85,32 @@
 	title("Modules", $content);
 	
 //Admin toolbar
-	if (access("modifyModule")) {
+	if (access("modifyModule") || access("assignUser")) {
 		echo "<div class=\"toolBar\">";
 		
 		if (access("modifyModule")) {
 			echo URL("Add New Module", "module_wizard/index.php", "toolBarItem new");
+		}
+		
+		if (access("modifyAllModules")) {
 			echo URL("Question Bank", "question_bank/index.php", "toolBarItem bank");
 			echo URL("Customize Settings", "settings.php", "toolBarItem settings");
 			echo URL("Feedback", "feedback/index.php", "toolBarItem feedback");
+		}
+		
+		if (access("assignUser")) {
+			echo URL("Assign Users", "assign/index.php", "toolBarItem user");
 		}
 		
 		echo "</div><br />";
 	}
 	
 //Modules table
-	if (exist("moduledata") == true) {	
-		 if (access("modifyModule") == false) {
+	if (exist("moduledata")) {	
+		 $organizationPrep = userData();
+		 $organization = $organizationPrep['organization'];
+		
+		 if (access("buyModule")) {
 			 form("purchaseModules", "post", true, "enroll/cart.php");
 		 }
 		 
@@ -116,10 +133,14 @@
 		 }
 		 
 		 if (access("modifyModule")) {
-			 echo "<th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th>";
+			 echo "<th width=\"50\" class=\"tableHeader\">Edit</th>";
+			 
+			 if (exist("moduledata", "organization", $organization)) {
+			 	echo "<th width=\"50\" class=\"tableHeader\">Delete</th>";
+			 }
 		 }
 		 
-		 if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
+		 if (access("buyModule") && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 			 echo "<th width=\"100\" class=\"tableHeader\">Buy</th>";
 		 }
 		
@@ -145,22 +166,36 @@
 			  
 			  echo "<td width=\"200\">" . URL(commentTrim(30, $moduleData['name']), "lesson.php?id=" . $moduleData['id'], false, false, "Launch the <strong>" . $moduleData['name'] . "</strong> module')") . "</td>";
 			  
-			  if (access("moduleStatistics") == false) {
+			  if (access("moduleDetails")) {
 				  $categoryGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$moduleData['category']}'", $connDBA);
 				  $category = mysql_fetch_array($categoryGrabber);
 				  
 				  echo "<td width=\"200\">" . prepare($category['category'], false, true) . "</td>";
+				  echo "<td>" . commentTrim(60, $moduleData['comments']) . "</td>";
+			  } else {
+				  echo "<td>" . commentTrim(80, $moduleData['comments']) . "</td>"; 
 			  }
-			  
-			  echo "<td>" . commentTrim(80, $moduleData['comments']) . "</td>";
 			  
 			  if (access("moduleStatistics")) {
 				  echo "<td width=\"50\">" . URL(false, "../statistics/index.php?type=module&period=overall&id=" . $moduleData['id'], "action statistics", false, "View the <strong>" . $moduleData['name'] . "</strong> module's statistics") . "</td>";
 			  }
 			  
 			  if (access("modifyModule")) {
-				  echo "<td width=\"50\">" . URL(false, "index.php?action=edit&id=" . $moduleData['id'], "action edit", false, "Edit the <strong>" . $moduleData['name'] . "</strong> module") . "</td>";
-				  echo "<td width=\"50\">" . URL(false, "index.php?action=delete&id=" . $moduleData['id'], "action delete", false, "Delete the <strong>" . $moduleData['name'] . "</strong> module", true) . "</td>";
+				  if (access("modifyAllModules")) {
+					  echo "<td width=\"50\">" . URL(false, "index.php?action=edit&id=" . $moduleData['id'], "action edit", false, "Edit the <strong>" . $moduleData['name'] . "</strong> module") . "</td>";
+				  } else {
+					  if ($moduleData['locked'] == "0") {
+						  echo "<td width=\"50\">" . URL(false, "index.php?action=edit&id=" . $moduleData['id'], "action edit", false, "Edit the <strong>" . $moduleData['name'] . "</strong> module") . "</td>";
+					  } else {
+						  echo "<td width=\"50\">" . tip("This module cannot be edited", false, "action noEdit") . "</td>";
+					  }
+				  }
+				  
+				  if (exist("moduledata", "organization", $organization) && $moduleData['organization'] == $organization) {
+					  echo "<td width=\"50\">" . URL(false, "index.php?action=delete&id=" . $moduleData['id'], "action delete", false, "Delete the <strong>" . $moduleData['name'] . "</strong> module", true) . "</td>";
+				  } elseif (exist("moduledata", "organization", $organization)) {
+					  echo "<td width=\"50\">" . tip("This module cannot be deleted", false, "action noDelete") . "</td>";
+				  }
 			  }
 			  
 			  if (access("buyModule") && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
@@ -183,7 +218,7 @@
 		 
 		 echo "</tbody></table>";
 		 
-		 if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
+		 if (access("buyModule") && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 			 echo "<div align=\"right\"><p>"; button("submit", "submit", "Add Selected Modules to Cart", "submit"); echo "</p></div>";
 		 }
 		 

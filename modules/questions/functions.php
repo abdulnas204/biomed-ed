@@ -167,13 +167,13 @@
 						unset($descriptionImport);
 					}
 				}
+				
+				$IDs = rtrim($descriptionID, ",");
+				$values = rtrim($descriptionName, ",");
 			} else {
-				$descriptionID = "";			
-				$descriptionName = "- None -";
+				$IDs = "";			
+				$values = "- None -";
 			}
-			
-			$IDs = rtrim($descriptionID, ",");
-			$values = rtrim($descriptionName, ",");
 			
 			directions("Link to description", false);
 			echo "<blockquote><p>";
@@ -218,27 +218,62 @@
 	
 //Display all of the category items
 	function category() {
-		global $connDBA;
-		
-		$categoryGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
-		$categoryID = ",";
-		$categoryName = "- Select -,";
-		
-		while ($category = mysql_fetch_array($categoryGrabber)) {
-			$categoryID .= $category['id'] . ",";
-			$categoryName .= prepare($category['category'], true) . ",";
-		}
-		
-		$IDs = rtrim($categoryID, ",");
-		$values = rtrim($categoryName, ",");
-		
-		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
-			directions("Category");
-			echo "<blockquote><p>";
-			dropDown("category", "category", ltrim($values, "- Select -,"), ltrim($IDs, ","), false, true, false, false, "questionData", "category");
-			echo "</p></blockquote>";
+		global $connDBA, $questionData, $moduleData, $monitor;
+				
+		if (access("modifyAllModules")) {
+			$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` ORDER BY position ASC", $connDBA);
+			$valuePrep = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'");
+			$value = $valuePrep['category'];
+			$categoryID = ",";
+			$categoryName = "- Select -,";
+			
+			while ($category = mysql_fetch_array($categoryGrabber)) {
+				$categoryID .= $category['id'] . ",";
+				$categoryName .= prepare($category['category'], true) . ",";
+			}
+			
+			$IDs = rtrim($categoryID, ",");
+			$values = rtrim($categoryName, ",");
+			
+			if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
+				directions("Category");
+				echo "<blockquote><p>";
+				dropDown("category", "category", ltrim($values, "- Select -,"), ltrim($IDs, ","), false, true, false, $value, "questionData", "category");
+				echo "</p></blockquote>";
+			} else {
+				dropDown("category", "category", $values, $IDs, false, true, false, false, "moduleData", "category");
+			}
 		} else {
-			dropDown("category", "category", $values, $IDs, false, true, false, false, "moduleData", "category");
+			if (isset($questionData)) {
+				$parentVariable = $questionData;
+				$trigger = "questionData";
+			} elseif (isset($moduleData)) {
+				$parentVariable = $moduleData;
+				$trigger = "moduleData";
+			}
+			
+			if (isset($parentVariable) && is_numeric($parentVariable['category']) && exist("modulecategories", "id", $parentVariable['category'])) {
+				$valuePrep = query("SELECT * FROM `modulecategories` WHERE `id` = '{$parentVariable['category']}'");
+				$value = $valuePrep['category'];
+			} elseif (isset($parentVariable) && (!is_numeric($parentVariable['category']) || !exist("modulecategories", "id", $parentVariable['category']))) {
+				$value = $questionData['category'];
+			} else {
+				if (array_key_exists("currentModule", $monitor)) {
+					$valuePrep = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'");
+					$value = $valuePrep['category'];
+				} else {
+					$value = "";
+				}
+			}
+			
+			if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
+				directions("Category", true);
+				echo "<blockquote><p>";
+				textField("category", "category", false, false, false, true, false, $value, $trigger, "category");
+				echo "</p></blockquote>";
+			} else {
+				textField("category", "category", false, false, false, true, false, $value, $trigger, "category");
+			}
 		}
 	}
 	

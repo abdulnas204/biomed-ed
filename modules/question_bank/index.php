@@ -94,7 +94,7 @@
 		$title = "Question Bank";
 	}
 	
-	headers($title, "Site Administrator", false, true);
+	headers($title, "Site Administrator", false, true, " onunload=\"opener.location.reload();\"");
 	
 //Title
 	title($title, "Questions may be created here and be imported into tests when a module is being created. The questions are broken up by their category.");

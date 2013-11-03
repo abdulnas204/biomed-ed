@@ -17,7 +17,7 @@
 			redirect("index.php");
 		}
 		
-		if (isset($_GET['page']) && $_SESSION['MM_UserGroup'] != "Site Administrator") {			
+		if (isset($_GET['page']) && !access("modifyModule")) {			
 			if (!array_key_exists($lessonID, $lessonUpdateArray)) {
 				redirect($_SERVER['PHP_SELF'] . "?id=" . $lessonID);
 			}
@@ -44,11 +44,11 @@
 	if (!isset($_GET['page'])) {
 		headers($moduleInfo['name'], false);
 	} else {
-		headers($moduleInfo['name'], "Student,Site Administrator");
+		headers($moduleInfo['name'], "Student,Organization Administrator,Site Administrator");
 	}
 	
 //Process the form	
-	if ($_SESSION['MM_UserGroup'] != "Site Administrator") {
+	if (!access("modifyModule")) {
 		if (isset($_GET['page']) && $lessonUpdateArray[$lessonID]['moduleStatus'] != "F") {
 			$lessonUpdateArray[$lessonID]['moduleStatus'] = "O";
 			$lessonUpdate = serialize($lessonUpdateArray);
@@ -97,7 +97,7 @@
 	} else {		
 		echo $moduleInfo['comments'] . "<div class=\"spacer\">";
 		
-		if (!loggedIn() || (loggedIn() && $_SESSION['MM_UserGroup'] != "Site Administrator" && (!is_array($modules) || !array_key_exists($moduleInfo['id'], $modules)))) {
+		if (!loggedIn() || (loggedIn() && $userData['role'] == "Student" && $userData['organization'] == "0" && (!is_array($modules) || !array_key_exists($moduleInfo['id'], $modules)))) {
 			$price = str_replace(".", "", $moduleInfo['price']);
 			
 			if (!empty($moduleInfo['enablePrice']) && !empty($moduleInfo['price']) && $price > 0) {
@@ -107,7 +107,7 @@
 				closeForm(false, false);
 			}
 		} else {
-			if ($_SESSION['MM_UserGroup'] != "Site Administrator") {
+			if (!access("modifyModule")) {
 				if ($modules[$lessonID]['moduleStatus'] == "C") {
 					button("beginLesson", "beginLesson", "Begin Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
 				} elseif ($modules[$lessonID]['moduleStatus'] == "O") {

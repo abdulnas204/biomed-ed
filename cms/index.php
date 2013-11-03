@@ -36,7 +36,7 @@
 	message("updated", "page", "theme", "The theme was successfully updated");
 
 //Pages table
-	if (exist("pages") == true) {
+	if (exist("pages")) {
 		$pageGrabber = mysql_query("SELECT * FROM pages ORDER BY `position` ASC", $connDBA);
 		
 		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";

@@ -1119,6 +1119,16 @@ a.skip:focus, a.skip:active {
 		list-style-image:url(../../images/common/percent.png);
 	}
 	
+	span.checkmark {
+		background:url(../../images/common/checkmark.png) no-repeat left;
+		padding-left: 23px;
+	}
+	
+	span.x {
+		background:url(../../images/common/x.png) no-repeat left;
+		padding-left: 23px;
+	}
+	
 	tr.attention {
 		background:#EBEBEB;
 	}
@@ -1193,7 +1203,7 @@ a.skip:focus, a.skip:active {
 		font-weight:bolder;
 	}
 	
-	div.pagesBox {
+	div.pagesBox, span.pagesBox {
 		margin:0% 10% 0% 10%;
 		border-bottom:thin #666 solid;
 		border-top:thin #666 solid;

@@ -4,20 +4,20 @@
 	
 //Grant access to this page if aa organization is defined and the organization exists
 	if (exist("organizations", "id", $_GET['id'])) {
-		$organization = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'");
+		$organizationInfo = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'");
 	} else {
 		redirect("../portal/index.php");
 	}
 	
-	headers($organization['organization'], "Site Administrator");
+	headers($organizationInfo['organization'], "Site Administrator");
 	
 //Title
-	title($organization['organization'], false);
+	title($organizationInfo['organization'], false);
 	
 //Admin toolbar
 	echo "<div class=\"toolBar\">";
-	echo URL("Edit this Organization", "manage_organization.php?id=" . $organization['id'], "toolBarItem editTool");
-	echo URL("Delete this Organization", "index.php?action=delete&id=" . $organization['id'], "toolBarItem deleteTool", false, false, true);
+	echo URL("Edit this Organization", "manage_organization.php?id=" . $organizationInfo['id'], "toolBarItem editTool");
+	echo URL("Delete this Organization", "index.php?action=delete&id=" . $organizationInfo['id'], "toolBarItem deleteTool", false, false, true);
 	echo "</div><br />";
 	
 //Organization Information
@@ -129,10 +129,48 @@
 	echo URL($organizationInfo['billingEmail'], "../communication/send_email.php?type=organization&id=" . $organizationInfo['id'] . "&limit=billing");
 	echo "</p></blockquote></blockquote>";
 	
-	catDivider("Submit", "five");
-	echo "<blockquote><p>";
-	button("cancel", "cancel", "Cancel", "cancel", "index.php");
-	echo "</p></blockquote>";
+//Organization billing history
+	catDivider("Billing History", "three");
+	
+	if ($historyGrabber = query("SELECT * FROM `billing` WHERE `ownerOrganization` = '{$organizationInfo['id']}' ORDER BY `id` DESC LIMIT 5", "raw")) {
+		$historyCount = query("SELECT * FROM `billing` WHERE `ownerOrganization` = '{$organizationInfo['id']}' ORDER BY `id` DESC LIMIT 5", "num");
+		$count = 1;
+		
+		if ($historyCount == 1) {
+			$word = " payment";
+		} else {
+			$word = " payments";
+		}
+		
+		echo "<blockquote>";
+		echo "<p>Showing information from the last " . $historyCount . $word . ".</p>";
+		echo "<table class=\"dataTable\"><tbody><tr><th class=\"tableHeader\">Product</th><th width=\"200\" class=\"tableHeader\">Date</th><th width=\"200\" class=\"tableHeader\">Transaction ID</th><th width=\"100\" class=\"tableHeader\">Amount</th><th width=\"50\" class=\"tableHeader\">Details</th></tr>";
+		
+		while ($history = mysql_fetch_array($historyGrabber)) {
+			echo "<tr";
+			if ($count & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+			echo "<td>" . unserialize($history['items']) . "</td>";
+			echo "<td width=\"200\">" . date("F j, Y", $history['date']) . "</td>";
+			echo "<td width=\"200\">" . $history['transactionID'] . "</td>";
+			echo "<td width=\"100\">\$" . $history['price'] . "</td>";
+			echo "<td width=\"50\">" . URL("", "manage_billing.php?detail=" . $history['id'], "action discover") . "</td>";
+			echo "</tr>";
+			
+			$count++;
+		}
+		
+		echo "</table>";
+		
+		if ($historyCount > 5) {
+			echo "<br />";
+			echo URL("View More Transactions", "manage_organization.php");
+		}
+		
+		echo "</blockquote>";
+	} else {
+		echo "<div class=\"noResults\">This organization does not have any billing history.</div>";
+	}
+	
 	catDivider(false, false, false, true);
 	
 //Include the footer

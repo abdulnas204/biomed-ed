@@ -93,7 +93,7 @@
 					}
 					
 					foreach ($userModules as $item) {
-						$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C");
+						$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"));
 						$currentModules[$item] = $module;
 					}
 					

@@ -12,7 +12,7 @@
 	}
 	
 	if (isset($pageData)) {
-		$title = "Edit the " . prepare($pageData['title'], true) . " Page";
+		$title = "Edit the " . prepare($pageData['title'], false, true) . " Page";
 	} else {
 		$title =  "Create a New Page";
 	}

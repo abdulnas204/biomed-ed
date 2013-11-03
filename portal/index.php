@@ -1,19 +1,21 @@
 <?php
 //Header functions
 	require_once('../system/connections/connDBA.php');	
-	headers("Home", "Organization Administrator,Site Administrator,Student", false, true);
+	headers("Home", "Student,Instructor,Organization Administrator,Site Administrator", false, true);
 	
 //Title
 	switch($_SESSION['MM_UserGroup']) {
-		case "Organization Administrator" :
-			$title = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
 		case "Site Administrator" :
-			$title = "Welcome to the administration home page. This page contains a quick reference to major information about this site. Major parts of this site can be administered by navigating the links above."; break;
+			$description = "Welcome to the administration home page. This page contains a quick reference to major information about this site. Major parts of this site can be administered by navigating the links above."; break;
+		case "Organization Administrator" :
+			$description = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
+		case "Instructor" : 
+			$description = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
 		case "Student" : 
-			$title = "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above."; break;
+			$description = "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above."; break;
 	}
 	
-	title("Home", $title, false);
+	title("Home", $description, false);
 	
 //A function to calculate the number of users in a particular system
 	function userCount($role, $type) {
@@ -208,26 +210,6 @@
 	}
 
 	switch($_SESSION['MM_UserGroup']) {
-		case "Organization Administrator" : 
-		//Site layout
-			echo "<p>&nbsp;</p><p class=\"homeDivider\">Organization Data</p><div class=\"layoutControl\"><div class=\"contentLeft\">";
-			
-		//Render the chart
-			chart("line", "overall");
-		
-		//Site layout
-		   	echo"</div><div class=\"dataRight\">";
-		   
-		//Select all users from the site
-			users($userData['organization']);
-			  
-		//Show active users
-			active($userData['organization']);
-			
-		//Close the site layout
-			echo "</div></div>";
-			break;
-		
 		case "Site Administrator" : 
 		//Site layout
 			echo "<p>&nbsp;</p><p class=\"homeDivider\">Site Data</p><div class=\"layoutControl\"><div class=\"contentLeft\">";
@@ -243,6 +225,26 @@
 			  
 		//Show active users
 			active();
+			
+		//Close the site layout
+			echo "</div></div>";
+			break;
+		
+		case "Organization Administrator" : 
+		//Site layout
+			echo "<p>&nbsp;</p><p class=\"homeDivider\">Organization Data</p><div class=\"layoutControl\"><div class=\"contentLeft\">";
+			
+		//Render the chart
+			chart("line", "overall");
+		
+		//Site layout
+		   	echo"</div><div class=\"dataRight\">";
+		   
+		//Select all users from the site
+			users($userData['organization']);
+			  
+		//Show active users
+			active($userData['organization']);
 			
 		//Close the site layout
 			echo "</div></div>";

@@ -82,6 +82,7 @@
 	if (isset ($_GET['id'])) {
 		echo "<div class=\"toolBar\">";
 		echo URL("Back to Module Categories", "question_bank.php", "toolBarItem back");
+		echo URL("Edit Questions", "../question_bank/index.php?id=" . $_GET['id'], "toolBarItem editTool", false, false, false, true, "800", "600");
 		echo "</div>";
 	}
 

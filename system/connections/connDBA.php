@@ -15,12 +15,15 @@ ob_start();
 	$timeZoneGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
 	$timeZone = mysql_fetch_array($timeZoneGrabber);
 	date_default_timezone_set($timeZone['timeZone']);
+	
+	//Upload limits
+	set_time_limit(3600);
 /* End core functions */	
 
 /* Begin messages functions */
 	//Alerts
 	function alert($errorContent = NULL) {
-		echo "<p><div align=\"center\"><div align=\"center\" class=\"alert\">$errorContent</div></div></p><br />";
+		echo "<p><div align=\"center\"><div align=\"center\" class=\"announcement\">$errorContent</div></div></p><br />";
 	}
 	
 	//Response for errors
@@ -267,49 +270,6 @@ ob_start();
 					}
 					break;
 					
-			//If this is the organization administrator navigation bar
-				case "Organization Administrator" : 
-					echo "<li><a class=\"";
-					if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "portal/index.php";
-					echo "\">Home</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
-					if (strstr($requestURL, "/users")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "users/index.php";
-					echo "\">Users</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
-					if (strstr($requestURL, "/organizations")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "organizations/index.php";
-					echo "\">Organization</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
-					if (strstr($requestURL, "/communication")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "communication/index.php";
-					echo "\">Communication</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
-					if (strstr($requestURL, "/modules")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "modules/index.php";
-					echo "\">Modules</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
-					if (strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "statistics/index.php";
-					echo "\">Statistics</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"topPageNav\" href=\"";
-					echo $root . "logout.php"; 
-					echo "\">Logout</a></li>";
-					break;
-					
 			//If this is the site administrator navigation bar
 				case "Site Administrator" : 
 					echo "<li><a class=\"";
@@ -353,6 +313,86 @@ ob_start();
 					echo "\" href=\"";
 					echo $root . "cms/index.php";
 					echo "\">Public Website</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"topPageNav\" href=\"";
+					echo $root . "logout.php"; 
+					echo "\">Logout</a></li>";
+					break;
+					
+			//If this is the organization administrator navigation bar
+				case "Organization Administrator" : 
+					echo "<li><a class=\"";
+					if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "portal/index.php";
+					echo "\">Home</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/users")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "users/index.php";
+					echo "\">Users</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/organizations")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "organizations/index.php";
+					echo "\">Organization</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/communication")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "communication/index.php";
+					echo "\">Communication</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/modules")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "modules/index.php";
+					echo "\">Modules</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "statistics/index.php";
+					echo "\">Statistics</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"topPageNav\" href=\"";
+					echo $root . "logout.php"; 
+					echo "\">Logout</a></li>";
+					break;
+					
+			//If this is the instrcutor navigation bar
+				case "Instructor" : 
+					echo "<li><a class=\"";
+					if (!strstr($requestURL, "/users") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "portal/index.php";
+					echo "\">Home</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/users")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "users/index.php";
+					echo "\">Users</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/communication")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "communication/index.php";
+					echo "\">Communication</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/modules")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "modules/index.php";
+					echo "\">Modules</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "statistics/index.php";
+					echo "\">Statistics</a></li><span class=\"arrow sep\">&#x25BA;</span>";
 					
 					echo "<li><a class=\"topPageNav\" href=\"";
 					echo $root . "logout.php"; 
@@ -452,49 +492,6 @@ ob_start();
 							}
 						}
 						break;
-						
-				//If this is the site administrator footer bar
-					case "Organization Administrator" : 
-						echo "<a class=\"";
-						if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "portal/index.php";
-						echo "\">Home</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"";
-						if (strstr($requestURL, "/users")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "users/index.php";
-						echo "\">Users</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"";
-						if (strstr($requestURL, "/organizations")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "organizations/index.php";
-						echo "\">Organization</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"";
-						if (strstr($requestURL, "/communication")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "communication/index.php";
-						echo "\">Communication</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"";
-						if (strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "modules/index.php";
-						echo "\">Modules</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"";
-						if (strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
-						echo "\" href=\"";
-						echo $root . "statistics/index.php";
-						echo "\">Statistics</a><span class=\"arrow sep\">&bull;</span>";
-						
-						echo "<a class=\"bottomPageNav\" href=\"";
-						echo $root . "logout.php"; 
-						echo "\">Logout</a>";
-						break;
 					
 				//If this is the site administrator footer bar
 					case "Site Administrator" : 
@@ -545,6 +542,86 @@ ob_start();
 						echo "\">Logout</a>";
 						break;
 						
+				//If this is the organization administrator footer bar
+					case "Organization Administrator" : 
+						echo "<a class=\"";
+						if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "portal/index.php";
+						echo "\">Home</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/users")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "users/index.php";
+						echo "\">Users</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/organizations")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "organizations/index.php";
+						echo "\">Organization</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/communication")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "communication/index.php";
+						echo "\">Communication</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "modules/index.php";
+						echo "\">Modules</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "statistics/index.php";
+						echo "\">Statistics</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"bottomPageNav\" href=\"";
+						echo $root . "logout.php"; 
+						echo "\">Logout</a>";
+						break;
+						
+				//If this is the instructor footer bar
+					case "Instructor" : 
+						echo "<a class=\"";
+						if (!strstr($requestURL, "/users") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "portal/index.php";
+						echo "\">Home</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/users")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "users/index.php";
+						echo "\">Users</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/communication")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "communication/index.php";
+						echo "\">Communication</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "modules/index.php";
+						echo "\">Modules</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "statistics/index.php";
+						echo "\">Statistics</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"bottomPageNav\" href=\"";
+						echo $root . "logout.php"; 
+						echo "\">Logout</a>";
+						break;
+						
 				//If this is the student footer bar
 					case "Student" : 
 						echo "<a class=\"";
@@ -586,6 +663,42 @@ ob_start();
 /* End site layout functions */
 	
 /* Begin login management functions */
+	//A function to encrypt a string
+	function encrypt($string) {
+		$search = str_split(" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890`~!@#$%^&*()-_=+[{]}|;:',<.>/?\\\"");
+		$replace = str_split(" B)3Z/~8tr;`y%oJ{X(Mx}2kDc=7<AaSCzNh&5n\"[Il!@gRP]\\$mwb?#4p*0eK6QLHdEv^,Uj:-|9O'qsufY>1iFTGVW.+_");
+		$encrypt = "";
+		
+		foreach(str_split($string) as $segement) {
+			if ($segement == "") {
+				$encrypt .= " ";
+			} else {
+				$key = array_keys($search, $segement);
+				$encrypt .= $replace[$key['0']];
+			}
+		}
+		
+		return base64_encode(gzdeflate($encrypt));
+	}
+	
+	//A function to decrypt a string
+	function decrypt($string) {
+		$search = str_split(" B)3Z/~8tr;`y%oJ{X(Mx}2kDc=7<AaSCzNh&5n\"[Il!@gRP]\\$mwb?#4p*0eK6QLHdEv^,Uj:-|9O'qsufY>1iFTGVW.+_");
+		$replace = str_split(" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890`~!@#$%^&*()-_=+[{]}|;:',<.>/?\\\"");
+		$decrypt = "";
+		
+		foreach(str_split(gzinflate(base64_decode($string))) as $segement) {
+			if ($segement == "") {
+				$decrypt .= " ";
+			} else {
+				$key = array_keys($search, $segement);
+				$decrypt .= $replace[$key['0']];
+			}
+		}
+		
+		return $decrypt;
+	}
+	
 	//Login a user
 	function login() {
 		global $connDBA;
@@ -625,7 +738,7 @@ ob_start();
 			
 			if (isset($_POST['username'])) {
 				$loginUsername=$_POST['username'];
-				$password=$_POST['password'];
+				$password=encrypt($_POST['password']);
 				$MM_fldUserAuthorization = "role";
 				
 				$userRoleGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$loginUsername}' AND `passWord` = '{$password}'");
@@ -710,12 +823,16 @@ ob_start();
 	function message($trigger, $triggerValue, $type, $text) {
 		global $messageBreakLimit;	
 			
-		if (isset($_GET[$trigger]) && $_GET[$trigger] == $triggerValue) {
+		if ((isset($_GET[$trigger]) && $_GET[$trigger] == $triggerValue) || (isset($type) && $trigger == false)) {
 			if ($type == "success") {
 				successMessage($text);
 			} elseif ($type == "error") {
 				errorMessage($text);
+			} elseif ($type == "alert") {
+				alert($text);
 			}
+			
+			$messageBreakLimit = "true";
 		} else {
 			if (!isset($messageBreakLimit)) {
 				echo "<br />";
@@ -739,13 +856,13 @@ ob_start();
 			}
 			
 			if ($toolTip == true) {
-				 $return .= " onmouseover=\"Tip('" . prepare($toolTip, true, false) . "')\" onmouseout=\"UnTip()\"";
+				$return .= " onmouseover=\"Tip('" . prepare($toolTip, true, false) . "')\" onmouseout=\"UnTip()\"";
 			}
 			
 			if ($delete == true) {
-				 $return .= " onclick=\" return confirm('This action cannot be undone. Continue?');\"" . $additionalParameters;
+				$return .= " onclick=\" return confirm('This action cannot be undone. Continue?');\"" . $additionalParameters;
 			} elseif ($additionalParameters == true) {
-				 $return .= $additionalParameters;
+				$return .= $additionalParameters;
 			}
 			
 			$return .= ">" . prepare($text) . "</a>";
@@ -754,6 +871,10 @@ ob_start();
 			
 			if ($toolTip == true) {
 				 $return .= " onmouseover=\"Tip('" . prepare($toolTip, true, false) . "')\" onmouseout=\"UnTip()\"";
+			}
+			
+			if ($class == true) {
+				$return .= " class=\"" . $class . "\"";
 			}
 			
 			$return .= ">" . $text . "</a>";
@@ -815,7 +936,7 @@ ob_start();
 		echo "</form>";
 	}
 	
-	function catDivider($content, $class, $first = false, $last = false) {
+	function catDivider($content, $class, $first = false, $last = false, $id = false) {
 		if ($last == true) {
 			echo "</div>";
 		} else {
@@ -823,7 +944,13 @@ ob_start();
 				echo "</div>";
 			}
 			
-			echo "<div class=\"catDivider " . $class . "\">" . $content . "</div>";
+			echo "<div class=\"catDivider " . $class . "\"";
+			
+			if ($id == true) {
+				echo " id=\"" . $id . "\"";
+			}
+			
+			echo ">" . $content . "</div>";
 			
 			if ($last == false) {
 				echo "<div class=\"stepContent\">";
@@ -1125,13 +1252,13 @@ ob_start();
 		global $$editorTrigger;
 		
 		if ($manualValue == true && ($editorTrigger == false || !isset($$editorTrigger))) {
-			echo "value=\"" . prepare($manualValue, true, true) . "\"";
+			echo "  value=\"" . prepare($manualValue, true, true) . "\"";
 		} else {
 			if ($editorTrigger == true && isset($$editorTrigger)) {
 				$value = $$editorTrigger;
 				
 				if (isset($$editorTrigger)) {
-					echo "value=\"" . prepare($value[$arrayValue], true, true) . "\"";
+					echo " value=\"" . prepare($value[$arrayValue], true, true) . "\"";
 				}
 			}
 		}
@@ -1302,11 +1429,15 @@ ob_start();
 			$navigation = "<div align=\"center\">";
 			
 			if (exist($table, "position", $previousPage) == true) {
-				$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage") . " | ";
+				$navigation .= URL("Previous Step", $URL . "page=" . $previousPage , "previousPage");
+				
+				if (exist($table, "position", $nextPage) || (!exist($table, "position", $nextPage) && !access("modifyModule"))) {
+					$navigation .= " | ";
+				}
 			}
 			
 			if (exist($table, "position", $nextPage) == true) {
-				$navigation .= URL("Next Page", $URL . "page=" . $nextPage , "nextPage");
+				$navigation .= URL("Next Step", $URL . "page=" . $nextPage , "nextPage");
 			}
 		}
 		
@@ -1323,7 +1454,7 @@ ob_start();
 				$text = "Proceed to Test";
 			}
 			
-			if (exist($table, "position", $nextPage) == false && $moduleData['test'] == "1") {
+			if (!exist($table, "position", $nextPage) && !access("modifyModule")) {
 				if ($moduleData['reference'] == "0" && $accessArray[$id]['testStatus'] != "F") {
 					$alert = " onclick=\"return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')\"";
 				} else {
@@ -1331,7 +1462,7 @@ ob_start();
 				}
 				
 				$navigation .= URL($text, $testURL, "nextPage", false, false, false, false, false, false, $alert);
-			} elseif (exist($table, "position", $nextPage) == false && $moduleData['test'] == "0") {				
+			} elseif (!exist($table, "position", $nextPage) && $moduleData['test'] == "0") {				
 				$navigation .= URL("Finish", $testURL, "nextPage");
 			}
 		}
@@ -1839,8 +1970,16 @@ ob_start();
 	}
 	
 	//A function to create a tooltip
-	function tip($text, $contents) {
-		return "<span onmouseover=\"Tip('" . $text . "')\" onmouseout=\"UnTip()\">" . $contents . "</span>";
+	function tip($text, $contents, $class = false) {
+		$return = "<span onmouseover=\"Tip('" . $text . "')\" onmouseout=\"UnTip()\"";
+		
+		if ($class == true) {
+			$return .= " class=\"" . $class . "\"";
+		}
+		
+		$return .= ">" . $contents . "</span>";
+		
+		return $return;
 	}
 	
 	//A function to provide a letter grade for a test
@@ -1981,7 +2120,7 @@ ob_start();
 	}
 	
 	//Delete an item
-	function delete($table, $redirect, $reorder = true, $file = false, $directory = false, $extraTables = false) {
+	function delete($table, $redirect = false, $reorder = true, $file = false, $directory = false, $extraTables = false) {
 		global $connDBA;
 		
 		if (isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
@@ -2025,8 +2164,10 @@ ob_start();
 				}
 			}
 			
-			header ("Location: " . $redirect);
-			exit;
+			if ($redirect == true) {
+				header ("Location: " . $redirect);
+				exit;
+			}
 		}
 	}
 	
@@ -2167,6 +2308,13 @@ ob_start();
 		global $root;
 		
 		echo "<script src=\"" . $root . "system/javascripts/common/datePicker.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/datePicker.css\" type=\"text/css\">";
+	}
+	
+	//Include a tabbed panel script
+	function tabbedPanels() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/tabbedPanels/tabbedPanels.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/tabbedPanels.css\" type=\"text/css\">";
 	}
 /* End page scripting functions */
 	
@@ -2337,6 +2485,21 @@ ob_start();
 	function size($array) {
 		$return = end($array);
 		return key($return);
+	}
+	
+	//A function to remove an array value by the element
+	function removeElement ($array, $element) {
+		$return = array();
+		
+		for($count = 0; $count <= sizeof($array); $count ++) {
+			if ($array[$count] === $element) {
+				unset($array[$count]);
+			} else {
+				array_push($return, $array[$count]);
+			}
+		}
+		
+		return $return;
 	}
 	
 	//A function to delete a folder and all of its contents
@@ -2678,7 +2841,7 @@ ob_start();
 			}
 		}
 		
-		headers($titlePrefix . $title, "Site Administrator", $functions, true, $class, false, false, false, false, $hideHTML);
+		headers($titlePrefix . $title, "Organization Administrator,Site Administrator", $functions, true, $class, false, false, false, false, $hideHTML);
 		$parentTable = "moduledata";
 		$prefix = "";
 		
@@ -2902,6 +3065,8 @@ ob_start();
 				$return[2] = "true";
 				echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
 			} else {
+				$userInfo = userData();
+				
 				if (isset($_GET['id'])) {
 					$data = query("SELECT * FROM `{$table}` WHERE `id` = '{$_GET['id']}'");
 					
@@ -2913,8 +3078,20 @@ ob_start();
 						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
 					}
 				} else {
-					$return[2] = "false";
-					echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+					if ($table == "organizations" && !isset($_GET['id']) && $userInfo['organization'] != "0") {
+						$data = query("SELECT * FROM `{$table}` WHERE `id` = '{$userInfo['organization']}'");
+						
+						if ($data[$column] === $value) {
+							$return[2] = "true";
+							echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+						} else {
+							$return[2] = "false";
+							echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+						}
+					} else {
+						$return[2] = "false";
+						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+					}
 				}
 			}
 			
@@ -2926,8 +3103,19 @@ ob_start();
 	function access($access) {		
 		if (isset($_SESSION['MM_UserGroup'])) {
 			switch ($_SESSION['MM_UserGroup']) {
+				case "Site Administrator" :
+					$allowedArray = array("assignOrganization", "modifyAllModules", "modifyModule", "moduleStatistics", "manageAllUsers", "manageThisUser", "manageOrganizationUsers", "manageAllOrganizations", "manageAllCommunication");
+					
+					if (in_array($access, $allowedArray)) {
+						return true;
+					} else {
+						return false;
+					}
+					
+					break;
+				
 				case "Organization Administrator" :
-					$allowedArray = array("modifyModule", "moduleStatistics", "moduleAvailability", "moduleDetails", "manageThisUser", "manageThisOrganization", "manageAllOrganizationCommunication");
+					$allowedArray = array("modifyModule", "moduleStatistics", "moduleAvailability", "moduleDetails", "manageThisUser", "manageOrganizationUsers", "manageOrganizationGroups", "manageThisOrganization", "manageAllOrganizationCommunication");
 					
 					if (in_array($access, $allowedArray)) {
 						if ($access == "manageThisUser") {
@@ -2961,9 +3149,9 @@ ob_start();
 					
 					return false;
 					break;
-				
-				case "Site Administrator" :
-					$allowedArray = array("assignOrganization","modifyModule", "moduleStatistics", "manageAllUsers", "manageThisUser", "manageAllOrganizations", "manageAllCommunication");
+					
+				case "Instructor" : 
+					$allowedArray = array("viewOrganizationGroups", "moduleDetails", "moduleStatistics", "assignUser");
 					
 					if (in_array($access, $allowedArray)) {
 						return true;
@@ -3093,23 +3281,27 @@ ob_start();
 			echo "<br />";
 		}
 		
-		echo "<div class=\"pagesBox\">";
-		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\">";
+		echo "<div align=\"center\">";
+		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" align=\"center\">";
+		echo "<span spry:if=\"{ds_UnfilteredRowCount} > 1\">";
 		echo URL("Previous Page", "javascript:void", "spacerLeft previousPage", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 1 != '1'\" onclick=\"" . $dataSource . ".previousPage(); return false;\"");
 		echo URL("1", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} >= 13 && {ds_PageCount} > 25\" onclick=\"" . $dataSource . ".goToPage('1'); return false;\"");
+			
 		echo "<span spry:if=\"{ds_CurrentRowNumber} >= 14 && {ds_PageCount} > 25 && {ds_PageCount} != 26\" class=\"currentSearchNumber\">...</span>";
 		echo "</span>";
-		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\" spry:repeatchildren=\"" . $dataSource . "PagedInfo\" class=\"search\">";
-		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 <= 13 && {ds_PageNumber} <= 25 && {ds_CurrentRowNumber} + 13 < {ds_PageCount}\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
-		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 > 13 && {ds_CurrentRowNumber} + 13 < {ds_PageCount} && ({ds_CurrentRowNumber} < {ds_PageNumber} + 12 && {ds_CurrentRowNumber} > {ds_PageNumber} - 14)\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
-		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 13 >= {ds_PageCount} && {ds_PageNumber} >= {ds_PageCount} - 24\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
-		echo "<span>" . "<span spry:if=\"{ds_CurrentRowNumber} == {ds_RowNumber}\" class=\"currentSearchNumber\">{ds_PageNumber}</span></span>";
+		echo "<span spry:if=\"{ds_UnfilteredRowCount} > 0\" spry:repeatchildren=\"" . $dataSource . "PagedInfo\" class=\"search\">";
+		echo URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 <= 13 && {ds_PageNumber} <= 25 && {ds_CurrentRowNumber} + 13 < {ds_PageCount}\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"");
+		echo URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 > 13 && {ds_CurrentRowNumber} + 13 < {ds_PageCount} && ({ds_CurrentRowNumber} < {ds_PageNumber} + 12 && {ds_CurrentRowNumber} > {ds_PageNumber} - 14)\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"");
+		echo URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 13 >= {ds_PageCount} && {ds_PageNumber} >= {ds_PageCount} - 24\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"");
+		echo "<span spry:if=\"{ds_CurrentRowNumber} == {ds_RowNumber} && {ds_PageCount} > 1\" class=\"currentSearchNumber\">{ds_PageNumber}</span>";
 		echo "</span>";
-		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\">";
+		echo "<span spry:if=\"{ds_UnfilteredRowCount} > 0\">";
 		echo "<span spry:if=\"{ds_CurrentRowNumber} + 14 < {ds_PageCount} && {ds_PageCount} > 25 && {ds_PageCount} != 26\" class=\"currentSearchNumber\">...</span>";
 		echo URL("{ds_PageCount}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 14 <= {ds_PageCount} && {ds_PageCount} > 25\" onclick=\"" . $dataSource . ".goToPage('{ds_PageCount}'); return false;\"");
 		echo URL("Next Page", "javascript:void", "spacerRight nextPage", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 2 <= {ds_PageCount}\" onclick=\"" . $dataSource . ".nextPage(); return false;\"");
-		echo "</span></div>";
+		echo "</span>";
+		echo "</span>";
+		echo "</div>";
 		
 		if ($type == "top") {
 			echo "<br />";
@@ -3272,4 +3464,84 @@ ob_start();
 		}
 	}
 /* End statistics tracker */
+
+//Force user to change password if required
+	if (loggedIn()) {
+		$userData = userData();
+		$organizationStatus = query("SELECT * FROM `organizations` WHERE `id` = '{$userData['organization']}'");
+		$URL = $_SERVER['REQUEST_URI'];
+		
+		if ($userData['changePassword'] == "on" && !strstr($URL, "logout.php")) {
+		//Process the form
+			if (isset ($_POST['submitPassword']) && !empty($_POST['oldPassword']) && !empty($_POST['newPassword']) && !empty($_POST['confirmPassword'])) {
+				$userName = $_SESSION['MM_Username'];
+				$oldPassword = encrypt($_POST['oldPassword']);
+				$newPassword = encrypt($_POST['newPassword']);
+				$confirmPassword = encrypt($_POST['confirmPassword']);
+				$passwordGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$userName}' AND `passWord` = '{$oldPassword}'", $connDBA);
+				$password = mysql_fetch_array($passwordGrabber);
+				
+				if ($password && $newPassword === $confirmPassword) {
+					if ($password['passWord'] != $newPassword) {
+						mysql_query("UPDATE `users` SET `passWord` = '{$newPassword}', `changePassword` = '' WHERE `userName` = '{$userName}' AND `passWord` = '{$oldPassword}'", $connDBA);
+						
+						redirect($root . "portal/index.php");
+						exit;
+					} else {
+						redirect($_SERVER['PHP_SELF'] . "?password=identical");
+						exit;
+					}
+				} else {
+					redirect($_SERVER['PHP_SELF'] . "?password=error");
+					exit;
+				}
+			}
+			
+		//Display the content	
+		//Top content
+			headers("Change Password", false, "validate");
+			
+		//Title
+			if (!isset($_GET['password'])) {
+				title("Change Password", "You are required to change your password before using this site.");
+			} else {
+				title("Change Password", "You are required to change your password before using this site.", false);
+			}
+			
+		//Display message updates
+			message("password", "error", "error", "Either your old password is incorrect, or your new password does not match.");
+			message("password", "identical", "error", "Your old password may not be the same as your new password.");
+			
+		//Password form
+			form("updatePassword");			
+			echo "<blockquote>";
+			directions("Current password", true);
+			echo "<blockquote><p>";
+			textField("oldPassword", "oldPassword", false, false, true, true);
+			echo "</p></blockquote>";
+			directions("New password", true);
+			echo "<blockquote><p>";
+			textField("newPassword", "newPassword", false, false, true, true, ",length[6,30]");
+			echo "</p></blockquote>";
+			directions("Confirm new password", true);
+			echo "<blockquote><p>";
+			textField("confirmPassword", "confirmPassword", false, false, true, true, ",length[6,30],confirm[newPassword]");
+			echo "</p></blockquote>";
+			echo "<blockquote><p>";
+			button("submitPassword", "submitPassword", "Submit", "submit");
+			echo "</p></blockquote></blockquote>";
+			closeForm(false, true);
+			
+		//Display the footer
+			footer();
+			
+		//Exit so the rest of the page is not loaded
+			exit;
+		}
+	}
+	
+//Force administrator to setup an organization if needed
+	if (loggedIn() && $_SESSION['MM_UserGroup'] == "Organization Administrator" && !strstr($_SERVER['REQUEST_URI'], "manage_organization.php") && !strstr($_SERVER['REQUEST_URI'], "logout.php") && (empty($organizationStatus['specialty']) || empty($organizationStatus['webSite']) || empty($organizationStatus['phone']) || empty($organizationStatus['fax']) || empty($organizationStatus['mailingAddress1']) || empty($organizationStatus['mailingCity']) || empty($organizationStatus['mailingState']) || empty($organizationStatus['mailingZIP']) || empty($organizationStatus['billingAddress1']) || empty($organizationStatus['billingCity']) || empty($organizationStatus['billingState']) || empty($organizationStatus['billingZIP']) || empty($organizationStatus['billingPhone']) || empty($organizationStatus['billingFax']) || empty($organizationStatus['billingEmail']) || empty($organizationStatus['timeZone']))) {
+		redirect($root . "organizations/manage_organization.php");
+	}
 ?>

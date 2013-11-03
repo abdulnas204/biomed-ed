@@ -55,3 +55,22 @@ function toggleType(field) {
 		}
 	}
 }
+
+function toggleInfo(container, catDivider, currentClass, swapClass) {
+	if (document.getElementById(container)) {
+		var containerClass = document.getElementById(container);
+		var dividerClass = document.getElementById(catDivider);
+		
+		if (containerClass.className == "contentHide") {
+			containerClass.className = "contentShow";
+		} else {
+			containerClass.className = "contentHide";
+		}
+		
+		if (dividerClass.className == currentClass) {
+			dividerClass.className = swapClass;
+		} else {
+			dividerClass.className = currentClass;
+		}
+	}
+}

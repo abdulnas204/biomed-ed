@@ -28,7 +28,16 @@
 	echo "<div class=\"toolBar noPadding\">";
 	form("jump");
 	echo "<span class=\"toolBarItem noLink\">Add: ";
-	dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False, Import from Question Bank", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php,../questions/question_bank.php");
+	
+	if (access("modifyAllModules")) {
+		$additionalValues = ",Import from Question Bank";
+		$additionalIDs = ",../questions/question_bank.php";
+	} else {
+		$additionalValues = "";
+		$additionalIDs = "";
+	}
+	
+	dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response,Fill in the Blank,Matching,Multiple Choice,Short Answer,True or False" . $additionalValues, ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php" . $additionalIDs);
 	button("submit", "submit", "Go", "button", false, " onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\"");
 	echo "</span>";
 	closeForm(false, false); 

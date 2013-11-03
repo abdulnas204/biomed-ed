@@ -77,6 +77,10 @@
 							
 		mysql_query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'", $connDBA);
 		
+		if ($type == "File Response") {
+			copy("../QuestionBank/test/answers/" . $fileURL, $monitor['directory'] . "test/answers/" . $fileURL);
+		}
+		
 		$redirect = "../questions/";
 		
 		switch ($type) {

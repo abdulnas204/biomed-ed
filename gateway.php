@@ -54,6 +54,17 @@
 			}
 		}
 		
+	//Organization administrators will have access 
+		if ($_SESSION['MM_UserGroup'] == "Organization Administrator") {
+			for ($count = 0; $count <= $directoryDepth; $count++) {
+				if ($count == "2") {
+					if ($directoryArray['2'] == "lesson") {
+						open();
+					}
+				}
+			}
+		}
+		
 	//Student will have access to lesson and answer files partaining to them
 		if ($_SESSION['MM_UserGroup'] == "Student") {
 			$userData = userData();

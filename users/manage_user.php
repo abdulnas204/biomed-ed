@@ -5,6 +5,54 @@
 //Check to see if the user name exists
 	validateName("users", "userName");
 	
+//Generate XML data for user suggestions
+	if (isset($_GET['data'])) {
+		headers("Organizations Data Collection", "Organization Administrator,Site Administrator", false, false, false, false, false, false, false, "XML");
+		header("Content-type: text/xml");
+		$userData = userData();
+		
+		if ($userData['organization'] == "0") {
+			$sql = "";
+		} else {
+			$sql = " WHERE `organization` = '{$userData['organization']}'";
+		}
+		
+		$userGrabber = query("SELECT * FROM `users`{$sql}", "raw");
+		$limit = array(array(), array(), array(), array());
+		
+		echo "<root>";
+		
+		while ($users = mysql_fetch_array($userGrabber)) {
+			echo "<user>";
+			
+			if (!in_array($users['workLocation'], $limit['0'])) {
+				echo "<location>" . $users['workLocation'] . "</location>";
+			}
+			
+			if (!in_array($users['jobTitle'], $limit['1'])) {
+				echo "<jobTitle>" . $users['jobTitle'] . "</jobTitle>";
+			}
+			
+			if (!in_array($users['department'], $limit['2'])) {
+				echo "<department>" . $users['department'] . "</department>";
+			}
+			
+			if (!in_array($departmentID['jobTitle'], $limit['3'])) {
+				echo "<departmentID>" . $users['departmentID'] . "</departmentID>";
+			}
+			
+			echo "</user>";
+			
+			array_push($limit['0'], $users['workLocation']);
+			array_push($limit['1'], $users['jobTitle']);
+			array_push($limit['2'], $users['department']);
+			array_push($limit['3'], $users['departmentID']);
+		}
+		
+		echo "</root>";
+		exit;
+	}
+	
 //Check to see if the user is being edited
 	if (isset ($_GET['id'])) {
 		if ($user = exist("users", "id", $_GET['id'])) {
@@ -22,10 +70,18 @@
 		$description = "Create a new user by filling in the information below.";
 	}
 	
-	headers($title, "Organization Administrator,Site Administrator", "tinyMCEAdvanced,validate", true);
+	headers($title, "Organization Administrator,Site Administrator", "tinyMCEAdvanced,validate,autoSuggest,showHide", true, false, false, false, false, false, false, "<script type=\"text/javascript\">var data = new Spry.Data.XMLDataSet(\"manage_user.php?data=xml\", \"/root/user\");</script>");
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty($_POST['role']) && !empty($_POST['firstName']) && !empty($_POST['lastName']) && !empty($_POST['primaryEmail'])) {
+	if (isset($_POST['submit']) && !empty($_POST['role']) && !empty($_POST['firstName']) && !empty($_POST['lastName']) && !empty($_POST['primaryEmail'])) {		
+		if (!access("manageAllUsers") && !empty($_POST['staffID']) && !empty($_POST['phoneWork']) && !empty($_POST['workLocation']) && !empty($_POST['jobTitle']) && !empty($_POST['department']) && !empty($_POST['departmentID'])) {
+			//Continue to processor, all form fields are complete
+		} elseif (access("manageAllUsers")) {
+			//Continue to processor, all necessary form fields are complete
+		} else {
+			redirect($_SERVER['REQUEST_URI']);
+		}
+		
 		$currentUser = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'");
 		$role = $_POST['role'];
 		$firstName = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['firstName']));
@@ -34,12 +90,65 @@
 		$primaryEmail = $_POST['primaryEmail'];
 		$secondaryEmail = $_POST['secondaryEmail'];
 		$tertiaryEmail = $_POST['tertiaryEmail'];
+		$staffID = $_POST['staffID'];
+		$phoneWork = $_POST['phoneWork'];
+		$phoneFax = $_POST['phoneFax'];
+		$phonePager = $_POST['phonePager'];
+		$phoneMobile = $_POST['phoneMobile'];
+		$phoneHome = $_POST['phoneHome'];
+		$workLocation = $_POST['workLocation'];
+		$jobTitle = $_POST['jobTitle'];
+		$department = $_POST['department'];
+		$departmentID = $_POST['departmentID'];
 		
 		if (!access("manageAllUsers")) {
 			$allowedArray = array("Student", "Instructorial Assisstant", "Instructor", "Administrative Assistant", "Organization Administrator");
 			
 			if (!in_array($role, $allowedArray)) {
 				redirect($_SERVER['REQUEST_URI']);
+			}
+			
+			$currentUser = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'");
+		
+			if ($currentUser['role'] == "Organization Administrator") {
+				$organizationData = query("SELECT * FROM `users` WHERE `organization` = '{$currentUser['organization']}' AND `role` = 'Organization Administrator'", "num");
+				
+				if ($organizationData == 1) {
+					if (isset($_GET['id'])) {
+						redirect($_SERVER['REQUEST_URI'] . "&error=noAdmin");
+					} else {
+						redirect($_SERVER['PHP_SELF'] . "?error=noAdmin");
+					}
+				}
+			}
+		}
+		
+		$adminGrabber = query("SELECT * FROM `organizations` WHERE `id` = '{$currentUser['organization']}'");
+		
+		if ($role != "Organization Administrator") {
+			$admins = implode(",", removeElement(explode(",", $adminGrabber['admin']), $_GET['id']));
+			query("UPDATE `organizations` SET `admin` = '{$admins}' WHERE `id` = '{$adminGrabber['id']}'");
+		} else {
+			$admins = $adminGrabber['admin'] . "," . $_GET['id'];
+			
+			if (!in_array($_GET['id'], explode(",", $adminGrabber['admin']))) {
+				query("UPDATE `organizations` SET `admin` = '{$admins}' WHERE `id` = '{$currentUser['organization']}'");
+				
+				if ($_POST['organization'] != "0") {
+					mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$id}' WHERE `id` = '{$userID}'", $connDBA);
+					
+					$domain = explode(":", $_SERVER['HTTP_HOST']);
+					$emailGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}'");
+					mail($emailGrabber['emailAddress1'], "Your are an Organization Administrator", "
+					You have been granted the Organization Administrator role for \"" . $_POST['name'] . "\".
+					
+					Please copy and paste the following link into your browser to access the login page.
+					
+					" . $root . "login.php
+					
+					-------------------------------------------------
+					Please DO NOT reply to this email. If you have any questions regarding the contents of this email, please contact one of the site administrators.", "From: No Reply<no-reply@" . $domain['0'] . ">");
+				}
 			}
 		}
 		
@@ -73,13 +182,13 @@
 		
 		if (!isset($user)) {
 			if (!empty($_POST['password'])) {
-				$password = $_POST['password'];
+				$password = encrypt($_POST['password']);
 			} else {
 				redirect($_SERVER['REQUEST_URI']);
 			}
 		} else {
 			if (!empty($_POST['password'])) {
-				$password = $_POST['password'];
+				$password = encrypt($_POST['password']);
 			} else {
 				$checkPassWord = query("SELECT * FROM `users` WHERE id = '{$_GET['id']}'");
 				$password = $checkPassWord['passWord'];
@@ -91,69 +200,37 @@
 			$organization = $userData['organization'];
 		} else {
 			if (!empty($_POST['organization']) && $role != "Site Administrator" && $role != "Site Manager") {
-				$organizationPrep = mysql_real_escape_string($_POST['organization']);
-				$organizationData = query("SELECT * FROM `organizations` WHERE `organization` = {$organizationPrep}");
-				$organization = $organizationData['id'];
+				$organization = $_POST['organization'];
 			} else {
 				$organization = "0";
 			}
 		}
 		
-		if (!access("manageAllUsers")) {
-			if (!empty($_POST['staffID']) && !empty($_POST['phoneWork']) && !empty($_POST['phoneHome']) && !empty($_POST['workLocation']) && !empty($_POST['jobTitle']) && !empty($_POST['department']) && !empty($_POST['departmentID'])) {
-				$staffID = $_POST['staffID'];
-				$phoneWork = $_POST['phoneWork'];
-				$phoneHome = $_POST['phoneHome'];
-				$phoneMobile = $_POST['phoneMobile'];
-				$phoneFax = $_POST['phoneFax'];
-				$workLocation = $_POST['workLocation'];
-				$jobTitle = $_POST['jobTitle'];
-				$department = $_POST['department'];
-				$departmentID = $_POST['departmentID'];
-			} else {
-				redirect($_SERVER['REQUEST_URI']);
-			}
-		} else {
-			if (isset ($user)) {
-				$staffID = $currentUser['staffID'];
-				$phoneWork = $currentUser['phoneWork'];
-				$phoneHome = $currentUser['phoneHome'];
-				$phoneMobile = $currentUser['phoneMobile'];
-				$phoneFax = $currentUser['phoneFax'];
-				$workLocation = $currentUser['workLocation'];
-				$jobTitle = $currentUser['jobTitle'];
-				$department = $currentUser['department'];
-				$departmentID = $currentUser['departmentID'];
-			} else {
-				$staffID = "";
-				$phoneWork = "";
-				$phoneHome = "";
-				$phoneMobile = "";
-				$phoneFax = "";
-				$workLocation = "";
-				$jobTitle = "";
-				$department = "";
-				$departmentID = "";
-			}
-		}
-		
 		if (isset ($user)) {			
-			query("UPDATE `users` SET `staffID` = '{$staffID}', `firstName` = '{$firstName}', `lastName` = '{$lastName}', `userName` = '{$userName}', `password` = '{$password}', `changePassword` = '{$changePassword}', `emailAddress1` = '{$primaryEmail}', `emailAddress2` = '{$secondaryEmail}', `emailAddress3` = '{$tertiaryEmail}', `phoneWork` = '{$phoneWork}', `phoneHome` = '{$phoneHome}', `phoneMobile` = '{$phoneMobile}', `phoneFax` = '{$phoneFax}', `workLocation` = '{$workLocation}', `jobTitle` = '{$jobTitle}', `department` = '{$department}', `departmentID` = '{$departmentID}', `role` = '{$role}', `organization` = '{$organization}' WHERE `id` = '{$_GET['id']}'");
+			query("UPDATE `users` SET `staffID` = '{$staffID}', `firstName` = '{$firstName}', `lastName` = '{$lastName}', `userName` = '{$userName}', `password` = '{$password}', `changePassword` = '{$changePassword}', `emailAddress1` = '{$primaryEmail}', `emailAddress2` = '{$secondaryEmail}', `emailAddress3` = '{$tertiaryEmail}', `phoneWork` = '{$phoneWork}', `phoneHome` = '{$phoneHome}', `phoneMobile` = '{$phoneMobile}', `phoneFax` = '{$phoneFax}', `phonePager` = '{$phonePager}', `workLocation` = '{$workLocation}', `jobTitle` = '{$jobTitle}', `department` = '{$department}', `departmentID` = '{$departmentID}', `role` = '{$role}', `organization` = '{$organization}' WHERE `id` = '{$_GET['id']}'");
 			
 			if ($userData['id'] == $_GET['id'] && $role != $_SESSION['MM_UserGroup']) {
 				$_SESSION['MM_UserGroup'] = $role;
 				redirect("../portal/index.php");
 			}
 			
-			redirect("index.php?updated=user");
+			if (isset($_GET['return']) && $_POST['organization'] == "0") {
+				redirect(urldecode($_GET['return']));
+			} else {
+				redirect("index.php?updated=user");
+			}
 		} else {
 			query("INSERT INTO `users` (
-					  `id`, `locked`, `active`, `staffID`, `firstName`, `lastName`, `userName`, `password`, `changePassword`, `emailAddress1`, `emailAddress2`, `emailAddress3`, `phoneWork`, `phoneHome`, `phoneMobile`, `phoneFax`, `workLocation`, `jobTitle`, `department`, `departmentID`, `role`, `organization`, `modules`
+					  `id`, `locked`, `active`, `staffID`, `firstName`, `lastName`, `userName`, `password`, `changePassword`, `emailAddress1`, `emailAddress2`, `emailAddress3`, `phoneWork`, `phoneHome`, `phoneMobile`, `phoneFax`, `phonePager`, `workLocation`, `jobTitle`, `department`, `departmentID`, `role`, `organization`, `modules`
 				  ) VALUES (
-					  NULL, '', '', '{$staffID}', '{$firstName}', '{$lastName}', '{$userName}', '{$password}', '{$changePassword}', '{$primaryEmail}', '{$secondaryEmail}', '{$tertiaryEmail}', '{$phoneWork}', '{$phoneHome}', '{$phoneMobile}', '{$phoneFax}', '{$workLocation}', '{$jobTitle}', '{$department}', '{$departmentID}', '{$role}', '{$organization}', ''
+					  NULL, '', '', '{$staffID}', '{$firstName}', '{$lastName}', '{$userName}', '{$password}', '{$changePassword}', '{$primaryEmail}', '{$secondaryEmail}', '{$tertiaryEmail}', '{$phoneWork}', '{$phoneHome}', '{$phoneMobile}', '{$phoneFax}', '{$phonePager}', '{$workLocation}', '{$jobTitle}', '{$department}', '{$departmentID}', '{$role}', '{$organization}', ''
 				  )");
 			
-			redirect("index.php?inserted=user");
+			if (isset($_GET['return']) && $_POST['organization'] == "0") {
+				redirect(urldecode($_GET['return']));
+			} else {
+				redirect("index.php?inserted=user");
+			}
 		}
 	}
 
@@ -175,12 +252,11 @@
 	directions("Select a role for this user", true);
 	echo "<blockquote><p>";
 	
-	if (!access("manageAllUsers")) {
+	if (!access("manageAllUsers") || isset($_GET['return'])) {
 		$additionalRoles = "";
 	} else  {
 		$additionalRoles = ",Site Manager,Site Administrator";
 	}
-	
 	
 	dropDown("role", "role", "- Select -,Student,Instructorial Assisstant,Instructor,Administrative Assistant,Organization Administrator" . $additionalRoles, ",Student,Instructorial Assisstant,Instructor,Administrative Assistant,Organization Administrator" . $additionalRoles, false, true, false, false, "user", "role");
 	echo "</p></blockquote></blockquote>";
@@ -246,54 +322,51 @@
 	textField("tertiaryEmail", "tertiaryEmail", false, false, false, false, ",custom[email]", false, "user", "emailAddress3");
 	echo "</p></blockquote>";
 	
+	if (access("manageAllOrganizations")) {
+		echo URL("Enter Additional Contact Information (Not Required)", "javascript:void", false, false, false, false, false, false, false, " onclick=\"toggleInfo('contactInformation')\"");
+	}
+	
 	if (!access("manageAllUsers")) {
-		directions("Work Telephone", true);
-		echo "<blockquote><p>";
-		textField("phoneWork", "phoneWork", false, false, false, true, ",custom[telephone]", false, "user", "phoneWork");
-		echo "</p></blockquote>";
-		directions("Home Telephone", true);
-		echo "<blockquote><p>";
-		textField("phoneHome", "phoneHome", false, false, false, true, ",custom[telephone]", false, "user", "phoneHome");
-		echo "</p></blockquote>";
-		directions("Mobile Telephone", false);
-		echo "<blockquote><p>";
-		textField("phoneMobile", "phoneMobile", false, false, false, false, ",custom[telephone]", false, "user", "phoneMobile");
-		echo "</p></blockquote>";
-		directions("Fax", false);
-		echo "<blockquote><p>";
-		textField("phoneFax", "phoneFax", false, false, false, false, ",custom[telephone]", false, "user", "phoneFax");
-		echo "</p></blockquote></blockquote>";
-		
-		catDivider("Workplace Information", "four");
-		echo "<blockquote>";
-		directions("Staff ID", true);
-		echo "<blockquote><p>";
-		textField("staffID", "staffID", false, false, false, true, false, false, "user", "staffID");
-		echo "</p></blockquote>";
-		directions("Work Location", true);
-		echo "<blockquote><p>";
-		textField("workLocation", "workLocation", false, false, false, true, false, false, "user", "workLocation");
-		echo "</p></blockquote>";
-		directions("Job Title", true);
-		echo "<blockquote><p>";
-		textField("jobTitle", "jobTitle", false, false, false, true, false, false, "user", "jobTitle");
-		echo "</p></blockquote>";
-		directions("Department", true);
-		echo "<blockquote><p>";
-		textField("department", "department", false, false, false, true, false, false, "user", "department");
-		echo "</p></blockquote>";
-		directions("Department ID", true);
-		echo "<blockquote><p>";
-		textField("departmentID", "departmentID", false, false, false, true, false, false, "user", "departmentID");
-		echo "</p></blockquote>";
+		$require = true;
+	} else {
+		$require = false;
+		echo "<div id=\"contactInformation\" class=\"contentHide\">";
+	}
+	
+	directions("Work Telephone", $require);
+	echo "<blockquote><p>";
+	textField("phoneWork", "phoneWork", false, false, false, $require, ",custom[telephone]", false, "user", "phoneWork");
+	echo "</p></blockquote>";
+	directions("Work Fax", false);
+	echo "<blockquote><p>";
+	textField("phoneFax", "phoneFax", false, false, false, false, ",custom[telephone]", false, "user", "phoneFax");
+	echo "</p></blockquote>";
+	directions("Work Pager", false);
+	echo "<blockquote><p>";
+	textField("phonePager", "phonePager", false, false, false, false, ",custom[telephone]", false, "user", "phonePager");
+	echo "</p></blockquote>";
+	directions("Mobile Telephone", false);
+	echo "<blockquote><p>";
+	textField("phoneMobile", "phoneMobile", false, false, false, false, ",custom[telephone]", false, "user", "phoneMobile");
+	echo "</p></blockquote>";
+	directions("Home Telephone", false);
+	echo "<blockquote><p>";
+	textField("phoneHome", "phoneHome", false, false, false, false, ",custom[telephone]", false, "user", "phoneHome");
+	echo "</p></blockquote>";
+	
+	if (access("manageAllUsers")) {
+		echo "</div>";
 	}
 	
 	echo "</blockquote>";
 	
+	catDivider("Workplace Information", "four");
+	echo "<blockquote>";
+	
 	if (access("manageAllUsers")) {
 		$organizationGrabber = query("SELECT * FROM `organizations`", "raw");
 		$organizationValuesPrep = "- None -,";
-		$organizationIDsPrep = ",";
+		$organizationIDsPrep = "0,";
 		
 		while ($organization = mysql_fetch_array($organizationGrabber)) {
 			$organizationValuesPrep .= $organization['organization'] . ",";
@@ -303,20 +376,69 @@
 		$organizationValues = rtrim($organizationValuesPrep, ",");
 		$organizationIDs = rtrim($organizationIDsPrep, ",");
 		
-		catDivider("Organization", "four");
-		echo "<blockquote>";
-		directions("Assign this user to an organization", true);
-		echo "<blockquote><p>";
-		dropDown("organization", "organization", $organizationValues, $organizationIDs, false, false, false, false, "user", "organization");
-		echo "</p></blockquote></blockquote>";
+		if (!isset($_GET['return'])) {
+			directions("Assign this user to an organization");
+			echo "<blockquote><p>";
+			dropDown("organization", "organization", $organizationValues, $organizationIDs, false, false, false, false, "user", "organization");
+			echo "</p></blockquote>";
+		} else {
+			hidden("organization", "organization", "0");
+		}
 	}
+	
+	if (access("manageAllOrganizations")) {
+		echo URL("Enter Additional Workplace Information (Not Required)", "javascript:void", false, false, false, false, false, false, false, " onclick=\"toggleInfo('workplaceInformation')\"");
+	}
+	
+	if (access("manageAllUsers")) {
+		echo "<div id=\"workplaceInformation\" class=\"contentHide\">";
+	}
+	
+	directions("Staff ID", $require);
+	echo "<blockquote><p>";
+	textField("staffID", "staffID", false, false, false, $require, false, false, "user", "staffID");
+	echo "</p></blockquote>";
+	directions("Work Location", $require);
+	echo "<blockquote><p>";
+	echo "<div id=\"workLocationMenu\">";
+	textField("workLocation", "workLocation", false, false, false, $require, false, false, "user", "workLocation");
+	echo "<div><div id=\"locationSuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{location}\">{location}</div></div></div></div>";
+	echo "</p></blockquote>";
+	echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"workLocationMenu\", \"locationSuggestions\", \"data\", \"location\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
+	directions("Job Title", $require);
+	echo "<blockquote><p>";
+	echo "<div id=\"jobTitleMenu\">";
+	textField("jobTitle", "jobTitle", false, false, false, $require, false, false, "user", "jobTitle");
+	echo "<div><div id=\"titleSuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{jobTitle}\">{jobTitle}</div></div></div></div>";
+	echo "</p></blockquote>";
+	echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"jobTitleMenu\", \"titleSuggestions\", \"data\", \"jobTitle\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
+	directions("Department", $require);
+	echo "<blockquote><p>";
+	echo "<div id=\"departmentMenu\">";
+	textField("department", "department", false, false, false, $require, false, false, "user", "department");
+	echo "<div><div id=\"departmentSuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{department}\">{department}</div></div></div></div>";
+	echo "</p></blockquote>";
+	echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"departmentMenu\", \"departmentSuggestions\", \"data\", \"department\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
+	directions("Department ID", $require);
+	echo "<blockquote><p>";
+	echo "<div id=\"departmentIDMenu\">";
+	textField("departmentID", "departmentID", false, false, false, $require, false, false, "user", "departmentID");
+	echo "<div><div id=\"departmentIDSuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{departmentID}\">{departmentID}</div></div></div></div>";
+	echo "</p></blockquote>";
+	echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"departmentIDMenu\", \"departmentIDSuggestions\", \"data\", \"departmentID\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
+	
+	if (access("manageAllUsers")) {
+		echo "</div>";
+	}
+	
+	echo "</blockquote>";
 	
 	catDivider("Submit", "five");
 	echo "<blockquote><p>";
 	button("submit", "submit", "Submit", "submit");
 	button("reset", "reset", "Reset", "reset");
 	button("cancel", "cancel", "Cancel", "cancel", "index.php");
-	echo "</p>";
+	echo "</p></blockquote>";
 	closeForm(true, true);
 
 //Include the footer
