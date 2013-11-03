@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 //Script to add or remove table rows
 
-function addBlank(tableID, cellOneStart, cellOneEnd, cellTwoStart, cellTwoEnd) {
+function addBlank(tableID) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
 	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
@@ -19,44 +19,51 @@ function addBlank(tableID, cellOneStart, cellOneEnd, cellTwoStart, cellTwoEnd) {
 	newRow.align = "center";
 	
 	var newCell1 = newRow.insertCell(0);
-	newCell1.innerHTML = cellOneStart + currentID + cellOneEnd;
+	newCell1.innerHTML = "<input name='questionValue[]' type='text' id='questionValue" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
 	var newCell2 = newRow.insertCell(1);
-	newCell2.innerHTML = cellTwoStart + currentID + cellTwoEnd;
+	newCell2.innerHTML = "<input name='answerValue[]' type='text' id='answerValue" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
 	var newCell3 = newRow.insertCell(2);
 	newCell3.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '1')\">";
 }
 
-function addMatching(tableID, cellOneStart, cellOneEnd, cellTwoStart, cellTwoEnd) {
+function addMatching(tableID) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
-	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
+	var previousID = document.getElementById('id').value;
 	var currentID = Number(previousID) + 1;
 	newRow.id = currentID;
 	newRow.align = "center";
 	
 	var newCell1 = newRow.insertCell(0);
-	newCell1.innerHTML = cellOneStart + currentID + cellOneEnd;
+	newCell1.innerHTML = "<textarea name='questionValue[]' id='questionValue" + currentID + "' style='width:350px;' class='validate[required] noEditorMedia editorQuestion questionValue" + currentID + "' /></textarea>";
 	var newCell2 = newRow.insertCell(1);
-	newCell2.innerHTML = cellTwoStart + currentID + cellTwoEnd;
+	newCell2.innerHTML = "<textarea name='answerValue[]' id='answerValue" + currentID + "' style='width:350px;' class='validate[required] noEditorMedia editorQuestion answerValue" + currentID + "' /></textarea>";
 	var newCell3 = newRow.insertCell(2);
 	newCell3.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '2')\">";
+	
+	setup('questionValue' + currentID);
+	setup('answerValue' + currentID);
+	document.getElementById('id').value = currentID;
 }
 
 function addMultipleChoice(tableID, cellOneStart, cellOneMiddle, cellOneEnd, cellTwoStart, cellTwoEnd) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
-	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
+	var previousID = document.getElementById('id').value;
 	var currentID = Number(previousID) + 1;
 	var currentValue = table.rows.length;
 	newRow.id = currentID;
 	newRow.align = "center";
 	
 	var newCell1 = newRow.insertCell(0);
-	newCell1.innerHTML = cellOneStart + currentValue + cellOneMiddle + currentValue + cellOneEnd;
+	newCell1.innerHTML = "<label><input name='choices[]' type='checkbox' id='choice" + currentID + "' value='" + currentID + "' class='validate[required,minCheckbox[1]]'></label>";
 	var newCell2 = newRow.insertCell(1);
-	newCell2.innerHTML = cellTwoStart + currentID + cellTwoEnd;
+	newCell2.innerHTML = "<textarea name='values[]' id='value" + currentID + "' style='width:350px;' class='validate[required] noEditorMedia editorQuestion value" + currentID + "' /></textarea>";
 	var newCell3 = newRow.insertCell(2);
 	newCell3.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', this.parentNode.parentNode.id, '2', true, true)\">";
+	
+	setup('value' + currentID);
+	document.getElementById('id').value = currentID;
 }
 
 function addShortAnswer(tableID, cellOneStart, cellOneEnd) {

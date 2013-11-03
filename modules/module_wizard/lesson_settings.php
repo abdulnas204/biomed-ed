@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Module Settings", "tinyMCESimple,validate,enableDisable,navigationMenu");
 	require_once('../questions/functions.php');
+	$monitor = monitor("Module Settings", "tinyMCESimple,validate,enableDisable,navigationMenu,autoSuggest");
 	
 //Grab the form data
 	if (isset($_SESSION['currentModule'])) {
@@ -11,7 +11,7 @@
 	}
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && is_numeric($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip'])) {
+	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip'])) {
 		$name = mysql_real_escape_string($_POST['name']);
 		$category = mysql_real_escape_string($_POST['category']);
 		$employee = mysql_real_escape_string($_POST['employee']);
@@ -34,14 +34,13 @@
 								
 			mysql_query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `employee` = '{$employee}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `skip` = '{$skip}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE `id` = '{$id}'", $connDBA);
 		} else {
-			$position = lastItem($monitor['parentTable']);
 			$organizationPrep = userData();
 			$organization = $organizationPrep['organization'];
 			
 			mysql_query("INSERT INTO `{$monitor['parentTable']}` (
-						`id`, `position`, `locked`, `visible`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
+						`id`, `locked`, `visible`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
 						) VALUES (
-						NULL, '{$position}', '{$locked}', '', '{$name}', '{$category}', '{$employee}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$skip}', '{$feedback}', '{$tags}', '{$searchEngine}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
+						NULL, '{$locked}', '', '{$name}', '{$category}', '{$employee}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$skip}', '{$feedback}', '{$tags}', '{$searchEngine}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
 						)", $connDBA);
 						
 			$id =  mysql_insert_id();
@@ -49,7 +48,6 @@
 			mysql_query("CREATE TABLE IF NOT EXISTS `{$monitor['prefix']}modulelesson_{$id}` (
 						  `id` int(255) NOT NULL AUTO_INCREMENT,
 						  `position` int(100) NOT NULL,
-						  `type` longtext NOT NULL,
 						  `title` longtext NOT NULL,
 						  `content` longtext NOT NULL,
 						  `attachment` longtext NOT NULL,
@@ -58,6 +56,9 @@
 						
 			mkdir("../" . $id, 0777);
 			mkdir("../" . $id . "/lesson", 0777);
+			mkdir("../" . $id . "/lesson/browser", 0777);
+			mkdir("../" . $id . "/lesson/browser/public", 0777);
+			mkdir("../" . $id . "/lesson/browser/secure", 0777);
 			mkdir("../" . $id . "/test", 0777);
 			mkdir("../" . $id . "/test/answers", 0777);
 			mkdir("../" . $id . "/test/responses", 0777);

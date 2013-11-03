@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Essay", "tinyMCESimple,validate");
 	require_once('functions.php');
+	$monitor = monitor("Essay", "tinyMCEMedia,validate,autoSuggest");
 	$questionData = dataGrabber("Essay");
 	
 //Process the form

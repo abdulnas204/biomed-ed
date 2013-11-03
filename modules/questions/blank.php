@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Fill in the Blank", "tinyMCESimple,validate,newObject");
 	require_once('functions.php');
+	$monitor = monitor("Fill in the Blank", "tinyMCESimple,validate,newObject,autoSuggest");
 	$questionData = dataGrabber("Fill in the Blank");
 	
 //Process the form
@@ -81,7 +81,7 @@
 	}
 	
 	echo "</table><p>";
-	echo "<span class=\"smallAdd\" onclick=\"addBlank('items', '<input name=\'questionValue[]\' type=\'text\' id=\'questionValue', '\' autocomplete=\'off\' size=\'50\' class=\'validate[required]\' />', '<input name=\'answerValue[]\' type=\'text\' id=\'answerValue', '\' autocomplete=\'off\' size=\'50\' />')\">Add Another Item</span>";
+	echo "<span class=\"smallAdd\" onclick=\"addBlank('items')\">Add Another Item</span>";
 	echo "</p></blockquote></blockquote>";
 	
 	catDivider("Feedback", "four");	

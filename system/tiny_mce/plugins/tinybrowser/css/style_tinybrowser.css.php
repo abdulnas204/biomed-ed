@@ -6,6 +6,7 @@ header ("Content-type: text/css");
 html { 
 overflow: -moz-scrollbars-vertical !important; 
 }
+
 .panel_wrapper div.currentmod {
 display:block;
 width:100%; 

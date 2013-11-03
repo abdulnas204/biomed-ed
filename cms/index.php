@@ -1,7 +1,9 @@
 <?php 
 //Header functions
-	require_once('../system/connections/connDBA.php');
-	headers("Pages Control Panel", "Site Administrator", "liveSubmit,customVisible", true); 
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("cms") . "config.php");
+	require_once(relativeAddress("cms/system/php") . "index.php");
+	headers("Pages Control Panel", "liveSubmit,customVisible", true); 
 
 //Reorder pages	
 	reorder("pages", "index.php");
@@ -21,7 +23,7 @@
 	echo URL("Manage Site Settings", "site_settings.php", "toolBarItem settings");
 	echo URL("Manage Sidebar", "sidebar.php", "toolBarItem sideBar");
 
-	if (exist("pages") == true) {
+	if (exist("pages")) {
 		echo URL("Preview this Site", "../../index.php", "toolBarItem search");
 	}
 	

@@ -1,15 +1,34 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+*/
+
+/* 
+Created by: Oliver Spryn
+Created on: July 16th, 2010
+Last updated: Novemeber 28th, 2010
+
+This is the error page for the system, which will return a 
+customized and user-friendly error for a 403 and 404 error.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
-	headers("Access Denied"); 
+	require_once('../../system/core/index.php');
+	headers("Access Denied");
+	login(); 
 	
-//Sidebar processor
-	$sideBarCheck = mysql_query("SELECT * FROM `sidebar` WHERE `visible` = 'on'", $connDBA);
-	if (mysql_fetch_array($sideBarCheck)) {
-		$sideBarDataGrabber = mysql_query("SELECT * FROM `sidebar` WHERE `visible` = 'on'", $connDBA);
-		$sideBarArray = array();
+//Detirmine whether or not to show the sidebar
+	if (exist("sidebar", "visible", "on")) {
+		$sideBarDataGrabber = query("SELECT * FROM `sidebar` WHERE `visible` = 'on'", "raw");
+		$sideBarLocation = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 		
-		while ($sideBarData = mysql_fetch_array($sideBarDataGrabber)) {
+		while ($sideBarData = fetch($sideBarDataGrabber)) {
 			switch ($sideBarData['type']) {
 				case "Login" : $login = "true"; break;
 				case "Register" : $register = "true"; break;
@@ -17,33 +36,10 @@
 			}
 		}
 		
-		if (isset($_SESSION['MM_Username'])) {
-			if (isset($login) || isset($register) && !isset($customContent)) {
-				if (isset($customContent)) {
-					$sideBarResult = "true";
-				}
-			} elseif (isset($login) && isset($register)) {
-				if (isset($customContent)) {
-					$sideBarResult = "true";
-				}
-			} elseif (!isset($login) || !isset($register)) {
-				if (isset($customContent)) {
-					$sideBarResult = "true";
-				}
-			} elseif (!isset($login) && !isset($register)) {
-				if (isset($customContent)) {
-					$sideBarResult = "true";
-				}
-			}
-		} else {
-			$sideBarResult = "true";
-		}
+		$sideBarResult = "true";
 	}
 	
-//Use the layout control if the page is displaying a sidebar
-	$sideBarLocationGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
-	$sideBarLocation = mysql_fetch_array($sideBarLocationGrabber);
-		
+//Use the layout control if the page is displaying a sidebar		
 	if (isset($sideBarResult)) {
 		echo "<div class=\"layoutControl\"><div class=\"";
 		
@@ -52,6 +48,7 @@
 		} else {
 			echo "contentLeft";
 		}
+		
 		echo "\">";
 	}
 
@@ -67,12 +64,12 @@
 	}
 	
 	echo "<p>&nbsp;</p><p align=\"center\">";
-	button("continue", "continue", "Continue", "history");
+	echo button("continue", "continue", "Continue", "history");
 	echo "</p>";
 
 //Display the sidebar
 	if (isset($sideBarResult)) {
-		$sideBarCheck = mysql_query("SELECT * FROM sidebar WHERE visible = 'on' ORDER BY position ASC", $connDBA);
+		$sideBarCheck = query("SELECT * FROM `sidebar` WHERE `visible` = 'on' ORDER BY `position` ASC", "raw");
 		
 		echo "</div><div class=\"";
 		
@@ -82,13 +79,13 @@
 			echo "dataRight";
 		}
 		
-		echo "\"><br /><br /><br />";
+		echo "\">\n";
 		
-		while ($sideBar = mysql_fetch_array($sideBarCheck)) {
+		while ($sideBar = fetch($sideBarCheck)) {
 			sideBox($sideBar['title'], $sideBar['type'], $sideBar['content'], "Site Administrator,Site Manager", $sideBar['id']);
 		}
 		
-		echo "</div></div>";
+		echo "</div>\n</div>\n";
 	}
 	
 //Include the footer

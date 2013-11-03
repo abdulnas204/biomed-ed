@@ -4,9 +4,10 @@
 	
 //Check to see if the module exists
 	if (isset ($_GET['id'])) {
+		$organization = userData();
 		$moduleData = exist("moduledata", "id", $_GET['id']);
 		
-		if (exist("moduledata", "id", $_GET['id']) && $moduleData['organization'] == "0") {
+		if (exist("moduledata", "id", $_GET['id']) && $moduleData['organization'] !== $organization['organization']) {
 			if ($moduleData['locked'] == "1" || empty($moduleData['visible'])) {
 				redirect("index.php");
 			}
@@ -24,6 +25,10 @@
 		query("INSERT INTO `moduledata` SELECT NULL, `position`, `locked`, `visible`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `time`, `timer`, `randomizeAll`, `questionBank`, `display`, `organization` FROM `moduledata` WHERE `id` = '{$_GET['id']}'");
 		
 		$id = mysql_insert_id();
+		$position = lastItem("moduledata");
+		
+		query("UPDATE `moduledata` SET `position` = '{$position}' WHERE `id` = '{$id}'");
+		
 		$organizationPrep = userData();
 		$organization = $organizationPrep['organization'];
 		
@@ -184,7 +189,7 @@
 	echo "</ol></blockquote>";
 	
 //Display only if a test exists
-	if ($moduleData['test'] == "1" && exist("modulelesson_" . $_GET['id'], "position", "1")) {
+	if ($moduleData['test'] == "1" && exist("moduletest_" . $_GET['id'], "position", "1")) {
 		catDivider("Test Settings", "three");
 		echo "<blockquote>";
 		directions("Test Name");
@@ -275,6 +280,9 @@
 		echo "<blockquote>";
 		test("moduletest_" . $_GET['id'], false, true);
 		echo "</blockquote>";
+	} else {
+		catDivider("Test", "three");
+		echo "<div class=\"noResults\">A test for this modules does not exist.</div>";
 	}
 	
 	catDivider(false, false, false, true);

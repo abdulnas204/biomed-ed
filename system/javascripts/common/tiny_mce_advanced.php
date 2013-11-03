@@ -37,7 +37,7 @@ tinyMCE.init({
         remove_script_host : false,
         convert_urls : false,
 		content_css : "<?php echo $root; ?>system/styles/common/universal.css",
-		file_browser_callback: "tinyBrowser",
+		file_browser_callback: "filebrowser",
 		width : "640",
 		height: "320",
 
@@ -46,3 +46,21 @@ tinyMCE.init({
         editor_deselector : "noEditorAdvanced",
         gecko_spellcheck : false,
 });
+
+function filebrowser(field_name, url, type, win) {
+    fileBrowserURL = "<?php echo $root; ?>system/tiny_mce/plugins/filebrowser/index.php?filter=" + type;
+    
+    tinyMCE.activeEditor.windowManager.open({
+        file : fileBrowserURL,
+        title : 'Server Files',
+        width : 800, 
+        height : 500,
+        resizable : "no",
+        scrollbars : "yes",
+        inline : "yes",  // This parameter only has an effect if you use the inlinepopups plugin!
+        close_previous : "no"
+    }, {
+        window : win,
+        input : field_name
+    });
+}

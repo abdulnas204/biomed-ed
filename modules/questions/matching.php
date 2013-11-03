@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Matching", "tinyMCESimple,validate,newObject");
 	require_once('functions.php');
+	$monitor = monitor("Matching", "tinyMCEMedia,tinyMCEQuestion,validate,newObject,autoSuggest");
 	$questionData = dataGrabber("Matching");
 	
 //Process the form
@@ -65,25 +65,28 @@
 			$value = $count + 1;
 			
 			echo "<tr id=\"" . $value . "\" align=\"center\"><td>";
-			textField("questionValue[]", "questionValue" . $value, false, false, false, true, false, $questions[$count]);
+			textArea("questionValue[]", "questionValue" . $value, "extraSmall", true, false, $questions[$count], false, false, " class=\"noEditorMedia editorQuestion answerValue" . $count . "\"");
 			echo "</td><td>";
-			textField("answerValue[]", "answerValue" . $value, false, false, false, true, false, $answers[$count]);
+			textArea("answerValue[]", "answerValue" . $value, "extraSmall", true, false, $answers[$count], false, false, " class=\"noEditorMedia editorQuestion questionValue" . $count . "\"");
 			echo "</td><td width=\"50\"><span class=\"action smallDelete\" onclick=\"deleteObject('items', '" . $value . "', '2')\"></span></td></tr>";
 		}
+		
+		hidden("id", "id", $value);
 	} else {
 		echo "<tr id=\"1\" align=\"center\"><td>";
-		textField("questionValue[]", "questionValue1");
+		textArea("questionValue[]", "questionValue1", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion questionValue1\"");
 		echo "</td><td>";
-		textField("answerValue[]", "answerValue1");
+		textArea("answerValue[]", "answerValue1", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion answerValue1\"");
 		echo "</td><td width=\"50\"><span class=\"action smallDelete\" onclick=\"deleteObject('items', '1', '2')\"></span></td></tr><tr id=\"2\" align=\"center\"><td>";
-		textField("questionValue[]", "questionValue2");
+		textArea("questionValue[]", "questionValue2", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion questionValue2\"");
 		echo "</td><td>";
-		textField("answerValue[]", "answerValue2");
+		textArea("answerValue[]", "answerValue2", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion answerValue2\"");
 		echo "</td><td width=\"50\"><span class=\"action smallDelete\" onclick=\"deleteObject('items', '2', '2')\"></span></td></tr>";
+		hidden("id", "id", "2");
 	}
 	
 	echo "</table><p>";
-	echo "<span class=\"smallAdd\" onclick=\"addMatching('items', '<input name=\'questionValue[]\' type=\'text\' id=\'questionValue', '\' autocomplete=\'off\' size=\'50\' class=\'validate[required]\' />', '<input name=\'answerValue[]\' type=\'text\' id=\'answerValue', '\' autocomplete=\'off\' size=\'50\' class=\'validate[required]\' />')\">Add Another Item</span>";
+	echo "<span class=\"smallAdd\" onclick=\"addMatching('items')\">Add Another Item</span>";
 	echo "</p></blockquote></blockquote>";
 	
 	catDivider("Feedback", "four");	

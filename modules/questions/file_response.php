@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("File Response", "tinyMCESimple,validate");
 	require_once('functions.php');
+	$monitor = monitor("File Response", "tinyMCEMedia,validate,autoSuggest");
 	$questionData = dataGrabber("File Response");
 	
 //Process the form
@@ -24,7 +24,7 @@
 			if ($type == "Module") {
 				$uploadDir = $monitor['directory'] . "test/answers";
 			} else {
-				$uploadDir = "../QuestionBank/test/answers";
+				$uploadDir = "../questionbank/test/answers";
 			}
 						
 			$tempFile = $_FILES['answer'] ['tmp_name'];
@@ -76,7 +76,7 @@
 		} elseif (isset($_GET['bankID'])) {
 			$table = "questionbank";
 			$id = $_GET['bankID'];
-			$directory = "../QuestionBank/test/answers";
+			$directory = "../questionbank/test/answers";
 			$redirect = "?bankID=" . $id;
 		}
 		
@@ -118,7 +118,7 @@
 	if (isset($_GET['id'])) {
 		$directory = $monitor['gatewayPath'] . "test/answers";
 	} elseif (isset($_GET['bankID'])) {
-		$directory = "../../gateway.php/modules/QuestionBank/test/answers";
+		$directory = "../../gateway.php/modules/questionbank/test/answers";
 	} else {
 		$directory = false;
 	}

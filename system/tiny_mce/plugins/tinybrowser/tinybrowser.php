@@ -1,4 +1,8 @@
 <?php
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+
 require_once('config_tinybrowser.php');
 // Set language
 if(isset($tinybrowser['language']) && file_exists('langs/'.$tinybrowser['language'].'.php'))
@@ -45,7 +49,19 @@ $passsortby = '&sortby='.$sortbynow.'&sorttype='.$sorttypenow;
 // Assign view, thumbnail and link paths
 $browsepath = $tinybrowser['path'][$typenow].$foldernow;
 $linkpath = $tinybrowser['link'][$typenow].$foldernow;
-$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+//Developer Enhancement, to force the use of the file gateway when security is required
+//$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+	if ($secure == true) {
+		switch($typenow) {
+			case "image" : $secureThumb = $imageLink; break;
+			case "media" : $secureThumb = $mediaLink; break;
+			case "file" : $secureThumb = $fileLink; break;
+		}
+		
+		$thumbpath = $secureThumb . $foldernow;
+	} else {
+		$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+	}
 
 // Assign sort parameters for column header links
 $sortbyget = array();
@@ -203,7 +219,10 @@ else
 <link rel="stylesheet" type="text/css" media="all" href="css/style_tinybrowser.css.php" />
 <script language="javascript" type="text/javascript" src="js/tinybrowser.js.php?<?php echo substr($passfeid,1); ?>"></script>
 </head>
-<body<?php echo $rowhlightinit; ?>>
+<?php
+//Developer Enhancement, check if this is a secure file zone
+	isSecure($rowhlightinit);
+?>
 <?php
 if(count($notify['type'])>0) editorAlert($notify);
 form_open('foldertab',false,'tinybrowser.php','?type='.$typenow.$passviewtype.$passsortby.$passfeid);

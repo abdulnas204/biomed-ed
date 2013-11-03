@@ -2,6 +2,7 @@
 /**********************************************************************
 Developer enhancements are denoted by a //Developer Enhancement comment
 **********************************************************************/
+
 require_once('config_tinybrowser.php');
 // Set language
 if(isset($tinybrowser['language']) && file_exists('langs/'.$tinybrowser['language'].'.php'))
@@ -28,8 +29,22 @@ $destfolder = (isset($_POST['destination']) ? $tinybrowser['path'][$typenow].url
 $destfoldernow = (isset($_POST['destination']) ? urldecode($_POST['destination']) : $foldernow);
 
 // Assign edit and thumbnail path
-$editpath = $tinybrowser['path'][$typenow].$foldernow;
-$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+//Developer Enhancement, to force the use of the file gateway when security is required
+//$editpath = $tinybrowser['path'][$typenow].$foldernow;
+//$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+	if ($secure == true) {
+		switch($typenow) {
+			case "image" : $secureThumb = $imageLink; break;
+			case "media" : $secureThumb = $mediaLink; break;
+			case "file" : $secureThumb = $fileLink; break;
+		}
+		
+		//$editpath = $secureThumb . $foldernow;
+		$thumbpath = $secureThumb . $foldernow;
+	} else {
+		$editpath = $tinybrowser['path'][$typenow].$foldernow;
+		$thumbpath = $tinybrowser[$tinybrowser['thumbsrc']][$typenow].$foldernow;
+	}
 
 // Assign browsing options
 $sortbynow = (isset($_REQUEST['sortby']) ? $_REQUEST['sortby'] : $tinybrowser['order']['by']);
@@ -359,7 +374,10 @@ else
 <link rel="stylesheet" type="text/css" media="all" href="css/style_tinybrowser.css.php" />
 <script language="javascript" type="text/javascript" src="js/tinybrowser.js.php"></script>
 </head>
-<body onload="rowHighlight();">
+<?php
+//Developer Enhancement, check if this is a secure file zone
+	isSecure("onload=\"rowHighlight();\"");
+?>
 <?php
 if(count($notify['type'])>0) alert($notify);
 form_open('foldertab',false,'edit.php','?type='.$typenow.$passfeid);

@@ -598,29 +598,6 @@ a.skip:focus, a.skip:active {
 	}
 /* End universal declarations */
 
-/* Begin notifications styles */
-	.error {
-		color:#000000;
-		border:solid red;
-		padding:5px;
-		width: 75%;
-		text-align:center;
-	}
-	
-	.success {
-		color:#000000;
-		border:solid green;
-		padding:5px;
-		width: 75%;
-	}
-	
-	.announcement {
-		border:solid grey;
-		padding:5px;
-		width: 75%;
-	}
-/* End notifications styles */
-
 /* Begin layout control */
 	.layoutControl {
 		clear: both;
@@ -909,6 +886,30 @@ a.skip:focus, a.skip:active {
 		background: #FDFDFD;
 		text-align:center;
 		padding:7px 0px 7px 0px;
+	}
+	
+	tr.evenRollover td {
+		background: #EAEAEA;
+		text-align:center;
+		padding:7px 0px 7px 0px;
+	}
+	
+	tr.oddRollover td {
+		background: #FDFDFD;
+		text-align:center;
+		padding:7px 0px 7px 0px;
+	}
+	
+	tr.evenRollover:hover td {
+		background: #b4cae9;
+	}
+	
+	tr.oddRollover:hover td {
+		background: #b4cae9;
+	}
+	
+	tr.marked td {
+		background: #e9c7b4;
 	}
 	
 	a.sortHover:link, a.sortHover:visited {
@@ -1297,6 +1298,10 @@ a.skip:focus, a.skip:active {
 		background:url(../../images/admin_icons/smallEdit.png) no-repeat left;
 	}
 	
+	a.mediumEdit {
+		background:url(../../images/admin_icons/mediumEdit.png) no-repeat center;
+	}
+	
 	a.smallDelete, span.smallDelete {
 		background:url(../../images/common/x.png) no-repeat center;
 		cursor:pointer;
@@ -1306,5 +1311,9 @@ a.skip:focus, a.skip:active {
 		height: 25px;
 		padding-right: 10px;
 		text-align:right;
+	}
+	
+	#calendar {
+		width:900px;		
 	}
 /* End Misc. */

@@ -93,10 +93,10 @@
 			echo "</div>";
 			
 		//Assignment control panel
-			echo "<div class=\"layoutControl\"><div class=\"TabbedPanels\" id=\"assignmentPanel\"><ul class=\"TabbedPanelsTabGroup\"><li class=\"TabbedPanelsTab\" tabindex=\"0\">View By User</li><li class=\"TabbedPanelsTab\" tabindex=\"0\">View By Module</li></ul><div class=\"TabbedPanelsContentGroup\">";
+			//echo "<div class=\"layoutControl\"><div class=\"TabbedPanels\" id=\"assignmentPanel\"><ul class=\"TabbedPanelsTabGroup\"><li class=\"TabbedPanelsTab\" tabindex=\"0\">View By User</li><li class=\"TabbedPanelsTab\" tabindex=\"0\">View By Module</li></ul><div class=\"TabbedPanelsContentGroup\">";
 			
 		//View assignments by user
-			echo "<div class=\"TabbedPanelsContent\">";			
+			//echo "<div class=\"TabbedPanelsContent\">";			
 			//Search options
 			echo "<div class=\"toolBar noPadding\">Users per Page: ";
 			dropDown("resultsUsers", "resultsUsers", "10,20,30,40,50,100,200", "10,20,30,40,50,100,200", false, false, false, "20", false, false, " onchange=\"pvUsers.setPageSize(parseInt(document.getElementById('resultsUsers').value))\"");
@@ -128,15 +128,15 @@
 			echo "</table>";
 			echo "</div>";
 			
-			echo "<div spry:region=\"pvUsers\" spry:if=\"{ds_UnfilteredRowCount} == 0\" align=\"center\">No results found.</div>";
+			echo "<div spry:region=\"pvUsers\" spry:if=\"{ds_UnfilteredRowCount} == 0\" align=\"center\">No results found. Make sure your spelling is correct, and that you are searching under the correct category.</div>";
 			
 			//Bottom navigation toolbar
 			navigate("pvUsers", "bottom");
 			
-			echo "</div>";
+			//echo "</div>";
 		
 		//View assignments by module
-			echo "<div class=\"TabbedPanelsContent\">";
+			/*echo "<div class=\"TabbedPanelsContent\">";
 			//Search options
 			echo "<div class=\"toolBar noPadding\">Users per Page: ";
 			dropDown("resultsUsers", "resultsUsers", "10,20,30,40,50,100,200", "10,20,30,40,50,100,200", false, false, false, "20", false, false, " onchange=\"pvUsers.setPageSize(parseInt(document.getElementById('resultsUsers').value))\"");
@@ -168,13 +168,13 @@
 			echo "</table>";
 			echo "</div>";
 			
-			echo "<div spry:region=\"pvUsers\" spry:if=\"{ds_UnfilteredRowCount} == 0\" align=\"center\">No results found.</div>";
+			echo "<div spry:region=\"pvUsers\" spry:if=\"{ds_UnfilteredRowCount} == 0\" align=\"center\">No results found. Make sure your spelling is correct, and that you are searching under the correct category.</div>";
 			
 			//Bottom navigation toolbar
 			navigate("pvUsers", "bottom");
 			
 			echo "</div>";
-			echo "</div></div></div></div>";
+			echo "</div></div></div></div>";*/
 			
 		//Configure the tabbed panels
 			echo "<script type=\"text/javascript\">var tp1 = new Spry.Widget.TabbedPanels(\"assignmentPanel\");</script>";

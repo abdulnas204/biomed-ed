@@ -129,17 +129,16 @@
 			
 			foreach ($oldAdmin as $userID) {
 				if (!in_array($userID, $newAdmin)) {
-					mysql_query("UPDATE `users` SET `role` = 'Student', `organization` = '{$id}' WHERE `id` = '{$userID}'", $connDBA);
+					query("UPDATE `users` SET `role` = 'Student', `organization` = '{$id}' WHERE `id` = '{$userID}'");
 				}
 			}
 			
 			foreach ($newAdmin as $userID) {				
 				if (!in_array($userID, $oldAdmin)) {
-					mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$id}' WHERE `id` = '{$userID}'", $connDBA);
-					
-					$domain = explode(":", $_SERVER['HTTP_HOST']);
+					query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$id}' WHERE `id` = '{$userID}'");
 					$emailGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}'");
-					mail($emailGrabber['emailAddress1'], "Your are an Organization Administrator", "
+					
+					autoEmail($emailGrabber['emailAddress1'], "Your are an Organization Administrator", "
 					You have been granted the Organization Administrator role for \"" . $_POST['name'] . "\".
 					
 					Please copy and paste the following link into your browser to access the login page.
@@ -147,7 +146,7 @@
 					" . $root . "login.php
 					
 					-------------------------------------------------
-					Please DO NOT reply to this email. If you have any questions regarding the contents of this email, please contact one of the site administrators.", "From: No Reply<no-reply@" . $domain['0'] . ">");
+					Please DO NOT reply to this email. If you have any questions regarding the contents of this email, please contact one of the site administrators.");
 				}
 			}
 			
@@ -217,10 +216,10 @@
 			$newAdmin = explode(",", $admin);
 			
 			foreach ($newAdmin as $userID) {
-				mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$newID}' WHERE `id` = '{$userID}'", $connDBA);
-				
+				query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$newID}' WHERE `id` = '{$userID}'", $connDBA);
 				$emailGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}'");
-				mail($emailGrabber['emailAddress1'], "Your are an Organization Administrator", "
+				
+				autoEmail($emailGrabber['emailAddress1'], "Your are an Organization Administrator", "
 				You have been granted the Organization Administrator role for \"" . $_POST['name'] . "\".
 				
 				This organization many require some initial setup. Please copy and paste the following link into your browser to access the login page.
@@ -228,7 +227,7 @@
 				" . $root . "login.php
 				
 				-------------------------------------------------
-				Please DO NOT reply to this email. If you have any questions regarding the contents of this email, please contact one of the site administrators.", "From: No Reply<no-reply@" . $domain['0'] . ">");
+				Please DO NOT reply to this email. If you have any questions regarding the contents of this email, please contact one of the site administrators.");
 			}
 							
 			redirect("index.php?inserted=organization");

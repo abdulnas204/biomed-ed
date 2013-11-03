@@ -23,7 +23,8 @@
 	
 //If a file extension was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {
-		$gatewayFile = urldecode(str_replace($strippedRoot . "gateway.php/", "", urldecode($_SERVER['REQUEST_URI'])));
+		$gatewayFilePrep = explode("?", urldecode($_SERVER['REQUEST_URI']));
+		$gatewayFile = urldecode(str_replace($strippedRoot . "gateway.php/", "", $gatewayFilePrep['0']));
 		
 	//Expose the directory path and file type
 		$directoryArray = explode("/", $gatewayFile);
@@ -40,7 +41,7 @@
 		
 	//Check to see if the file exists
 		if (!file_exists($gatewayFile) || is_dir($gatewayFile)) {
-			redirect($root . "includes/access_deny.php?error=404");
+			redirect($root . "system/deny/index.php?error=404");
 		}
 	
 	//Site administrators will have access to lesson and answer files from modules
@@ -111,7 +112,7 @@
 					}
 					
 					if ($directoryArray['2'] == "lesson") {
-						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "C" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") {
+						if (($moduleAccess[$directoryArray['1']]['testStatus'] == "C" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") || $directoryArray['4'] == "public") {
 							open();
 						}
 					}
@@ -119,7 +120,16 @@
 			}
 		}
 		
-		redirect($root . "includes/access_deny.php?error=403");
+	//Display only public directories to non-logged in users
+		if (!loggedIn())  {
+			for ($count = 0; $count <= $directoryDepth; $count++) {
+				if ($directoryArray['4'] == "public") {
+					open();
+				}
+			}
+		}
+		
+		redirect($root . "system/deny/index.php?error=403");
 	} else {
 		die(centerDiv("A file was not provided."));
 	}

@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Multiple Choice", "tinyMCESimple,validate,newObject");
 	require_once('functions.php');
+	$monitor = monitor("Multiple Choice", "tinyMCEMedia,tinyMCEQuestion,validate,newObject,autoSuggest");
 	$questionData = dataGrabber("Multiple Choice");
 	
 //Process the form
@@ -17,7 +17,7 @@
 		$partialCredit = $_POST['partialCredit'];
 		$randomize = $_POST['randomize'];
 		$tags = mysql_real_escape_string($_POST['tags']);
-		$questionValue = serialize($_POST['values']);
+		$questionValue = mysql_real_escape_string(serialize($_POST['values']));
 		$answerValue = mysql_real_escape_string(serialize($_POST['choices']));
 		$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
 		$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
@@ -83,23 +83,26 @@
 			}
 			
 			echo "</td><td>";
-			textField("values[]", "value" . $value, false, false, false, false, false, $values[$count]);
+			textArea("values[]", "value" . $value, "extraSmall", true, false, $values[$count], false, false, " class=\"noEditorMedia editorQuestion value" . $count . "\"");
 			echo "</td><td><span class=\"action smallDelete\" onclick=\"deleteObject('items', this.parentNode.parentNode.id, '2', true)\"></span></td></tr>";
 		}
+		
+		hidden("id", "id", $value);
 	} else {
 		echo "<tr id=\"1\" align=\"center\"><td>";
 		checkbox("choices[]", "choice1", false, "1", true, "1");
 		echo "</td><td>";
-		textField("values[]", "value1");
+		textArea("values[]", "value1", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion value1\"");
 		echo "</td><td><span class=\"action smallDelete\" onclick=\"deleteObject('items', this.parentNode.parentNode.id, '2', true, true)\"></span></td></tr><tr id=\"2\" align=\"center\"><td>";
 		checkbox("choices[]", "choice2", false, "2", true, "1");
 		echo "</td><td>";
-		textField("values[]", "value2");
+		textArea("values[]", "value2", "extraSmall", true, false, false, false, false, " class=\"noEditorMedia editorQuestion value2\"");
 		echo "</td><td><span class=\"action smallDelete\" onclick=\"deleteObject('items', this.parentNode.parentNode.id, '2', true, true)\"></span></td></tr>";
+		hidden("id", "id", "2");
 	}
 	
 	echo "</table><p>";
-	echo "<span class=\"smallAdd\" onclick=\"addMultipleChoice('items', '<label><input name=\'choices[]\' type=\'checkbox\' id=\'choice', '\' value=\'', '\' class=\'validate[required,minCheckbox[1]]\'></label>', '<input name=\'values[]\' type=\'text\' id=\'value', '\' autocomplete=\'off\' size=\'50\' class=\'validate[required]\' />', '<input name=\'answerValue[]\' type=\'text\' id=\'answerValue', '\' autocomplete=\'off\' size=\'50\' />')\">Add Another Item</span>";
+	echo "<span class=\"smallAdd\" onclick=\"addMultipleChoice('items')\">Add Another Item</span>";
 	echo "</p></blockquote></blockquote>";
 	
 	catDivider("Feedback", "four");	

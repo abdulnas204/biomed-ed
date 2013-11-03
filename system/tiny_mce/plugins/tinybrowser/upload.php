@@ -1,4 +1,8 @@
 <?php
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+
 require_once('config_tinybrowser.php');
 // Set language
 if(isset($tinybrowser['language']) && file_exists('langs/'.$tinybrowser['language'].'.php'))
@@ -102,29 +106,34 @@ document.location = url;
 }
 </script>
 </head>
-<body onload='
-      var so = new SWFObject("flexupload.swf", "mymovie", "100%", "340", "9", "#ffffff");
-      so.addVariable("folder", "<?php echo $uploadpath; ?>");
-      so.addVariable("uptype", "<?php echo $typenow; ?>");
-      so.addVariable("destid", "<?php echo $passupfeid; ?>");
-      so.addVariable("maxsize", "<?php echo $tinybrowser['maxsize'][$_GET['type']]; ?>");
-      so.addVariable("sessid", "<?php echo session_id(); ?>");
-      so.addVariable("obfus", "<?php echo md5($_SERVER['DOCUMENT_ROOT'].$tinybrowser['obfuscate']); ?>");
-      so.addVariable("filenames", "<?php echo $filelist; ?>");
-      so.addVariable("extensions", "<?php echo $fileexts; ?>");
-      so.addVariable("filenamelbl", "<?php echo TB_FILENAME; ?>");
-      so.addVariable("sizelbl", "<?php echo TB_SIZE; ?>");
-      so.addVariable("typelbl", "<?php echo TB_TYPE; ?>");
-      so.addVariable("progresslbl", "<?php echo TB_PROGRESS; ?>");
-      so.addVariable("browselbl", "<?php echo TB_BROWSE; ?>");
-      so.addVariable("removelbl", "<?php echo TB_REMOVE; ?>");
-      so.addVariable("uploadlbl", "<?php echo TB_UPLOAD; ?>");
-      so.addVariable("uplimitmsg", "<?php echo TB_MSGMAXSIZE; ?>");
-      so.addVariable("uplimitlbl", "<?php echo TB_TTLMAXSIZE; ?>");
-      so.addVariable("uplimitbyte", "<?php echo TB_BYTES; ?>");
-      so.addParam("allowScriptAccess", "always");
-      so.addParam("type", "application/x-shockwave-flash");
-      so.write("flashcontent");'>
+<?php
+//Developer Enhancement, check if this is a secure file zone
+//Developer Enhancement, modified from config below
+//so.addVariable(\"sessid\", \"" . session_id() . "\");
+	isSecure("onload='
+      var so = new SWFObject(\"flexupload.swf\", \"mymovie\", \"100%\", \"340\", \"9\", \"#ffffff\");
+      so.addVariable(\"folder\", \"" . $uploadpath . "\");
+      so.addVariable(\"uptype\", \"" . $typenow . "\");
+      so.addVariable(\"destid\", \"" . $passupfeid . "\");
+      so.addVariable(\"maxsize\", \"" . $tinybrowser['maxsize'][$_GET['type']] . "\");
+      so.addVariable(\"sessid\", \"\");
+      so.addVariable(\"obfus\", \"" . md5($_SERVER['DOCUMENT_ROOT'].$tinybrowser['obfuscate']) . "\");
+      so.addVariable(\"filenames\", \"" . $filelist . "\");
+      so.addVariable(\"extensions\", \"" . $fileexts . "\");
+      so.addVariable(\"filenamelbl\", \"" . TB_FILENAME . "\");
+      so.addVariable(\"sizelbl\", \"" . TB_SIZE . "\");
+      so.addVariable(\"typelbl\", \"" . TB_TYPE . "\");
+      so.addVariable(\"progresslbl\", \"" . TB_PROGRESS . "\");
+      so.addVariable(\"browselbl\", \"" . TB_BROWSE . "\");
+      so.addVariable(\"removelbl\", \"" . TB_REMOVE . "\");
+      so.addVariable(\"uploadlbl\", \"" . TB_UPLOAD . "\");
+      so.addVariable(\"uplimitmsg\", \"" . TB_MSGMAXSIZE . "\");
+      so.addVariable(\"uplimitlbl\", \"" . TB_TTLMAXSIZE . "\");
+      so.addVariable(\"uplimitbyte\", \"" . TB_BYTES . "\");
+      so.addParam(\"allowScriptAccess\", \"always\");
+      so.addParam(\"type\", \"application/x-shockwave-flash\");
+      so.write(\"flashcontent\");'");
+?>
 <?php
 if(count($notify['type'])>0) alert($notify);
 form_open('foldertab',false,'upload.php','?type='.$typenow.$passfeid);

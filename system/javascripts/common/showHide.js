@@ -59,7 +59,6 @@ function toggleType(field) {
 function toggleInfo(container, catDivider, currentClass, swapClass) {
 	if (document.getElementById(container)) {
 		var containerClass = document.getElementById(container);
-		var dividerClass = document.getElementById(catDivider);
 		
 		if (containerClass.className == "contentHide") {
 			containerClass.className = "contentShow";
@@ -67,10 +66,41 @@ function toggleInfo(container, catDivider, currentClass, swapClass) {
 			containerClass.className = "contentHide";
 		}
 		
-		if (dividerClass.className == currentClass) {
-			dividerClass.className = swapClass;
-		} else {
-			dividerClass.className = currentClass;
+		if (document.getElementById(catDivider)) {
+			var dividerClass = document.getElementById(catDivider);
+			
+			if (dividerClass.className == currentClass) {
+				dividerClass.className = swapClass;
+			} else {
+				dividerClass.className = currentClass;
+			}
 		}
 	}
+}
+
+function toggleDisplay(field, toggle) {
+	if (field) {
+		if (field == "Linear") {
+			document.getElementById(toggle).className = "contentHide";
+		} else {
+			document.getElementById(toggle).className = "contentShow";
+		}
+	}
+}
+
+function rollOverTools(div) {
+	var togglePrep = document.getElementById(div).className;
+	var toggle = togglePrep.split(" ");
+	
+	if (toggle['0'] == "contentHide") {
+		var hide = toggle['1'] + " " + toggle['2'];
+		document.getElementById(div).className = hide;
+	} else {
+		var show = "contentHide " + toggle['0'] + " " + toggle['1'];
+		document.getElementById(div).className = show;
+	}
+}
+
+function quickEdit(field) {
+	
 }

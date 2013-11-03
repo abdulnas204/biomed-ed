@@ -1,4 +1,8 @@
 <?php
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+
 // *************************CREATE FOLDER**********************************
 function createfolder($dir,$perm) {
 is_dir(dirname($dir)) || createfolder(dirname($dir), $perm);
@@ -435,4 +439,26 @@ function userErrorHandler($errno, $errmsg, $filename, $linenum, $vars)
 }
 $old_error_handler = set_error_handler('userErrorHandler');
 
+//Developer Enhancement, to indicate whether or not the user is browsing a secure directory
+	function isSecure($bodyParameters = false) {
+		global $secure;
+		
+		if ($secure == true) {
+			echo "<body";
+			
+			if ($bodyParameters == true) {
+				echo " " . $bodyParameters;
+			}
+			
+			echo " class=\"secure\">";
+		} else {
+			echo "<body";
+			
+			if ($bodyParameters == true) {
+				echo " " . $bodyParameters;
+			}
+			
+			echo " class=\"unsecure\">";
+		}
+	}
 ?>

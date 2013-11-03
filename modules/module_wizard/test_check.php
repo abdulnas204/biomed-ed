@@ -15,7 +15,7 @@
 					  `extraCredit` text NOT NULL,
 					  `partialCredit` int(1) NOT NULL,
 					  `difficulty` longtext NOT NULL,
-					  `category` int(11) NOT NULL,
+					  `category` longtext NOT NULL,
 					  `link` longtext NOT NULL,
 					  `randomize` int(1) NOT NULL,
 					  `totalFiles` int(2) NOT NULL,

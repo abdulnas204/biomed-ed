@@ -2,136 +2,141 @@
 //Header functions
 	require_once('../../system/connections/connDBA.php');
 	
+//Check to see if a category name exists
+	validateName("modulecategories", "category");
+	
 //Set a session to use when inserting questions in to the database
 	if (isset($_GET['id'])) {
 		$_SESSION['questionBank'] = $_GET['id'];
+		$categoryPrep = query("SELECT * FROM `modulecategories` WHERE `id` = '{$_GET['id']}'");
+		$category = mysql_real_escape_string($categoryPrep['category']);
 	}
 	
-//Select all categories
-	if (exist("modulecategories")) {
-	//Use the URL to narrow the categories down on request
-		if (isset ($_GET['id'])) {
-			$id = $_GET['id'];
-			
-		//Display any questions from categories whose questions may have been deleted
-			if ($_GET['id'] == "0") {
-				$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
-				$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
-				$count = 0;
-				$sql = "";
+//Create a function to delete questions
+	function questionBankDelete($id, $type) {
+		if ($type == "single") {
+			$delete = query("SELECT * FROM `questionbank_0` WHERE `id` = '{$id}'");
+		} else {
+			$delete = query("SELECT * FROM `questionbank_0` WHERE `category` = '{$id}'");
+		}
+		
+		if ($delete) {
+			if ($type == "single") {
+			//Delete from tests in which this appears
+				$questionBankDeleteGrabber = query("SELECT * FROM `moduledata`", "raw");
 				
-				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (in_array($otherQuestions['category'], $currentCategories)) {
-						if ($count == 0) {
-							$sql .= " WHERE`category` != '" . $otherQuestions['category'] . "'";
-						} else {
-							$sql .= " AND `category` != '" . $otherQuestions['category'] . "' ";
-						}
+				if (exist("moduledata")) {
+					while ($questionBankDelete = mysql_fetch_array($questionBankDeleteGrabber)) {
+						$currentTable = $questionBankDelete['id'];
+						$questionArray = query("SELECT * FROM `moduletest_{$currentTable}` WHERE `linkID` = '{$id}'", false, false);
 						
-						$count ++;
+						if ($questionArray) {
+							$questionID = $questionArray['id'];
+							$questionPosition = $questionArray['position'];
+							
+							query("UPDATE moduletest_{$currentTable} SET position = position-1 WHERE position > '{$questionPosition}'");
+							query("DELETE FROM moduletest_{$currentTable} WHERE id = '{$questionID}'");
+						}
 					}
 				}
 				
-				$testImport = query("SELECT * FROM `questionbank`{$sql}ORDER BY id ASC", "raw");
-					
-				if (!$testImport) {
-					redirect("index.php");
+			//Delete the question from the bank
+				if ($delete['type'] == "File Response") {
+					delete("questionbank_0", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true, "../questionbank/test/answers/" . $delete['fileURL']);
+				} else {
+					delete("questionbank_0", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true);
 				}
 			} else {
-				$testImport = query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", "raw");
+			//Delete from tests in which this appears
+				$questionBankDeleteGrabber = query("SELECT * FROM `moduledata`", "raw");
 				
-				if (!exist("modulecategories", "id", $id)) {
-					redirect("index.php");
-				} else {
-					$bankTitle = query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'");
+				while ($questionBankDelete = mysql_fetch_array($questionBankDeleteGrabber)) {
+					$currentTable = $questionBankDelete['id'];
+					$questionArray = query("SELECT * FROM `moduletest_{$currentTable}` WHERE `linkID` = '{$id}'", false, false);
+					
+					if ($questionArray) {
+						$questionID = $questionArray['id'];
+						$questionPosition = $questionArray['position'];
+						
+						query("UPDATE moduletest_{$currentTable} SET position = position-1 WHERE position > '{$questionPosition}'");
+						query("DELETE FROM moduletest_{$currentTable} WHERE id = '{$questionID}'");
+					}
+				}
+				
+			//Delete the question from the bank
+				if ($redirect == true) {
+					if ($delete['type'] == "File Response") {
+						delete("questionbank_0", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true, "../questionbank/test/answers/" . $delete['fileURL']);
+					} else {
+						delete("questionbank_0", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true);
+					}
 				}
 			}
 		}
-	
-		$categoryResult = 1;
-	} else {
-		$categoryResult = 0;
 	}
 	
-//Delete a test question	
+//Delete a question
 	if (isset ($_GET['questionID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
-		$delete = query("SELECT * FROM `questionbank` WHERE `id` = '{$_GET['questionID']}'");
+		questionBankDelete($_GET['questionID'], "single");
+	}
+	
+//Add a new category
+	if (isset($_POST['submit']) && !empty($_POST['category']) && !exist("modulecategories", "category", mysql_real_escape_string($_POST['category']))) {
+		$category = $_POST['category'];
 		
-		if ($delete) {			
-		//Delete from tests in which this appears
-			$questionBankDeleteGrabber = query("SELECT * FROM `moduledata`", "raw");
-			
-			while ($questionBankDelete = mysql_fetch_array($questionBankDeleteGrabber)) {
-				$currentTable = $questionBankDelete['id'];
-				$questionArray = query("SELECT * FROM `moduletest_{$currentTable}` WHERE `linkID` = '{$_GET['questionID']}'", false, false);
+		query("INSERT INTO `modulecategories` (
+					`id`, `category`
+				) VALUES (
+					NULL, '{$category}'
+				)");
 				
-				if ($questionArray) {
-					$questionID = $questionArray['id'];
-					$questionPosition = $questionArray['position'];
-					
-					query("UPDATE moduletest_{$currentTable} SET position = position-1 WHERE position > '{$questionPosition}'");
-					query("DELETE FROM moduletest_{$currentTable} WHERE id = '{$questionID}'");
-				}
-			}
-			
-		//Delete the question from the bank
-			if ($delete['type'] == "File Response") {
-				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true, "../questionbank/test/answers/" . $delete['fileURL']);
-			} else {
-				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true);
-			}
-		}
+		redirect("index.php");
+	}
+	
+//Delete a category
+	if (isset($_GET['categoryID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
+		/*if (exist("modulecategories", "id", $_GET['categoryID'])) {
+			questionBankDelete($_GET['categoryID'], "category");
+		}*/
+		
+		query("DELETE FROM `modulecategories` WHERE `id` = '{$_GET['categoryID']}'");
+		redirect("index.php");
 	}
 	
 //Top Content
 	if (isset ($_GET['id'])) {
-		if ($_GET['id'] == 0) {
-			$title = "Uncategorized Bank";
-		} else {
-			$title = prepare($bankTitle['category'], false, true) . " Bank";
-		}
+		$bankTitle = query("SELECT * FROM `modulecategories` WHERE `id` = '{$_GET['id']}'");
+		$title = prepare($bankTitle['category'], false, true) . " Bank";
 	} else {
 		$title = "Question Bank";
 	}
 	
-	headers($title, "Site Administrator", false, true, " onunload=\"opener.location.reload();\"");
+	headers($title, "Site Administrator", "showHide,validate", true, " onunload=\"opener.location.reload();\"");
 	
 //Title
 	title($title, "Questions may be created here and be imported into tests when a module is being created. The questions are broken up by their category.");
 
 //Admin toolbar
 	if (isset ($_GET['id'])) {
-		if ($_GET['id'] != "0") {
-			echo "<div class=\"toolBar noPadding\">";
-			form("jump");
-			echo "<span class=\"toolBarItem noLink\">Add: ";
-			dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php");
-			button("submit", "submit", "Go", "button", false, " onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\"");
-			echo "</span>";
-			echo URL("Back to Categories", "index.php", "toolBarItem back");
-			
-			if ($testImport) {
-				echo URL("Search", "search.php", "toolBarItem search");
-			}
-			
-			closeForm(false, false); 
-			echo "</div>";
-		} else {
-			echo "<div class=\"toolBar\">";
-			echo URL("Back to Categories", "index.php", "toolBarItem back");
-			
-			if ($testImport) {
-				echo URL("Search", "search.php", "toolBarItem search");
-			}
-			
-			echo "</div>";
+		echo "<div class=\"toolBar noPadding\">";
+		form("jump");
+		echo "<span class=\"toolBarItem noLink\">Add: ";
+		dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php");
+		button("submit", "submit", "Go", "button", false, " onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\"");
+		echo "</span>";
+		echo URL("Back to Categories", "index.php", "toolBarItem back");
+		
+		if (exist("questionbank_0", "category", $category)) {
+			echo URL("Search", "search.php?id=" . $_GET['id'], "toolBarItem search");
 		}
+		
+		closeForm(false, false); 
+		echo "</div>";
 	 } else {
 		 echo "<div class=\"toolBar\">";
-		 echo URL("Back to Modules", "../index.php", "toolBarItem home");
-		 echo URL("Manage Categories", "../settings.php?type=category", "toolBarItem settings");
+		 echo URL("Back to Modules", "../index.php", "toolBarItem back");
 		 
-		 if ($categoryResult != "0") {
+		 if (exist("questionbank_0")) {
 		 	echo URL("Search", "search.php", "toolBarItem search");
 		 }
 		 
@@ -142,54 +147,52 @@
 	message("inserted", "question", "success", "The question was successfully inserted");
 	message("updated", "question", "success", "The question was successfully updated");
 	
-	if ($categoryResult != "0") {
+	if (exist("modulecategories")) {
+	//Display the categories
 		if (!isset ($_GET['id'])) {
 			echo "<p>Please select a category from the list below.</p><blockquote>";
-			$categoryGrabber = query("SELECT * FROM `modulecategories` ORDER BY position ASC", "raw");
 			
-			while ($category = mysql_fetch_array($categoryGrabber)) {
-				$currentCategory = $category['id'];
-				$questionValue = query("SELECT * FROM `questionbank` WHERE `category` = '{$currentCategory}'", "num");
+			$categoryGrabber = query("SELECT * FROM `modulecategories` ORDER BY `id` ASC", "raw");
+			
+			while ($categoryData = mysql_fetch_array($categoryGrabber)) {
+				$currentCategory = $categoryData['category'];
+				$questionValue = query("SELECT * FROM `questionbank_0` WHERE `category` = '{$currentCategory}'", "num");
 				
-				echo URL($category['category'], "index.php?id=" . $category['id']) . " : ";
+				echo "<div onmouseover=\"rollOverTools('edit_" . $categoryData['id'] . "'); rollOverTools('delete_" . $categoryData['id'] . "');\" onmouseout=\"rollOverTools('edit_" . $categoryData['id'] . "'); rollOverTools('delete_" . $categoryData['id'] . "');\">";
+				echo URL($categoryData['category'], "index.php?id=" . $categoryData['id']) . " : ";
 				
 				if ($questionValue == 1) {
-					echo $questionValue . " Question<br /><br />";
+					echo $questionValue . " Question ";
 				} else {
-					echo $questionValue . " Questions<br /><br />";
+					echo $questionValue . " Questions";
 				}
-			}
-			
-		//Display any questions from categories whose questions may have been deleted
-			$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
-			$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
-			$count = 0;
-			
-			if ($otherQuestionsGrabber) {
-				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (!inArray($otherQuestions['category'], $currentCategories)) {
-						$count++;
-					}
-				}
-			}
-			
-			if ($count > 0) {
-				echo URL ("Uncategorized", "index.php?id=0") . " : ";
 				
-				if ($count == 1) {
-					echo $count . " Question<br /><br />";
-				} else {
-					echo $count . " Questions<br /><br />";
-				}
+				echo URL("", "javascript:void;", "contentHide action mediumEdit", false, "Edit the <strong>" . $categoryData['category'] . "</strong> category", false, false, false, false, " onclick=\"quickEdit()\" id=\"edit_" . $categoryData['id'] . "\"");
+				//This action will remove this category and all of it\'s containing questions. If any of these questions are imported into a test, they will be removed from the test. To prevent the loss of these questions from a test, either move them to another category, or manually import the questions into the test. This action cannot be undone. Continue?
+				echo URL("", "index.php?categoryID=" . $categoryData['id'] . "&action=delete", "contentHide action smallDelete", false, "Delete the <strong>" . $categoryData['category'] . "</strong> category", false, false, false, false, " onclick=\"return confirm('This action will only delete the category. All questions inside will still exist. This is just a temporary limitation. Please manually remove all questions inside before removing this category. Click OK when this category is empty.')\" id=\"delete_" . $categoryData['id'] . "\"");
+				echo "</div>";
+				echo "<br />";
 			}
+			
+		//Allow addition of category types
+			echo "<div id=\"newCategory\" class=\"contentHide\">";
+			form("insertCategory");
+			directions("Category Name", true);
+			textField("category", "category", false, false, false, true, ",ajax[ajaxName]");
+			echo "<br /><br />";
+			button("submit", "submit", "Submit", "submit");
+			closeForm(false, false);
+			echo "<br /></div><span class=\"smallAdd\" onclick=\"toggleInfo('newCategory')\">Add New Category</span>";
 			
 			echo "</blockquote>";
 		}
 		
-		if (isset ($_GET['id'])) {								
-			if ($testImport) {
+	//Display the questions within a category
+		if (isset ($_GET['id'])) {						
+			if (exist("questionbank_0", "category", $category)) {
 				echo "<table class=\"dataTable\"><tbody><tr><th width=\"150\" class=\"tableHeader\">Type</th><th width=\"100\" class=\"tableHeader\">Point Value</th><th class=\"tableHeader\">Question</th><th width=\"50\" class=\"tableHeader\">Discover</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
-				$count = 1;	
+				$count = 1;
+				$testImport = query("SELECT * FROM `questionbank_0` WHERE `category` = '{$category}'", "raw");
 				
 				while ($testData = mysql_fetch_array($testImport)) {
 					echo "<tr";
@@ -237,12 +240,24 @@
 				}
 				
 				echo "</tbody></table>";
-			} else {
+			} elseif (exist("modulecategories", "category", $category)) {
 				echo "<div class=\"noResults\">There are no questions in this bank. Questions can be created by selecting a question type from the drop down menu above, and pressing &quot;Go&quot;.</div>";
+			} else {
+				redirect($_SERVER['PHP_SELF']);
 			}
 		}
 	} else {
-		echo "<div class=\"noResults\">Please <a href=\"../settings.php?type=category\">add at least one category</a> prior to entering questions.</div>";
+		echo "<div class=\"noResults\">Please <a href=\"javascript:void()\" onclick=\"toggleInfo('newCategory')\">add at least one category</a> prior to entering questions.";
+		
+	//Allow addition of category types
+		echo "<div id=\"newCategory\" class=\"contentHide\">";
+		form("insertCategory");
+		echo "<br />";
+		textField("category", "category", false, false, false, true, ",ajax[ajaxName]");
+		echo "<br /><br />";
+		button("submit", "submit", "Submit", "submit");
+		closeForm(false, false);
+		echo "</div></div>";
 	}
 	
 //Include the footer

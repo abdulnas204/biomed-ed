@@ -92,7 +92,7 @@
 		echo URL("View Groups", "group.php", "toolBarItem user");
 	}
 	
-	echo URL("Search for Users", "search.php", "toolBarItem search");
+	//echo URL("Search for Users", "search.php", "toolBarItem search");
 	echo "</div>"; 
 	
 //Display message updates
@@ -128,7 +128,7 @@
 		echo "<div spry:state=\"loadingData\" class=\"noResults\">Loading Users...</div>";
 		
 	//Users table
-		echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tr><th class=\"tableHeader\">" . URL("Name", "javascript:void", "descending", false, false, false, false, false, false, " id=\"name\" spry:sort=\"name\" onclick=\"toggleClass(this.id);\"") . "</th><th width=\"" . $emailWdith . "\" spry:sort=\"email\" class=\"tableHeader\">Email Address</th><th width=\"225\" spry:sort=\"role\" class=\"tableHeader\" width=\"" . $roleWidth . "\">Role</th>";
+		echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tr><th class=\"tableHeader\">" . URL("Name", "javascript:void", "descending", false, false, false, false, false, false, " id=\"name\" spry:sort=\"name\" onclick=\"toggleClass(this.id);\"") . "</th><th width=\"" . $emailWidth . "\" spry:sort=\"email\" class=\"tableHeader\">Email Address</th><th width=\"225\" spry:sort=\"role\" class=\"tableHeader\" width=\"" . $roleWidth . "\">Role</th>";
 		
 		if (access("manageAllOrganizations")) {
 			echo "<th width=\"200\" spry:sort=\"organization\" class=\"tableHeader\">Organization</th>";
@@ -142,7 +142,7 @@
 		
 		echo "<tr spry:repeat=\"pvUsers\" spry:odd=\"odd\" spry:even=\"even\">";
 		echo "<td>" . URL("{pvUsers::name}", "profile.php?id={pvUsers::id}") . "</td>";
-		echo "<td width=\"" . $emailWdith . "\">" . URL("{pvUsers::email}", "../communication/send_email.php?type=users&id={pvUsers::id}") . "</td>";
+		echo "<td width=\"" . $emailWidth . "\">" . URL("{pvUsers::email}", "../communication/send_email.php?type=users&id={pvUsers::id}") . "</td>";
 		echo "<td width=\"" . $roleWidth . "\">{pvUsers::role}</td>";
 		
 		if (access("manageAllOrganizations")) {

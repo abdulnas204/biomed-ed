@@ -1,12 +1,19 @@
 <?php
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+
 require_once('config_tinybrowser.php');
 require_once('fns_tinybrowser.php');
 
+//Developer Enhancement, removed, now using custom security
+/*
 // Check session, if it exists
 if(session_id() != '')
 	{
 	if(!isset($_SESSION[$tinybrowser['sessioncheck']])) { echo 'Error!'; exit; }
 	}
+*/
 	
 // Check hash is correct (workaround for Flash session bug, to stop external form posting)
 if($_GET['obfuscate'] != md5($_SERVER['DOCUMENT_ROOT'].$tinybrowser['obfuscate'])) { echo 'Error!'; exit; } 
@@ -23,7 +30,7 @@ if(!validateExtension($ext, $tinybrowser['prohibited'])) { echo 'Error!'; exit; 
 
 // Check file data
 if ($_FILES['Filedata']['tmp_name'] && $_FILES['Filedata']['name'])
-	{	
+	{
 	$source_file = $_FILES['Filedata']['tmp_name'];
 	$file_name = stripslashes($_FILES['Filedata']['name']);
 	if($tinybrowser['cleanfilename']) $file_name = clean_filename($file_name);

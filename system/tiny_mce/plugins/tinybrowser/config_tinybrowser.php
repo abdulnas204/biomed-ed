@@ -1,16 +1,9 @@
 <?php
-//Developer Enhancement, to detirmine the folder root
-	$strippedRootExplode = explode("/", $_SERVER['REQUEST_URI']);
-	$strippedRootCount = count($strippedRootExplode);
-	$strippedRoot = "";
-	
-	foreach ($strippedRootExplode as $appendString) {
-		if ($appendString != "tiny_mce") {
-			$strippedRoot .= $appendString . "/";
-		} else {
-			break;
-		}
-	}
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+die("depreciated");
+
 /*
 TinyBrowser 1.41 - A TinyMCE file browser (C) 2008  Bryn Jones
 (author website - http://www.lunarvis.com)
@@ -37,13 +30,43 @@ set_time_limit(240);
 
 $tinybrowser = array();
 
-// Session control and security check - to enable please uncomment
-//if(isset($_GET['sessidpass'])) session_id($_GET['sessidpass']); // workaround for Flash session bug
-//session_start();
-//$tinybrowser['sessioncheck'] = 'authenticated_user'; //name of session variable to check
-
+//Developer Enhancement, to disallow unwanted access
+	session_start();
+	
+	if (isset($_SESSION['MM_Username']) && !empty($_SESSION['MM_Username']) && isset($_SESSION['MM_UserGroup']) && $_SESSION['MM_UserGroup'] === "Site Administrator") {
+		//Do nothing, access is granted
+	} else {
+		die("You do not have access to this content");
+	}
+	
+//Developer Enhancement, to detirmine the folder root
+	$strippedRootExplode = explode("/", $_SERVER['REQUEST_URI']);
+	$strippedRootCount = count($strippedRootExplode);
+	$strippedRoot = "";
+	
+	foreach ($strippedRootExplode as $appendString) {
+		if ($appendString != "tiny_mce") {
+			$strippedRoot .= $appendString . "/";
+		} else {
+			break;
+		}
+	}
+	
+	if (isset($_SESSION['currentModule'])) {
+		$secureRoot = str_replace("system/", "", $strippedRoot) . "modules/" . $_SESSION['currentModule'] . "/lesson/browser/";
+		$imagePath = $secureRoot . "images/";
+		$mediaPath = $secureRoot . "media/";
+		$filePath = $secureRoot . "other/";
+		$secure = true;
+	} else {		
+		$imagePath = $strippedRoot . 'files/images/';
+		$mediaPath = $strippedRoot . 'files/media/';
+		$filePath = $strippedRoot . 'files/other/';
+		$secure = false;
+	}
+	
 // Random string used to secure Flash upload if session control not enabled - be sure to change!
-$tinybrowser['obfuscate'] = 's0merand0mjunk!!!111';
+$tinybrowser['obfuscate'] = 'HJf8denj9dIUdhd';
 
 // Set default language (ISO 639-1 code)
 $tinybrowser['language'] = 'en';
@@ -58,19 +81,34 @@ $tinybrowser['docroot'] = rtrim($_SERVER['DOCUMENT_ROOT'],'/');
 $tinybrowser['unixpermissions'] = 0777;
 
 // File upload paths (set to absolute by default)
-$tinybrowser['path']['image'] = $strippedRoot . 'files/images/'; // Image files location - also creates a '_thumbs' subdirectory within this path to hold the image thumbnails
-$tinybrowser['path']['media'] = $strippedRoot . 'files/media/'; // Media files location
-$tinybrowser['path']['file']  = $strippedRoot . 'files/other/'; // Other files location
+$tinybrowser['path']['image'] = $imagePath; // Image files location - also creates a '_thumbs' subdirectory within this path to hold the image thumbnails
+$tinybrowser['path']['media'] = $mediaPath; // Media files location
+$tinybrowser['path']['file']  = $filePath; // Other files location
+
+//Developer Enhancement, to pass all images through the gateway
+	if ($secure == true) {
+		$secureRoot = str_replace("system/", "", $strippedRoot) . "gateway.php/modules/" . $_SESSION['currentModule'] . "/lesson/browser/";
+		$imageLink = $secureRoot . "images/";
+		$mediaLink = $secureRoot . "media/";
+		$fileLink = $secureRoot . "other/";
+	} else {
+		$imageLink = $tinybrowser['path']['image'];
+		$mediaLink = $tinybrowser['path']['media'];
+		$fileLink = $tinybrowser['path']['file'];
+	}
 
 // File link paths - these are the paths that get passed back to TinyMCE or your application (set to equal the upload path by default)
-$tinybrowser['link']['image'] = $tinybrowser['path']['image']; // Image links
-$tinybrowser['link']['media'] = $tinybrowser['path']['media']; // Media links
-$tinybrowser['link']['file']  = $tinybrowser['path']['file']; // Other file links
+$tinybrowser['link']['image'] = $imageLink; // Image links
+$tinybrowser['link']['media'] = $mediaLink; // Media links
+$tinybrowser['link']['file']  = $fileLink; // Other file links
+
+//Developer Enhancement, to detirmine the system upload_max_filesize
+	$uploadLimit = sprintf(ereg_replace("[^0-9]", "", ini_get('upload_max_filesize')) * 1024 * 1024);
 
 // File upload size limit (0 is unlimited)
-$tinybrowser['maxsize']['image'] = 0; // Image file maximum size
-$tinybrowser['maxsize']['media'] = 0; // Media file maximum size
-$tinybrowser['maxsize']['file']  = 0; // Other file maximum size
+$tinybrowser['maxsize']['image'] = $uploadLimit; // Image file maximum size
+$tinybrowser['maxsize']['media'] = $uploadLimit; // Media file maximum size
+$tinybrowser['maxsize']['file']  = $uploadLimit; // Other file maximum size
 
 // Image automatic resize on upload (0 is no resize)
 $tinybrowser['imageresize']['width']  = 0;
@@ -108,7 +146,7 @@ $tinybrowser['view']['image'] = 'thumb'; // Possible values: thumb, detail
 $tinybrowser['pagination'] = 0;
 
 // TinyMCE dialog.css file location, relative to tinybrowser.php (can be set to absolute link)
-$tinybrowser['tinymcecss'] = '../../themes/advanced/skins/default/dialog.css';
+$tinybrowser['tinymcecss'] = 'css/tinymce_style.css';
 
 // TinyBrowser pop-up window size
 $tinybrowser['window']['width']  = 770;

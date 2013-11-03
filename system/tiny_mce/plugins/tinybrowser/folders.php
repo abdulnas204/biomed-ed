@@ -1,4 +1,8 @@
 <?php
+/**********************************************************************
+Developer enhancements are denoted by a //Developer Enhancement comment
+**********************************************************************/
+
 require_once('config_tinybrowser.php');
 // Set language
 if(isset($tinybrowser['language']) && file_exists('langs/'.$tinybrowser['language'].'.php'))
@@ -48,7 +52,9 @@ if(isset($_POST['createfolder']))
 		if($newfolder != '')
 			{
 			$createthisfolder = $tinybrowser['docroot'].$dirpath.urldecode($_POST['actionfolder'][$parent]).clean_filename($newfolder);
-			if (!file_exists($createthisfolder) && createfolder($createthisfolder,$tinybrowser['unixpermissions'])) $createqty++; else $errorqty++;
+			
+			if (!is_dir($createthisfolder) && createfolder($createthisfolder,$tinybrowser['unixpermissions'])) $createqty++; else $errorqty++;
+			
 			if($typenow=='image')
 			   {
 				createfolder($createthisfolder.'/_thumbs/',$tinybrowser['unixpermissions']);
@@ -152,7 +158,10 @@ else
 <link rel="stylesheet" type="text/css" media="all" href="css/style_tinybrowser.css.php" />
 <script language="javascript" type="text/javascript" src="js/tinybrowser.js.php"></script>
 </head>
-<body onload="rowHighlight();">
+<?php
+//Developer Enhancement, check if this is a secure file zone
+	isSecure("onload=\"rowHighlight();\"");
+?>
 <?php
 if(count($notify['type'])>0) alert($notify);
 form_open('foldertab',false,'folders.php','?type='.$typenow.$passfeid);

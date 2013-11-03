@@ -73,6 +73,7 @@
 	echo "<blockquote>";
 	directions("Passing score", false, "The minimum score a user must obtain to pass");
 	echo "<blockquote><p>";
+	
 	$valuesGenerate = "";
 	
 	for ($count = 1; $count <= 100; $count++) {
@@ -80,6 +81,7 @@
 	}
 	
 	$values = rtrim($valuesGenerate, ",");
+	
 	dropDown("score", "score", $values, $values, false, false, false, false, "testData", "score");
 	echo "</p></blockquote>";
 	directions("Number of attempts", false, "The number of times a user may take this test");

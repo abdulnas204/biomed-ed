@@ -16,7 +16,7 @@
 	function error($type) {
 		global $root, $userData, $values, $item_name, $item_number, $payment_status, $payment_amount, $payment_currency, $txn_id , $receiver_email, $payer_email;
 		
-		mail("wot200@gmail.com", "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at: " . $root . "modules/enroll/ipn.php. " . $type . " Below is all of the known information.
+		autoEmail("wot200@gmail.com", "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at: " . $root . "modules/enroll/ipn.php. " . $type . " Below is all of the known information.
 		
 		---------------------------------------------------------
 		HTTP POST-DATA:
