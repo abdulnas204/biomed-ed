@@ -32,8 +32,8 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>      
-    <h2>Welcome to the Module Setup  Wizard</h2>
-    <p>This wizard will guide you through the process of setting up a module. Click &quot;Launch Wizard&quot; to begin. </p>
+<h2>Welcome to the Module Setup  Wizard</h2>
+<p>This wizard will guide you through the process of setting up a module. Click &quot;Launch Wizard&quot; to begin. </p>
 <p>&nbsp;</p>
       <form id="startup" name="startup" method="post" action="index.php">
         <div align="center">
@@ -42,12 +42,9 @@
           </div>
         </div>
 </form>
-<br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

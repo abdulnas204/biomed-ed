@@ -1,26 +1,14 @@
 <?php require_once('Connections/connDBA.php'); ?>
 <?php login(); ?>
-<?php
-	if (isset ($_SESSION['MM_Username'])) {
-		$userRole = $_SESSION['MM_UserGroup'];
-		
-		switch ($userRole) {
-			case "Student": header ("Location: student/index.php"); exit; break;
-			case "Instructor": header ("Location: instructor/index.php"); exit; break;
-			case "Organization Administrator": header ("Location: organization_administrator/index.php"); exit; break;
-			case "Site Administrator": header ("Location: site_administrator/index.php"); exit; break;
-		}
-	}
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 <?php title("Login"); ?>
-<?php headers(); ?>
+<?php if (!isset($_GET['action'])) { headers();} ?>
 </head>
 <body<?php bodyClass(); ?>>
-<?php topPage("includes/top_menu.php"); ?>
-      <form method="post" action="login.php" name="login" id="login">
+<?php if (!isset($_GET['action'])) { topPage("includes/top_menu.php");} ?>
+      <form method="post" action="login.php<?php if (isset($_GET['accesscheck'])) {echo "?accesscheck=" .  urlencode($_GET['accesscheck']);} ?>" name="login" id="login">
         <h1>Login</h1>
         <p> Login with your username and password to access your account. </p>
         <table width="100%" border="0" align="center">
@@ -47,12 +35,13 @@
               </div>
                 </label></td>
           </tr>
-          <tr>
-            <td width="30%">&nbsp;</td>
-            <td width="70%"><p><a href="forgot_password.php">Forgot your password?</a><br /><a href="register.php">Register</a></p></td>
-          </tr>
+          <?php
+			  if (!isset($_GET['action'])) {
+				  echo "<tr><td width=\"30%\">&nbsp;</td><td width=\"70%\"><p><a href=\"forgot_password.php\">Forgot your password?</a><br /><a href=\"register.php\">Register</a></p></td></tr>";
+			  }
+		  ?>
         </table>
 </form>
-<?php footer("includes/bottom_menu.php"); ?>
+<?php if (!isset($_GET['action'])) { footer("includes/bottom_menu.php");} ?>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -41,7 +41,7 @@
 					  `extraCredit` text NOT NULL,
 					  `partialCredit` int(1) NOT NULL,
 					  `difficulty` longtext NOT NULL,
-					  `category` longtext NOT NULL,
+					  `category` int(11) NOT NULL,
 					  `link` longtext NOT NULL,
 					  `randomize` int(1) NOT NULL,
 					  `totalFiles` int(2) NOT NULL,
@@ -77,8 +77,15 @@
 	
 //Skip the test, and go to the end
 	if (isset ($_POST['skipTest'])) {
-		header ("Location: complete.php");
-		exit;
+		
+		if (isset ($_SESSION['review'])) {
+			header ("Location: modify.php?updated=testSettings");
+			exit;
+		} else {	
+			$_SESSION['step'] = "testVerify";
+			header ("Location: complete.php");
+			exit;
+		}
 	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -91,6 +98,7 @@
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <h2>Module Setup Wizard : Create a Test</h2>
+<div class="noResults">
 <p align="center">Do you wish to create a test for this module?</p>
     <form name="testCheck" method="post" action="test_check.php" id="validate" onsubmit="return errorsOnSubmit(this);">
       <div>
@@ -103,7 +111,7 @@
         </div>
       </div>
 	</form>
-    <p>&nbsp;</p>
+</div>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

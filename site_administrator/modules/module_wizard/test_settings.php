@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -53,13 +53,22 @@
 <?php
 //Process the form
 	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll']) && is_numeric($_POST['questionBank'])) {
+	//Do not process if a module with the same name exists
+		$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
+		$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `testName` = '{$name}'", $connDBA);
+		if (mysql_fetch_array($moduleCheck)) {
+			if ($testData['testName'] !== $name) {
+				header("Location:test_settings.php?error=identical");
+				exit;
+			}
+		}
 	//Use the session to find where to insert the test data
 		$currentModule = $_SESSION['currentModule'];
 		
 	//Check to see if the timer is set and if the time does not equal zero
 		if (isset($_POST['timer']) && isset($_POST['timeHours']) && isset($_POST['timeMinutes'])) {
 			if ($_POST['timer'] == "on" && $_POST['timeHours'] == "0" && $_POST['timeMinutes'] == "00") {
-				$timeValue = serialize("1");
+				$timeValue = serialize(array("0", "00"));
 				$timerValue = "0";
 			} else {
 			//Convert the time values to an array	
@@ -69,7 +78,7 @@
 				$timerValue = "on";
 			}
 		} else {
-			$timeValue = serialize("1");
+			$timeValue = serialize(array("0", "00"));
 			$timerValue = "0";
 		}
 		
@@ -164,11 +173,9 @@
     <p>Setup the test's initial settings, such as the name, directions, and score.</p>
     <?php errorWindow("database", "A test with this name already exists", "error", "identical", "true"); ?>
     <form name="testSettings" action="test_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this, 'true');">
-    <div class="catDivider">
     <?php
-		step("6", "Test Information", "1" , "Test Information")
+		step("six", "Test Information", "one" , "Test Information")
 	?>
-    </div>
     <div class="stepContent">
     <blockquote>
       <p>Test name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of this test')" onmouseout="UnTip()" /></p>
@@ -205,11 +212,9 @@
       </blockquote>
     </blockquote>
     </div>
-    <div class="catDivider">
     <?php
-		step("7", "Test settings", "2" , "Test Settings")
+		step("seven", "Test settings", "two" , "Test Settings")
 	?>
-    </div>
     <div class="stepContent">
     <blockquote>
       <p>Passing score: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The minimum score a user must obtain to pass')" onmouseout="UnTip()" /></p>
@@ -434,7 +439,7 @@
             Randomize</label>
         </p>
       </blockquote>
-      <p>Pull questions from bank: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not questions will be automatically pulled from <br />the question bank with the same questions in the same category')" onmouseout="UnTip()" /></p>
+      <p>Automatically pull questions from bank: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added')" onmouseout="UnTip()" /></p>
       <blockquote>
           <p>
             <label>
@@ -448,12 +453,12 @@
 		  	if ($categoryResult == "exist") {
 				echo "The question bank has test questions for this category.";
 			} else {
-				echo "The question bank does not have test questions for this category.";
+				echo "The question bank does not have any test questions for this category.";
 			}
 		  ?>
           </p>
        </blockquote>
-      <p>After the test is taken display: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Overall score of the test<br/><strong>Selected Answers:</strong> The answer(s) the user user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>')" onmouseout="UnTip()" /></p>
+      <p>After the test is taken display: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Display a breakdown of points that the user recieved on each quesiton<br/><strong>Selected Answers:</strong> The answer(s) the user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>')" onmouseout="UnTip()" /></p>
       <blockquote>
       <?php
 	  //Decompile the serialized array to see what boxes needs to be checked
@@ -575,11 +580,9 @@
       </blockquote>
     </blockquote>
     </div>
-    <div class="catDivider">
     <?php
-		step("8", "Submit", "3" , "Submit")
+		step("eight", "Submit", "three" , "Submit")
 	?>
-    </div>
     <div class="stepContent">
     <blockquote>
       <?php

@@ -23,40 +23,22 @@
 //Process the form
 	if (isset ($_POST['submit']) && !empty($_POST['question']) && !empty($_POST['questionValue'])) {
 	//If the page is updating an item
-		if (isset ($update)) {
-		//Detirmine what kind of user interface this will have, either checkboxes or bullets
-			if (sizeof($_POST['questionValue']) == "1") {
-				$interface = "radio";
-			} elseif (sizeof($_POST['questionValue']) > "1") {
-				$interface = "checkbox";
-			} elseif (sizeof($_POST['questionValue']) == "0") {
-				header ("Location: multiple_choice.php");
-				exit;
-			}
-			
+		if (isset ($update)) {			
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
+			$choiceType = $_POST['type'];
 			$questionValue = mysql_real_escape_string(serialize($_POST['questionValue']));
 		
-			$updateChoiceQuery = "UPDATE feedback SET `choiceType` = '{$interface}', `question` = '{$question}', `questionValue` = '{$questionValue}' WHERE id = '{$update}'";
+			$updateChoiceQuery = "UPDATE feedback SET `choiceType` = '{$choiceType}', `question` = '{$question}', `questionValue` = '{$questionValue}' WHERE id = '{$update}'";
 							
 			$updateChoice = mysql_query($updateChoiceQuery, $connDBA);
 			header ("Location: ../index.php?updated=choice");
 			exit;
 	//If the page is inserting an item		
 		} else {
-		//Detirmine what kind of user interface this will have, either checkboxes or bullets
-			if (sizeof($_POST['questionValue']) == "1") {
-				$interface = "radio";
-			} elseif (sizeof($_POST['questionValue']) > "1") {
-				$interface = "checkbox";
-			} elseif (sizeof($_POST['questionValue']) == "0") {
-				header ("Location: multiple_choice.php");
-				exit;
-			}
-			
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
+			$choiceType = $_POST['type'];
 			$questionValue = mysql_real_escape_string(serialize($_POST['questionValue']));
 			
 			//Get the last feedBack question, and add one to the value for the next feedBack
@@ -67,11 +49,10 @@
 			$insertChoiceQuery = "INSERT INTO feedback (
 							`id`, `type`, `position`, `choiceType`, `question`, `questionValue`
 							) VALUES (
-							NULL, 'Multiple Choice', '{$lastQuestion}', '{$interface}', '{$question}', '{$questionValue}'
+							NULL, 'Multiple Choice', '{$lastQuestion}', '{$choiceType}', '{$question}', '{$questionValue}'
 							)";
 							
 			$insertChoice = mysql_query($insertChoiceQuery, $connDBA);
-			
 			header ("Location: ../index.php?inserted=choice");
 			exit;
 		}
@@ -99,7 +80,7 @@
 			echo "?id=" . $testData['id'];
 		}
     ?>" method="post" name="choice" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -114,7 +95,21 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Content</div>
+      <div class="catDivider two">Settings</div>
+      <div class="stepContent">
+        <blockquote>
+          <p>Question type:</p>
+          <blockquote>
+            <p>
+              <select name="type" id="type">
+                <option value="radio"<?php if (isset ($update)) {if ($testData['choiceType'] == "radio") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Bullet (Single Answer)</option>
+                <option value="checkbox"<?php if (isset ($update)) {if ($testData['choiceType'] == "checkbox") {echo " selected=\"selected\"";}} ?>>Checkbox (Multiple Answers)</option>
+              </select>
+            </p>
+          </blockquote>
+        </blockquote>
+      </div>
+      <div class="catDivider three">Question Content</div>
       <div class="stepContent">
       <blockquote>
       <p>Question content<span class="require">*</span>:</p>
@@ -128,28 +123,28 @@
 					echo "<table width=\"50%\" name=\"values\" id=\"values\">";
 					while (list($valueKey, $valueArray) = each($values)) {
 						$id = $valueKey+1;
-                    	echo "<tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"v" . $id . "\" value=\""; echo stripslashes(htmlentities($valueArray));  echo "\" class=\"validate[required]\" size=\"50\" /></td></tr>";
+                    	echo "<tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"c" . $id . "\" value=\""; echo stripslashes(htmlentities($valueArray));  echo "\" class=\"validate[required]\" size=\"50\" /></td></tr>";
 					}
 					echo "</table>";
 			//Echo empty fields if the page is not editing a question
 				} else {					
-					echo "<table width=\"50%\" name=\"values\" id=\"values\"><tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"v1\" size=\"50\" class=\"validate[required]\" /></td></tr><tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"v2\" size=\"50\" class=\"validate[required]\" /></td></tr></table>";
+					echo "<table width=\"50%\" name=\"values\" id=\"values\"><tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"c1\" size=\"50\" class=\"validate[required]\" /></td></tr><tr><td><input type=\"text\" name=\"questionValue[]\" autocomplete=\"off\" id=\"c2\" size=\"50\" class=\"validate[required]\" /></td></tr></table>";
 				}
 			?>
         </blockquote>
-         <p><input value="Add Another Option" type="button" onclick="appendRow('values', '<input type=\'text\' name=\'questionValue[]\' autocomplete=\'off\' id=\'v', '\' size=\'50\' class=\'validate[required]\' /><!--','//-->')" />
+         <p><input value="Add Another Option" type="button" onclick="appendRow('values', '<input type=\'text\' name=\'questionValue[]\' autocomplete=\'off\' id=\'c', '\' size=\'50\' class=\'validate[required]\' /><!--', '//-->')" />
           <input value="Remove Last Option" type="button" onclick="deleteLastRow('values')" />
         </p>
       </div>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
+      <div class="catDivider four">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
           <?php submit("submit", "Submit"); ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
+          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php');return document.MM_returnValue" value="Cancel" />
         </p>
         <?php formErrors(); ?>
       </blockquote>

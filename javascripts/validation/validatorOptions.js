@@ -6,9 +6,9 @@
 		newLang: function() {
 			$.validationEngineLanguage.allRules = 	{"required":{    			// Add your regex rules here, you can take telephone as an example
 						"regex":"none",
-						"alertText":"* This field is required",
-						"alertTextCheckboxMultiple":"* Please select an option",
-						"alertTextCheckboxe":"* This checkbox is required"},
+						"alertText":"* Required (Click to hide)",
+						"alertTextCheckboxMultiple":"* Required (Click to hide)",
+						"alertTextCheckboxe":"* Required (Click to hide)"},
 					"length":{
 						"regex":"none",
 						"alertText":"*Between ",

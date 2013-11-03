@@ -8,7 +8,8 @@
 		if ($userCheck = mysql_fetch_array($userGrabber)) {
 			$user = $userCheck;
 			if ($user['role'] == "Site Administrator" || $user['role'] == "Site Manager") {
-				header ("Location: index.php?message=errorAssign");
+				header ("Location: assign_user.php?message=errorAssign");
+				exit;
 			}
 		} else {
 			$user = false;
@@ -31,24 +32,32 @@
 			$userGrabber = mysql_query("SELECT * FROM `users` WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
 			if ($userData = mysql_fetch_array($userGrabber)) {
 				if ($userData['role'] == "Site Administrator" || $userData['role'] == "Site Manager") {
-					header ("Location: index.php?message=errorAssign");
+					header ("Location: assign_user.php?message=errorAssign");
 					exit;
 				}
 			} else {
-				header ("Location: index.php?message=noUser");
+				header ("Location: assign_user.php?message=noUser");
 				exit;
 			}
 			
 			$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
 			if (mysql_fetch_array($organizationGrabber)) {
+				//Do nothing
 			} else {
-				header ("Location: index.php?message=noOrganization");
+				header ("Location: assign_user.php?message=noOrganization");
 				exit;
 			}
 			
-			mysql_query("UPDATE `users` SET `organization` = '$organization' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
+			mysql_query("UPDATE `users` SET `organization` = '{$organization}' WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}' LIMIT 1", $connDBA);
 			
-			header ("Location: index.php?message=assignedUser");
+			$userIDGrabber = mysql_query("SELECT * FROM `users` WHERE `firstName` = '{$firstName}' AND `lastName` = '{$lastName}'", $connDBA);
+			$userIDArray = mysql_fetch_array($userIDGrabber);
+			$userID = $userIDArray['id'];
+			$organizationIDGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
+			$organizationIDArray = mysql_fetch_array($organizationIDGrabber);
+			$organizationID = $organizationIDArray['id'];
+			
+			header ("Location: index.php?userID=" . $userID . "&orgID=" . $organizationID . "&message=assignedUser");
 			exit;
 		}
 	} else {
@@ -58,19 +67,36 @@
 			$userGrabber = mysql_query("SELECT * FROM `users` WHERE `id` = '{$id}'", $connDBA);
 			if ($user = mysql_fetch_array($userGrabber)) {
 				if ($user['role'] == "Site Administrator" || $user['role'] == "Site Manager") {
-					header ("Location: index.php?message=errorAssign");
+					if ($user != false) {
+						header ("Location: assign_user.php?id=" . $id . "&message=errorAssign");
+						exit;
+					} else {
+						header ("Location: assign_user.php?message=errorAssign");
+						exit;
+					}
 				}
 			}
 			
 			$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
 			if (mysql_fetch_array($organizationGrabber)) {
+				//Do nothing
 			} else {
-				header ("Location: index.php?message=noOrganization");
-				exit;
+				if ($user != false) {
+					header ("Location: assign_user.php?id=" . $id . "&message=noOrganization");
+					exit;
+				} else {
+					header ("Location: assign_user.php?message=noOrganization");
+					exit;
+				}
 			}
 			
-			mysql_query("UPDATE `users` SET `organization` = '$organization' WHERE `id` = '{$id}'", $connDBA);
-			header ("Location: index.php?message=assignedUser");
+			mysql_query("UPDATE `users` SET `organization` = '{$organization}' WHERE `id` = '{$id}' LIMIT 1", $connDBA);
+			
+			$organizationIDGrabber = mysql_query("SELECT * FROM `organizations` WHERE `name` = '{$organization}'", $connDBA);
+			$organizationIDArray = mysql_fetch_array($organizationIDGrabber);
+			$organizationID = $organizationIDArray['id'];
+			
+			header ("Location: index.php?userID=" . $id . "&orgID=" . $organizationID . "&message=assignedUser");
 			exit;
 		}
 	}
@@ -104,46 +130,55 @@
 		echo "<p>Assign <strong>" . $user['firstName'] . " " . $user['lastName'] . "</strong> to an organization.</p>";
 	}
 ?>
-<p>&nbsp;</p>
+<?php
+//If the user is given an error when assigning an administrator to an orgainzation
+	if (isset($_GET['message']) && $_GET['message'] == "errorAssign") {
+		errorMessage("Site administrators and site managers cannot be assigned to an organization. Please change their role if you wish to assign them.");
+//If the user is given an error that an assigned user does not exist
+	} elseif (isset($_GET['message']) && $_GET['message'] == "noUser") {
+		errorMessage("The user you are attempting to assign to an organization does not exist.");
+//If the user is given an error that an assigned organization does not exist
+	} elseif (isset($_GET['message']) && $_GET['message'] == "noOrganization") {
+		errorMessage("The organization you are attempting to assign to a user does not exist.");
+	} else {
+		echo "<p>&nbsp;</p>";
+	}
+?>
 <form name="assignUser" method="post" action="assign_user.php<?php if ($user !== false) {echo"?id=" . $id;} ?>" id="validate" onsubmit="return errorsOnSubmit(this);">
-<div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign User</div>
+<div class="catDivider one">Assign User</div>
 <div class="stepContent">
   <blockquote>
-    <p>User:</p>
+    <p>User<?php if ($user == false) {echo "<span class=\"require\">*</span>";}?>:</p>
     <blockquote>
-      <p>
     <?php
 	//If no user is set to assign, then force the administrator to pick from a list
 		if ($user == false) {
-			echo "<div id=\"userSuggest\"><input name=\"user\" id=\"user\" type=\"text\" size=\"50\" autocomplete=\"off\" class=\"validate[required]\" /><div><div id=\"nameSuggestions\" spry:region=\"nameData\"><span spry:repeat=\"nameData\" spry:suggest=\"{name}\"><div>{name}</div></span></div></div></div>";
+			echo "<div id=\"userSuggest\"><input name=\"user\" id=\"user\" type=\"text\" size=\"50\" autocomplete=\"off\" class=\"validate[required]\" /><div><div id=\"nameSuggestions\" spry:region=\"nameData\"><div spry:repeat=\"nameData\" spry:suggest=\"{name}\">{name}</div></div></div></div>";
 		} else {
 			echo "<strong>" . $user['firstName'] . " " . $user['lastName'] . "</strong>";
 		}
 	?>
-      </p>
       <script type="text/javascript">
-		 var nameSuggestions = new Spry.Widget.AutoSuggest("userSuggest", "nameSuggestions", "nameData", "name");
+		 var nameSuggestions = new Spry.Widget.AutoSuggest("userSuggest", "nameSuggestions", "nameData", "name", {containsString: true});
 	  </script>
     </blockquote>
-    <p>Organization:</p>
+    <p>Organization<span class="require">*</span>:</p>
     <blockquote>
       <div id="organizationSuggest">
         <input name="organization" id="organization" type="text" size="50" autocomplete="off" class="validate[required]" />
         <div>
         <div id="organizationSuggestions" spry:region="organizationData">
-        <span spry:repeat="organizationData" spry:suggest="{organization}">
-            <div>{organization}</div>
-        </span>
+        <div spry:repeat="organizationData" spry:suggest="{organization}">{organization}</div>
         </div>
         </div>
       </div>
       <script type="text/javascript">
-		 var organizationSuggestions = new Spry.Widget.AutoSuggest("organizationSuggest", "organizationSuggestions", "organizationData", "organization");
+		 var organizationSuggestions = new Spry.Widget.AutoSuggest("organizationSuggest", "organizationSuggestions", "organizationData", "organization", {containsString: true});
 	  </script>
     </blockquote>
   </blockquote>
 </div>
-<div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Submit</div>
+<div class="catDivider two">Submit</div>
 <div class="stepContent">
   <blockquote>
     <p>

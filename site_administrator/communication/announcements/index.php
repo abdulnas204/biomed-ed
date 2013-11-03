@@ -6,6 +6,10 @@
 <?php headers(); ?>
 </head>
 
-<body>
+<body<?php bodyClass(); ?>>
+<?php toolTip(); ?>
+<?php topPage("site_administrator/includes/top_menu.php"); ?>
+
+<?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

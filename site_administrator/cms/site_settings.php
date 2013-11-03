@@ -13,11 +13,11 @@
 //If the site meta page is requested
 	} elseif (isset ($_GET['type']) && ($_GET['type'] == "meta")) {
 		$meta = "meta is requested";
+//If the list of settings is requested
 	} elseif (!isset ($_GET['type'])) {
-		header ("Location: index.php");
-		exit;
+		$settings = "settings are requested";
 	} else {
-		header ("Location: index.php");
+		header("Location: site_settings.php");
 		exit;
 	}
 ?>
@@ -37,56 +37,48 @@
 //If the site meta page is requested
 	} elseif (isset ($meta)) {
 		$title = "Modify Site Information";
+	} else {
+		$title = "Select Settings";
 	}
 ?>
 <?php title($title); ?>
 <?php headers(); ?>
 <?php validate(); ?>
+<?php tinyMCESimple(); ?>
 <script src="../../javascripts/common/enableDisable.js" type="text/javascript"></script>
 <script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
-<script src="../../javascripts/common/loaderProgress.js" type="text/javascript"></script>
 </head>
-<body onfocus="MM_showHideLayers('progress','','hide')"<?php bodyClass(); ?>>
+<body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-      
-    <h2>
-    <?php
-	//If the site logo page is requested
-		if (isset ($logo)) {
-			echo "Modify Site Logo";
-	//If the site logo page is requested
-		} elseif (isset ($icon)) {
-			echo "Browser Icon";
-	//If the theme page is requested
-		} elseif (isset ($theme)) {
-			echo "Modify Site Theme";
-	//If the site meta page is requested
-		} elseif (isset ($meta)) {
-			echo "Modify Site Information";
-		}
-	?>
-    </h2>
-    
+<h2><?php echo $title; ?></h2>
+<?php 
+//If the list of settings is requested
+	if (isset($settings)) {
+?>
+<p>Modify  settings within this site:</p>
+<p>&nbsp;</p>
+<blockquote>
+<ul>
+  <li class="homeBullet"><a href="index.php">Back to Home</a></li>
+  <li class="arrowBullet"><a href="site_settings.php?type=logo">Site Logo</a></li>
+  <li class="arrowBullet"><a href="site_settings.php?type=icon">Browser Icon</a></li>
+  <li class="arrowBullet"><a href="site_settings.php?type=meta">Site Information</a></li>
+  <li class="arrowBullet"><a href="site_settings.php?type=theme">Theme</a></li>
+</ul>
+</blockquote>
 <?php
 //If the site logo page is requested
-	if (isset ($logo)) { 
+	} elseif (isset ($logo)) { 
 ?>
+<p>Modify the banner displayed at the of each page.</p>
 <?php
 //Modify logo
 	if (isset($_POST['submitBanner'])) {
 		$tempFile = $_FILES['bannerUploader'] ['tmp_name'];
 		$targetFile = basename($_FILES['bannerUploader'] ['name']);
 		$uploadDir = "../../images";
-		
-		function findexts ($targetFile) {
-			$filename = strtolower($targetFile) ;
-			$exts = split("[/\\.]", $targetFile) ;
-			$n = count($exts)-1;
-			$exts = $exts[$n];
-			return $exts;
-		}
-	
-		if (findexts($targetFile) == "png") {
+
+		if (extension($targetFile) == "png" || extension($targetFile) == "bmp" || extension($targetFile) == "jpg" || extension($targetFile) == "gif") {
 			move_uploaded_file($tempFile, $uploadDir . "/" . "banner.png");
 			if (isset ($_POST['return'])) {
 				header ("Location: site_setup_wizard.php");
@@ -96,8 +88,10 @@
 				exit;
 			}
 		} else {
-			errorMessage("The uploaded file must be in \".png\" format.");
+			errorMessage("This is an unsupported file type. Supported types have one of the following extensions: &quot;.png&quot;, &quot;.bmp&quot;, &quot;.jpg&quot;, or &quot;.gif&quot;.");
 		}
+	} else {
+		echo "<p>&nbsp;</p>";
 	}
 	
 	if (isset ($_POST['updatePlacement'])) {
@@ -135,8 +129,7 @@
 		}
 	}
 ?>
-    <p>Modify the banner displayed at the of each page.</p>
-    <p>&nbsp;</p>
+<?php errorWindow("extension", "This is an unsupported file type. Supported types have one of the following extensions: &quot;.png&quot;, &quot;.bmp&quot;, &quot;.jpg&quot;, or &quot;.gif&quot;."); ?>
     <div class="layoutControl"> 
     <div class="dataLeft">
     <div class="block_course_list sideblock">
@@ -158,10 +151,10 @@
       </div>
     </div>
     <div class="contentRight">
-      <div class="catDivider">Site Logo</div>
+      <div class="catDivider alignLeft">Site Logo</div>
       <div class="stepContent">
       <blockquote>
-        <form action="site_settings.php?type=logo" method="post" enctype="multipart/form-data" id="uploadBanner">
+        <form action="site_settings.php?type=logo" method="post" enctype="multipart/form-data" id="uploadBanner" onsubmit="return errorsOnSubmit(this, 'false', 'bannerUploader', 'true', 'png.bmp.jpg.gif');">
           <div align="left">
             <?php
 			//Display current banner if it exists
@@ -179,27 +172,20 @@
 					} 
 				}
 			?>
-            <label>
             <input name="bannerUploader" type="file" id="bannerUploader" size="50" />
-            </label>
             <br />
-            Max file size: <?php echo ini_get('upload_max_filesize'); ?>
-            <div id="progress">
-              <p><span class="require">Uploading in progress... </span><img src="../../images/common/loading.gif" alt="Uploading" width="16" height="16" /><br />
-            </p>
-            </div>
-            <label>
-            <input name="submitBanner" type="submit" id="submitBanner" onclick="MM_showHideLayers('progress','','show')" value="Upload" accept="image/x-png" />
-            </label>
-            <label>
+            Max file size: <?php echo ini_get('upload_max_filesize'); ?><br />
+            <br />
+            <p>
+            <?php submit("submitBanner", "Upload"); ?>
             <input name="cancelBanner" type="button" id="cancelBanner" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-            </label>
+            </p>
           </div>
+          <?php formErrors(); ?>
         </form>
-        <p>&nbsp;</p>
       </blockquote>
       </div>
-      <div class="catDivider">Banner Placement</div>
+      <div class="catDivider alignLeft">Banner Placement</div>
       <div class="stepContent">
       <blockquote>
       <form action="site_settings.php?type=logo" method="post" name="padding" id="padding">
@@ -227,19 +213,16 @@ px<br />
 <input name="paddingBottomSelect" type="text" id="paddingBottomSelect" value="<?php echo $imagePaddingBottom; ?>" size="3" maxlength="3" autocomplete="off" />
 px</p>
           <p>
-            <label>
-            <input type="submit" name="updatePlacement" id="updatePlacement" value="Update" />
-            </label>
+            <?php submit("updatePlacement", "Update"); ?>
             <input name="cancelPlacement" type="button" id="cancelPlacement" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
             <br />
           </p>
           <h6>px = Pixels from respective edge</h6>
         </div>
-        </form>
-        <p>&nbsp;</p>
+      </form>
       </blockquote>
       </div>
-      <div class="catDivider">Banner Size</div>
+      <div class="catDivider alignLeft">Banner Size</div>
       <div class="stepContent">
       <blockquote>
       <form action="site_settings.php?type=logo" method="post" name="size" id="size">
@@ -249,14 +232,10 @@ px</p>
 			$imageData = mysql_fetch_array($imageSizeGrabber);
 	  ?>
       Width:
-      <label>
       <input name="width" type="text" id="width" value="<?php echo $imageData['width']; ?>" size="3" maxlength="3" autocomplete="off"<?php if ($imageData['auto'] == "on") {echo " disabled=\"disabled\"";} ?> />
-      </label>
 px <br />
 Height:
-<label>
 <input name="height" type="text" id="height" value="<?php echo $imageData['height']; ?>" size="3" maxlength="3" autocomplete="off"<?php if ($imageData['auto'] == "on") {echo " disabled=\"disabled\"";} ?> />
-</label>
 px
 <p>
         <label><input type="checkbox" name="automatic" id="automatic" onclick="flvFTFO1('size','width,t','height,t')"<?php
@@ -266,12 +245,8 @@ px
 		?> /> Automatic</label>
       </p>
       <p>
-        <label>
-        <input type="submit" name="updateSize" id="updateSize" value="Update" />
-        </label>
-        <label>
+        <?php submit("updateSize", "Update"); ?>
         <input name="cancelSize" type="button" id="cancelSize" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-        </label>
       </p>
       </form>
       </blockquote>
@@ -282,27 +257,28 @@ px
 //If the browiser icon page is requested
 	} elseif (isset ($icon)) { 
 ?>
-      <p>Modify the browser icon displayed on the top-left of the browser window or the current tab. Example of a browser icon:
+      <p>Modify the browser icon displayed on the top-left of the browser window or the current tab. A browser icon may have one of the following extenstions : &quot;.ico&quot;, &quot;.jpg&quot;, or &quot;.gif&quot;. Below is an example of a browser icon:
       <br />
       <br />
-      <img src="../../images/faviconExample.jpg" alt="Browser Icon" /></p>
+      <img src="../../images/admin_icons/faviconExample.jpg" alt="Browser Icon" /></p>
 <?php
+//Identify the icon extension
+	$iconExtensionGrabber = mysql_query("SELECT * FROM siteProfiles", $connDBA);
+	$iconExtension = mysql_fetch_array($iconExtensionGrabber);
+
 //Modify browser icon
 	if (isset($_POST['submitIcon'])) {
 		$tempFile = $_FILES['iconUploader'] ['tmp_name'];
 		$targetFile = basename($_FILES['iconUploader'] ['name']);
 		$uploadDir = "../../images";
-		
-		function findexts ($targetFile) {
-			$filename = strtolower($targetFile) ;
-			$exts = split("[/\\.]", $targetFile) ;
-			$n = count($exts)-1;
-			$exts = $exts[$n];
-			return $exts;
-		}
 	
-		if (findexts($targetFile) == "ico") {
-			move_uploaded_file($tempFile, $uploadDir . "/" . "icon.ico");
+		if (extension($targetFile) == "ico" || extension($targetFile) == "jpg" || extension($targetFile) == "gif") {
+			
+			$iconType = extension($targetFile);
+			unlink("../../images/icon." . $iconExtension['iconType']);
+			move_uploaded_file($tempFile, $uploadDir . "/" . "icon." . $iconType);
+			mysql_query("UPDATE `siteprofiles` SET `iconType` = '{$iconType}' WHERE id = '1'", $connDBA);
+			
 			if (isset ($_POST['return'])) {
 				header ("Location: site_setup_wizard.php");
 				exit;
@@ -311,10 +287,11 @@ px
 				exit;
 			}
 		} else {
-			errorMessage("The uploaded file must be in \".ico\" format.");
+			errorMessage("This is an unsupported file type. Supported types have one of the following extensions: &quot;.ico&quot;, &quot;.jpg&quot;, or &quot;.gif&quot;.");
 		}
 	}
 ?>
+<?php errorWindow("extension", "This is an unsupported file type. Supported types have one of the following extensions: &quot;.ico&quot;, &quot;.jpg&quot;, or &quot;.gif&quot;."); ?>
 <br />
 <div class="layoutControl">
       <div class="dataLeft">
@@ -335,10 +312,10 @@ px
                 </ul>
           </div>
         </div>
-        </div>
+  </div>
       <div class="contentRight">
-      <form action="site_settings.php?type=icon" method="post" enctype="multipart/form-data" id="uploadIcon">
-      <div class="catDivider"><span class="content"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /></span> Upload Icon</div>
+      <form action="site_settings.php?type=icon" method="post" enctype="multipart/form-data" id="uploadIcon" onsubmit="return errorsOnSubmit(this, 'false', 'iconUploader', 'true', 'ico.jpg.gif');">
+      <div class="catDivider one">Upload Icon</div>
       <div class="stepContent">
       <blockquote>
           <p>
@@ -349,13 +326,9 @@ px
 				if (file_exists($directory)) {
 					$imageDirectory = opendir("../../images");
 					$image = readdir($imageDirectory);
-					while (false !== ($image = readdir($imageDirectory))) {
-						if (($image == "icon.ico")) {
-							echo "<p>";
-								echo "Current file: <a href=\"../../images/icon.ico\" target=\"_blank\">icon.ico</a>";
-							echo "</p>";
-						} 
-					} 
+					echo "<p>";
+						echo "Current file: <a href=\"../../images/icon." . $iconExtension['iconType'] . "\" target=\"_blank\">icon." . $iconExtension['iconType'] . "</a>";
+					echo "</p>";
 				}
 			?>
             <input name="iconUploader" type="file" id="iconUploader" size="50" />
@@ -363,18 +336,18 @@ px
           Max file size: <?php echo ini_get('upload_max_filesize'); ?> </p>
          </blockquote>
       </div> 
-      <div class="catDivider"><span class="content"><img src="../../images/numbering/2.gif" alt="2. " width="22" height="22" /></span> Submit</div>    
+      <div class="catDivider two">Submit</div>    
       <div class="stepContent">
       <blockquote>
-          <input type="submit" name="submitIcon" id="submitIcon" value="Upload" onclick="MM_showHideLayers('progress','','show')" />
+      	<p>
+          <?php submit("submitIcon", "Submit"); ?>
           <input name="cancelIcon" type="button" id="cancelIcon" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-          <div id="progress">
-            <p><span class="require">Uploading in progress... </span><img src="../../images/common/loading.gif" alt="Uploading" width="16" height="16" /></p>
-          </div>
+        </p>
+          <?php formErrors(); ?>
       </blockquote>
       </div>
       </form>
-      </div>
+    </div>
 	</div>
 <?php //If the theme page is requested
 	} elseif (isset ($theme)) { 
@@ -417,16 +390,12 @@ px
 </div>
 <div class="contentRight">
 <form action="site_settings.php?type=theme" method="post">
-<div class="catDivider">Select a Theme</div>
+<div class="catDivider alignLeft">Select a Theme</div>
     <div class="stepContent">
     <blockquote>
       <p><strong>American</strong></p><?php if ($theme['style'] == "american.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/american/preview.jpg" alt="American Theme Preview" width="252" height="124" />
         <input type="button" name="chooseAmerican" id="chooseAmerican" value="Choose American Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=american.css&assist=no');return document.MM_returnValue" />
-      </p>
-      <p><strong>Aqua</strong></p><?php if ($theme['style'] == "aqua.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
-      <p><img src="../../images/themes/aqua/preview.jpg" alt="Aqua Theme Preview" width="256" height="127" />
-        <input type="button" name="chooseAqua" id="chooseAqua" value="Choose Aqua Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=aqua.css&assist=yes');return document.MM_returnValue" />
       </p>
       <p><strong>Binary</strong></p><?php if ($theme['style'] == "binary.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
       <p><img src="../../images/themes/binary/preivew.jpg" alt="Binary Theme Preview" width="251" height="119" />
@@ -448,14 +417,6 @@ px
       <p><img src="../../images/themes/knowledge_library/preview.jpg" alt="Knowledge Library Theme Preview" width="252" height="111" />
         <input type="button" name="chooseLibrary" id="chooseLibrary" value="Choose Knowledge Library Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=knowLedgeLibrary.css&assist=no');return document.MM_returnValue" />
       </p>
-      <p><strong>Prestige Blue</strong></p><?php if ($theme['style'] == "prestigeBlue.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
-      <p><img src="../../images/themes/prestige_blue/preview.jpg" alt="Prestige Blue Theme Preview" width="256" height="111" />
-        <input type="button" name="chooseBlue" id="chooseBlue" value="Choose Prestige Blue Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=prestigeBlue.css&assist=yes');return document.MM_returnValue" />
-      </p>
-      <p><strong>School Denim</strong></p><?php if ($theme['style'] == "schoolDenim.css") { echo "<div class=\"selectedTheme\">This is the current theme</div>";} ?>
-      <p><img src="../../images/themes/school_denim/preview.jpg" alt="School Denim Theme Preview" width="218" height="122" />
-        <input type="button" name="chooseDenim" id="chooseDenim" value="Choose School Denim Theme" onclick="MM_goToURL('parent','site_settings.php?type=theme&action=modifyTheme&theme=schoolDenim.css&assist=yes');return document.MM_returnValue" />
-      </p>
       <p>&nbsp;</p>
     </blockquote>
      </div>
@@ -467,17 +428,18 @@ px
 	} elseif (isset ($meta)) { 
 ?>
 <?php 
-	if (isset ($_POST['modifyMeta']) || isset ($_POST['modifyMeta2'])) {
+	if (isset ($_POST['modifyMeta']) || isset ($_POST['modifyMeta2']) && !empty($_POST['name'])) {
 		if (!empty($_POST['name'])) {
 			$name = mysql_real_escape_string($_POST['name']);
 			$footer = mysql_real_escape_string($_POST['footer']);
 			$author = mysql_real_escape_string($_POST['author']);
 			$language = mysql_real_escape_string($_POST['language']);
+			$timeZone = mysql_real_escape_string($_POST['timeZone']);
 			$copyright = mysql_real_escape_string($_POST['copyright']);
 			$description = mysql_real_escape_string($_POST['description']);
 			$meta = mysql_real_escape_string($_POST['meta']);
 			
-			$modifyMetaQuery = "UPDATE siteProfiles SET siteName = '{$name}', siteFooter = '{$footer}', author = '{$author}', language = '{$language}', copyright = '{$copyright}', description = '{$description}', meta = '{$meta}'";
+			$modifyMetaQuery = "UPDATE siteProfiles SET siteName = '{$name}', siteFooter = '{$footer}', author = '{$author}', language = '{$language}', copyright = '{$copyright}', description = '{$description}', meta = '{$meta}', timeZone = '{$timeZone}'";
 			$modifyMetaQueryResult = mysql_query($modifyMetaQuery, $connDBA);
 			header ("Location: index.php?updated=siteInfo");
 			exit;
@@ -516,7 +478,7 @@ px
         </div>
         </div>
         <div class="contentRight">
-      		  <div class="catDivider">Site Name &amp; Footer</div>
+      		  <div class="catDivider alignLeft">Site Name &amp; Footer</div>
               <div class="stepContent">
       		  <blockquote>
       		    <p>The site name will appear in the title of your site<span class="require">*</span>:</p>
@@ -528,7 +490,7 @@ px
                 <p>The footer is displayed at the bottom-left of each page:</p>
                 <blockquote>
                   <p>
-                    <textarea name="footer" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif;"><?php echo stripslashes($siteInfo['siteFooter']); ?></textarea>
+                    <textarea name="footer" id="footer" rows="5" cols="45" style="width:450px;"><?php echo stripslashes($siteInfo['siteFooter']); ?></textarea>
                   </p>
                 </blockquote>
                 <p>
@@ -537,53 +499,57 @@ px
 				</p>
 	  </blockquote>
       </div>
-      <div class="catDivider">Search Keywords and Information</div>
+      <div class="catDivider alignLeft">Search Keywords and Information</div>
       <div class="stepContent">
         <blockquote>
           <p>The author of this site, or the name of this organization or company:</p>
           <blockquote>
             <p>
-              <label>
               <input name="author" type="text" id="author" size="50" value="<?php echo stripslashes($siteInfo['author']); ?>" autocomplete="off" />
-              </label>
             </p>
           </blockquote>
           <p>The language of this site (changing this option will not change the language pack of this system):</p>
           <blockquote>
             <p>
-              <label>
               <select name="language" id="language">
-                <option<?php if ($siteInfo['language'] == "none") {echo " selected=\"selected\"";} ?> value="none">- Select - </option>
                 <option <?php if ($siteInfo['language'] == "en-US") {echo " selected=\"selected\"";} ?> value="en-US">English</option>
               </select>
-              </label>
+            </p>
+          </blockquote>
+          <p>Time zone:</p>
+          <blockquote>
+            <p>
+              <select name="timeZone" id="timeZone">
+                <option value="America/New_York"<?php if ($siteInfo['timeZone'] == "America/New_York") {echo " selected=\"selected\"";} ?>>Eastern Time Zone</option>
+                <option value="America/Chicago"<?php if ($siteInfo['timeZone'] == "Central Time Zone") {echo " selected=\"selected\"";} ?>>Central Time Zone</option>
+                <option value="America/Denver"<?php if ($siteInfo['timeZone'] == "America/Denver") {echo " selected=\"selected\"";} ?>>Mountain Time Zone</option>
+                <option value="America/Los_Angeles"<?php if ($siteInfo['timeZone'] == "America/Los_Angeles") {echo " selected=\"selected\"";} ?>>Pacific Time Zone</option>
+                <option value="America/Juneau"<?php if ($siteInfo['timeZone'] == "America/Juneau") {echo " selected=\"selected\"";} ?>>Alaskan Time Zone</option>
+                <option value="Pacific/Honolulu"<?php if ($siteInfo['timeZone'] == "Pacific/Honolulu") {echo " selected=\"selected\"";} ?>>Hawaii-Aleutian Time Zone</option>
+              </select>
             </p>
           </blockquote>
           <p>Copyright statement:</p>
           <blockquote>
             <p>
-              <textarea name="copyright" id="copyright" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif;"><?php echo stripslashes($siteInfo['copyright']); ?></textarea>
+              <textarea name="copyright" id="copyright" cols="45" rows="5" class="noEditorSimple"><?php echo stripslashes($siteInfo['copyright']); ?></textarea>
             </p>
           </blockquote>
           <p>List keywords in the text box below, and <strong>separate each phrase with a comma and a space (e.g. website, my website, www)</strong>:</p>
           <blockquote>
             <p>
-              <textarea name="meta" id="meta" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif;"><?php echo stripslashes($siteInfo['meta']); ?></textarea>
+              <textarea name="meta" id="meta" cols="45" rows="5" class="noEditorSimple"><?php echo stripslashes($siteInfo['meta']); ?></textarea>
             </p>
           </blockquote>
           <p>Site description:</p>
           <blockquote>
             <p>
-              <textarea name="description" id="description" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif;"><?php echo stripslashes($siteInfo['description']); ?></textarea>
+              <textarea name="description" id="description" cols="45" rows="5" class="noEditorSimple"><?php echo stripslashes($siteInfo['description']); ?></textarea>
             </p>
           </blockquote>
           <p>
-            <label>
             <input type="submit" name="modifyMeta2" id="modifyMeta2" value="Submit" />
-            </label>
-            <label>
             <input name="cancelMeta2" type="button" id="cancelMeta2" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-            </label>
           </p>
         </blockquote>
       </div>

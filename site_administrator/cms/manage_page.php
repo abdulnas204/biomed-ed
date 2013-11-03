@@ -15,17 +15,17 @@
 //Process the form
 	if (isset($_POST['submit']) && !empty ($_POST['title']) && !empty($_POST['content'])) {	
 		if (!isset ($page)) {
-			$title = $_POST['title'];
-			$content = $_POST['content'];
+			$title = mysql_real_escape_string($_POST['title']);
+			$content = mysql_real_escape_string($_POST['content']);
 			
-			$positonGrabber = mysql_query ("SELECT * FROM pages ORDER BY position DESC", $connDBA);
-			$positionArray = mysql_fetch_array($positonGrabber);
+			$positionGrabber = mysql_query ("SELECT * FROM pages ORDER BY position DESC", $connDBA);
+			$positionArray = mysql_fetch_array($positionGrabber);
 			$position = $positionArray{'position'}+1;
 				
 			$newPageQuery = "INSERT INTO pages (
-								title, content, position, visible, level
+								`id`, `title`, `visible`, `position`, `content`
 							) VALUES (
-								'{$title}', '{$content}', '{$position}', '1', '1'
+								NULL, '{$title}', 'on', '{$position}', '{$content}'
 							)";
 			
 			mysql_query($newPageQuery, $connDBA);
@@ -33,8 +33,8 @@
 			exit;
 		} else {
 			$page = $_GET['id'];
-			$title = $_POST['title'];
-			$content = $_POST['content'];
+			$title = mysql_real_escape_string($_POST['title']);
+			$content = mysql_real_escape_string($_POST['content']);
 				
 			$editPageQuery = "UPDATE pages SET title = '{$title}', content = '{$content}' WHERE `id` = '{$page}'";
 			
@@ -49,7 +49,7 @@
 <head>
 <?php 
 	if (isset ($page)) {
-		$title = "Edit the " . $page['title'] . " Page";
+		$title = "Edit the " . stripslashes(htmlentities($page['title'])) . " Page";
 	} else {
 		$title =  "Create a New Page";
 	}
@@ -69,32 +69,32 @@
     <h2>
       <?php if (isset ($page)) {echo "Edit the \"" . $page['title'] . "\" Page";} else {echo "Create New Page";} ?>
     </h2>
-<p>Use this page to <?php if (isset ($page)) {echo "edit the content of \"<strong>" . $page['title'] . "</strong>\"";} else {echo "create a new page";} ?>.</p>
+<p>Use this page to <?php if (isset ($page)) {echo "edit the content of \"<strong>" . stripslashes(htmlentities($page['title'])) . "</strong>\"";} else {echo "create a new page";} ?>.</p>
     <p>&nbsp;</p>
     <form action="manage_page.php<?php 
 		if (isset ($page)) {
 			echo "?id=" . $page['id'];
 		}
 	?>" method="post" name="managePage" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" />  Content</div>
+      <div class="catDivider one">Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Title: <img src="../../images/admin_icons/help.png" alt="Help" width="17" height="17" onmouseover="Tip('The text that will display in big letters on the top-left of each page &lt;br /&gt;and at the top of the browser window')" onmouseout="UnTip()" /></p>
+        <p>Title<span class="require">*</span>: <img src="../../images/admin_icons/help.png" alt="Help" width="17" height="17" onmouseover="Tip('The text that will display in big letters on the top-left of each page &lt;br /&gt;and at the top of the browser window')" onmouseout="UnTip()" /></p>
         <blockquote>
           <p>
             <input name="title" type="text" id="title" size="50" autocomplete="off" class="validate[required]"<?php
             	if (isset ($page)) {
-					echo " value=\"" . $page['title'] . "\"";
+					echo " value=\"" . stripslashes(htmlentities($page['title'])) . "\"";
 				}
 			?> />
           </p>
         </blockquote>
-        <p>Content: <img src="../../images/admin_icons/help.png" alt="Help" width="17" height="17" onmouseover="Tip('The main content or body of the webpage')" onmouseout="UnTip()" /> </p>
+        <p>Content<span class="require">*</span>: <img src="../../images/admin_icons/help.png" alt="Help" width="17" height="17" onmouseover="Tip('The main content or body of the webpage')" onmouseout="UnTip()" /> </p>
         <blockquote>
-          <p><span id="contentCheck">
+        <p><span id="contentCheck">
             <textarea name="content" id="content2" cols="45" rows="5" style="width:640px; height:320px;" /><?php 
 				if (isset ($page)) {
-					echo $page['content'];
+					echo stripslashes($page['content']);
 				}
 			?></textarea>
           <span class="textareaRequiredMsg"></span></span>
@@ -103,13 +103,13 @@
         <p align="left">&nbsp;</p>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Finish</div>
+      <div class="catDivider two">Finish</div>
       <div class="stepContent">
 	  <blockquote>
       	<p>
           <?php submit("submit", "Submit"); ?>
-<input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
+			<input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
+            <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
         </p>
           <?php formErrors(); ?>
       </blockquote>

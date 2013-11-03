@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -61,6 +61,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -70,7 +71,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'
+			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'
 			";
 							
 			$updateMatching = mysql_query($updateMatchingQuery, $connDBA);
@@ -91,6 +92,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -107,7 +109,7 @@
 							)";
 							
 			$insertMatching = mysql_query($insertMatchingQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=matching");
 			exit;
 		}
 	}
@@ -123,11 +125,11 @@
 <script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/showHide.js" type="text/javascript"></script>
-<script src="../../../../javascripts/insert/newTextFieldAdvanced.js" type="text/javascript"></script>
+<script src="../../../../javascripts/insert/newMatching.js" type="text/javascript"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard :  Matching</h2>
+    <h2>Module Setup Wizard : Matching</h2>
     <p>A matching question will ask a user to match a series of similar values from a list of values.</p>
     <p>&nbsp;</p>
 	<form name="matching" method="post" action="matching.php<?php
@@ -135,7 +137,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -150,7 +152,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -226,6 +228,8 @@
 							unset($descriptionImport);
 						}
 					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -256,26 +260,26 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
+      <div class="catDivider three">Question Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question content<span class="require">*</span>:<br />
+        <p>Question content<span class="require">*</span>: <a href="../help.php?tab=3" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a><br />
+          The values below will be automatically scrambled.
+          <br />
         </p>
         <table width="100%" border="0">
         <tr><td>
             <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
-					$value = mysql_fetch_array($valueGrabber);
-					$questions = unserialize($value['questionValue']);
-					$answers = unserialize($value['answerValue']);
+					$questions = unserialize($testData['questionValue']);
+					$answers = unserialize($testData['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr>
 							<td width=\"100%\"><div align=\"center\"><strong>Left-Column Values</strong></div></td>
 						  </tr>";
 					while (list($questionKey, $questionArray) = each($questions)) {
-						echo "<tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q"; echo $questionKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($questionArray));  echo "\" class=\"validate[required]\" /></div>";
+						echo "<tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q"; echo $questionKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($questionArray));  echo "\" class=\"validate[required]\" /></div></td></tr>";
 					}
 					echo "</table>";
 					echo "</td><td>";
@@ -283,12 +287,12 @@
 							<td width=\"100%\"><div align=\"center\"><strong>Right-Column Values</strong></div></td>
 						  </tr>";
 					while (list($answerKey, $answerArray) = each($answers)) {
-						echo "<tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\""; echo $answerKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" /></div>";
+						echo "<tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a"; echo $answerKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" /></div></td></tr>";
 					}
-					echo "</table>";
+					echo "</td></tr></table>";
 			//Echo empty fields if the page is not editing a question
 				} else {
-					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr><td width=\"100%\"><div align=\"center\"><strong>Left-Column Values</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q1\" size=\"65\" class=\"validate[required]\" /></div></td></tr></table></td><td><table width=\"50%\" name=\"answers\" id=\"answers\"><tr><td width=\"100%\"><div align=\"center\"><strong>Right-Column Values</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a1\" size=\"65\" /></div></td></tr></table>";
+					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr><td width=\"100%\"><div align=\"center\"><strong>Left-Column Values</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q1\" size=\"65\" class=\"validate[required]\" /></div></td></tr><tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q2\" size=\"65\" class=\"validate[required]\" /></div></td></tr></table></td><td><table width=\"50%\" name=\"answers\" id=\"answers\"><tr><td width=\"100%\"><div align=\"center\"><strong>Right-Column Values</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a1\" size=\"65\" /></div></td></tr><tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a2\" size=\"65\" /></div></td></tr></table>";
 				}
 			?>
             </td>
@@ -302,7 +306,7 @@
         </p>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer:</p>
@@ -340,7 +344,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

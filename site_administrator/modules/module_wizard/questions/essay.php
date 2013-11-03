@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -61,6 +61,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
@@ -68,7 +69,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateEssay = mysql_query($updateEssayQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=essay");
@@ -104,7 +105,7 @@
 							)";
 							
 			$insertEssay = mysql_query($insertEssayQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=essay");
 			exit;
 		}
 	}
@@ -121,15 +122,15 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard :  Essay</h2>
-<p>This will insert an essay question into the test. Essays must be scored manually.</p>
-    <p>&nbsp;</p>
+    <h2>Module Setup Wizard : Essay</h2>
+<p>An essay question is  a question that requires a long, written response. Essays must be scored manually.</p>
+<p>&nbsp;</p>
     <form action="essay.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="essay" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -144,7 +145,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -220,6 +221,8 @@
 							unset($descriptionImport);
 						}
 					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -238,10 +241,10 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
+      <div class="catDivider three">Answer</div>
       <div class="stepContent">
       <blockquote>
-        <p>Provide an exmaple of a correct answer: </p>
+        <p>Provide an example of a correct answer: </p>
         <blockquote>
           <p>
           <textarea id="answer" name="answer" rows="5" cols="45" style="width: 450px"><?php
@@ -253,7 +256,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer: </p>
@@ -288,7 +291,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

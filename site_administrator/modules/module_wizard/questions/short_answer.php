@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric ($_POST['points']) && !empty($_POST['answerValue'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['answerValue'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -60,15 +60,8 @@
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
-			$case = $_POST['case'];
-			$answer = mysql_real_escape_string(serialize($_POST['answerValue']));
-			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
-			
-			$question = mysql_real_escape_string($_POST['question']);
-			$points = $_POST['points'];
-			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$case = $_POST['case'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -77,7 +70,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateShortAnswerQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateShortAnswerQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateShortAnswer = mysql_query($updateShortAnswerQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=answer");
@@ -97,6 +90,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$case = $_POST['case'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -113,7 +107,7 @@
 							)";
 							
 			$insertShortAnswer = mysql_query($insertShortAnswerQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=answer");
 			exit;
 		}
 	}
@@ -127,19 +121,19 @@
 <?php validate(); ?>
 <script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
-<script src="../../../../javascripts/insert/newTextFieldSimple.js" type="text/javascript"></script>
+<script src="../../../../javascripts/insert/newShortAnswer.js" type="text/javascript"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard :  Short Answer</h2>
-    <p>This will insert a text box, which a user must provide a one or two word response to a question. These questions are scored automatically.</p>
+    <h2>Module Setup Wizard : Short Answer</h2>
+    <p>A short answer is a question in which a user must provide a one or two word   response. These questions are scored automatically.</p>
 <p>&nbsp;</p>
     <form action="short_answer.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="shortAnswer" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -154,7 +148,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -230,6 +224,8 @@
 							unset($descriptionImport);
 						}
 					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -260,22 +256,20 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
+      <div class="catDivider three">Answer</div>
       <div class="stepContent">
       <blockquote>
-        <p>Provide correct answer(s)<span class="require">*</span>:</p>
+        <p>Provide correct answer(s)<span class="require">*</span>: <a href="../help.php?tab=5" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a></p>
         <blockquote>
         <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
-					$value = mysql_fetch_array($valueGrabber);
-					$answers = unserialize($value['answerValue']);
+					$answers = unserialize($testData['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"answers\" id=\"answers\">";
 					while (list($answerKey, $answerArray) = each($answers)) {
 						$id = $answerKey+1;
-						echo "<tr><td><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a" . $id . "\" size=\"50\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" class=\"validate[required]\" />";
+						echo "<tr><td><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a" . $id . "\" size=\"50\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" class=\"validate[required]\" /></td></tr>";
 					}
 					echo "</table>";
 			//Echo empty fields if the page is not editing a question
@@ -290,7 +284,7 @@
         </p>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer: </p>
@@ -326,15 +320,15 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
           <?php submit("submit", "Submit"); ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
           <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../test_content.php');return document.MM_returnValue" value="Cancel" />
-          <?php formErrors(); ?>
         </p>
+        <?php formErrors(); ?>
       </blockquote>
       </div>
 </form>

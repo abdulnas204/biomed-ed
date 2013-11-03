@@ -240,7 +240,7 @@ table.navbar {
 
 .navbar .navbutton,
 .navbar .menu {
-  float:right;
+  float:left;
 }
 
 #footer .navbar {
@@ -593,7 +593,12 @@ a.skip:focus, a.skip:active {
 /* Extra */
 
 a img {	
-	border::none;
+	border:none;
+}
+
+select.multiple {
+	width: 320px;
+	height: 240px;
 }
 
 .error {
@@ -615,25 +620,6 @@ a img {
 	border:solid grey;
 	padding:5px;
 	width: 75%;
-}
-
-.catDivider{
-	width: 100%;
-	background-color: #EEEEEE;
-	border: thin #CCCCCC solid;
-	font-size: 15px;
-	text-align: left;
-	font-weight: 900;
-	text-indent: 5px;
-	padding: 2px;
-}
-
-.toolBar {
-	background-color:#EEEEEE;
-	border:thin #CCCCCC solid;
-	padding: 5px;
-	vertical-align:middle;
-	text-align:left;
 }
 
 .dataLeft {
@@ -658,7 +644,17 @@ a img {
 
 .layoutControl {
 	clear: both;
-	overflow: auto;
+	overflow: hidden;
+}
+
+.halfLeft {
+	width:50%;
+	float:left;
+}
+
+.halfRight {
+	width:50%;
+	float:right;
 }
 
 .stepContent {
@@ -681,7 +677,7 @@ a img {
 }
 
 .homeBullet {
-	list-style-image:url(../../images/admin_icons/home.png);
+	list-style-image:url(../../images/admin_icons/homePage.png);
 	margin-bottom:5px;
 }
 
@@ -773,23 +769,332 @@ a.ascending:hover, a.ascending:active {
 }
 
 .questionBank {
-	background-image:url(../../images/admin_icons/bank.png);
-	background-position:left;
-	background-repeat:no-repeat;
-	height:23px;
+	background:url(../../images/admin_icons/bank.png) no-repeat;
+	background-position: 10px;
+	padding: 1px 0px 1px 0px;
 }
 
-/* Display Info for tables displaying data */
-.dataTable{
-width:100%;
-clear:both;
-padding:10px 0 10px 0;
-margin:auto;
-border: solid #999999 thin;
+.extraCredit {
+	background:url(../../images/common/extraCredit.png) no-repeat left;
+	padding:0px 8px 0px 8px;
 }
 
-table{width:100%;}
-th{background: url(../../images/common/headerBackground.gif) repeat-x center;color:#D8325D; height:21px; padding:5px;}
-td{text-align:left;padding:5px;}
-tr.even td{background: #EAEAEA;}
-tr.odd td{background: #FDFDFD;}
+span.notAssigned {
+	font-style:italic;	
+}
+
+span.alertNotAssigned {
+	background:url(../../images/admin_icons/warning.png) left no-repeat;
+	font-style:italic;
+	padding: 5px 0px 5px 30px;
+}
+
+.disabled {
+	background:#CCC;
+	color:#999;
+}
+
+.searchKeywords {
+	font-weight:bolder;
+}
+
+div.noResults {
+	padding: 30px 0px 80px 0px;
+	text-align:center;
+}
+
+span.pageTitle {
+	font-weight:bolder;
+}
+
+span.questionNumber {
+	font-size:14px;
+	font-weight:bolder;
+}
+
+span.questionPoints {
+	font-size:9px;
+	font-weight:bolder;
+}
+
+body.overrideBackground {
+	background-color:#FFF;
+}
+
+h2.preview {
+	padding:16px 0px 16px 60px;
+	background:url(../../images/admin_icons/preview.png) no-repeat left;
+}
+
+textarea.noEditorSimple {
+	font-family:Arial, Helvetica, sans-serif;
+	width:450px;
+}
+
+a.smallEdit {
+	padding: 1px 8px 1px 5px;
+	background:url(../../images/admin_icons/smallEdit.png) no-repeat left;
+}
+
+/* Begin tool bar and menu options */
+div.toolBar {
+	background-color:#EEEEEE;
+	border:thin #CCCCCC solid;
+	padding: 15px 5px 5px 5px;
+	text-align:left;
+}
+
+div.noPadding {
+	padding: 5px 5px 5px 5px;
+}
+
+a.toolBarItem, span.toolBarItem {
+	padding:10px 5px 0px 27px;
+	margin-right:20px;
+}	
+
+span.noLink {
+	padding:0px 5px 0px 0px;
+}
+
+a.new {
+	background:url(../../images/admin_icons/new.png) no-repeat left;
+}
+
+a.editTool {
+	background:url(../../images/admin_icons/edit.png) no-repeat left;
+}
+
+a.deleteTool {
+	background:url(../../images/admin_icons/delete.png) no-repeat left;
+}
+
+a.user {
+	background:url(../../images/admin_icons/profile.png) no-repeat left;
+}
+
+a.search {
+	background:url(../../images/admin_icons/search.png) no-repeat left;
+}
+
+a.back {
+	background:url(../../images/admin_icons/back.png) no-repeat left;
+}
+
+a.custom {
+	background:url(../../images/admin_icons/content.png) no-repeat left;
+}
+
+a.embedded {
+	background:url(../../images/admin_icons/load.png) no-repeat left;
+}
+
+a.bank {
+	background:url(../../images/admin_icons/bank.png) no-repeat left;
+}
+
+a.settings {
+	background:url(../../images/admin_icons/settings.png) no-repeat left;
+}
+
+a.feedback {
+	background:url(../../images/admin_icons/feedback.png) no-repeat left;
+}
+
+a.help {
+	background:url(../../images/admin_icons/help.png) no-repeat left center;
+}
+
+a.home {
+	background:url(../../images/admin_icons/home.png) no-repeat left;
+}
+
+a.sideBar {
+	background:url(../../images/admin_icons/sideBar.png) no-repeat left;
+}
+
+a.announcementLink {
+	background:url(../../images/admin_icons/announcement.png) no-repeat left;
+}
+
+a.email {
+	background:url(../../images/admin_icons/email.png) no-repeat left;
+}
+/* End tool bar and menu options */
+
+/* Begin form layout */
+div.catDivider {
+	width: 100%;
+	background: no-repeat 3px #EEEEEE;
+	border: thin #CCCCCC solid;
+	font-size: 15px;
+	text-align: left;
+	font-weight: 900;
+	text-indent: 30px;
+	padding: 4px 0px 4px 0px;
+}
+
+div.alignLeft {
+	text-indent: 5px;
+}
+
+div.one {
+	background-image:url(../../images/numbering/1.gif);
+}
+
+div.two {
+	background-image:url(../../images/numbering/2.gif);
+}
+
+div.three {
+	background-image:url(../../images/numbering/3.gif);
+}
+
+div.four {
+	background-image:url(../../images/numbering/4.gif);
+}
+
+div.five {
+	background-image:url(../../images/numbering/5.gif);
+}
+
+div.six {
+	background-image:url(../../images/numbering/6.gif);
+}
+
+div.seven {
+	background-image:url(../../images/numbering/7.gif);
+}
+
+div.eight {
+	background-image:url(../../images/numbering/8.gif);
+}
+
+div.nine {
+	background-image:url(../../images/numbering/9.gif);
+}
+
+div.ten {
+	background-image:url(../../images/numbering/10.gif);
+}
+
+div.eleven {
+	background-image:url(../../images/numbering/11.gif);
+}
+
+div.twelve {
+	background-image:url(../../images/numbering/12.gif);
+}
+
+div.thirteen {
+	background-image:url(../../images/numbering/13.gif);
+}
+
+div.fourteen {
+	background-image:url(../../images/numbering/14.gif);
+}
+
+div.fifteen {
+	background-image:url(../../images/numbering/15.gif);
+}
+
+div.sixteen {
+	background-image:url(../../images/numbering/16.gif);
+}
+
+div.seventeen {
+	background-image:url(../../images/numbering/17.gif);
+}
+
+div.eighteen {
+	background-image:url(../../images/numbering/18.gif);
+}
+
+div.nineteen {
+	background-image:url(../../images/numbering/19.gif);
+}
+
+div.twenty {
+	background-image:url(../../images/numbering/20.gif);
+}
+/* End form layout */
+
+/* Begin data table and table contents */
+table.dataTable {
+	width:100%;
+	clear:both;
+	padding:10px 0 10px 0;
+	margin:auto;
+	border: solid #999999 thin;
+}
+
+th {
+	background: url(../../images/common/headerBackground.gif) repeat-x center;
+	color:#D8325D;
+	height:21px;
+	padding:5px;
+	text-align:center;
+	font-weight:bolder;
+}
+
+td {
+	padding:5px;
+}
+
+tr.even td {
+	background: #EAEAEA;
+	text-align:center;
+	padding:7px 0px 7px 0px;
+}
+
+tr.odd td {
+	background: #FDFDFD;
+	text-align:center;
+	padding:7px 0px 7px 0px;
+}
+
+a.action, span.action {
+	padding:5px 12px 5px 12px;
+}
+
+a.edit {
+	background:url(../../images/admin_icons/edit.png) no-repeat center;
+}
+
+span.noEdit {
+	background:url(../../images/admin_icons/noEdit.png) no-repeat center;
+}
+
+a.delete {
+	background:url(../../images/admin_icons/delete.png) no-repeat center;
+}
+
+span.noDelete {
+	background:url(../../images/admin_icons/noDelete.png) no-repeat center;
+}
+
+a.statistics {
+	background:url(../../images/admin_icons/statistics.png) no-repeat center;
+}
+
+a.discover {
+	background:url(../../images/admin_icons/search.png) no-repeat center;
+}
+/* End data table and table contents */
+
+/* Begin statistics styles */
+div.pagesBox {
+	margin:0% 10% 0% 10%;
+	border-bottom:thin #666 solid;
+	border-top:thin #666 solid;
+	text-align:center;
+}
+a.searchNumber, span.searchNumber {
+	padding: 0px 5px 0px 5px;	
+}
+
+span.currentSearchNumber {
+	padding: 0px 5px 0px 5px;
+	font-weight:bolder;
+}
+/* End statistics styles */

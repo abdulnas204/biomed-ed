@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			//case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -27,15 +27,20 @@
 		$moduleData = mysql_fetch_array($moduleDataGrabber);
 		
 	//Process the form
-		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && is_numeric($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
 			if (mysql_fetch_array($moduleCheck)) {
-				if ($moduleData['name'] !== $name) {
+				if (strtolower($_SESSION['currentModule']) !== strtolower($name)) {
 					header("Location:lesson_settings.php?error=identical");
 					exit;
 				}
+			}
+			
+			if ($name == "Question Bank" || $name == "QuestionBank") {
+				header("Location:lesson_settings.php?error=identical");
+				exit;
 			}
 		
 			$id = $moduleData['id'];
@@ -85,6 +90,11 @@
 				rename("../../../modules/{$oldDirectory}", "../../../modules/{$newDirectory}");
 			}
 			
+		//Update the category types for the test
+			if ($testCheck['test'] == "1") {
+				mysql_query("UPDATE moduletest_{$newTableName} SET `category` = '{$category}' WHERE `category` != ''", $connDBA);
+			}
+			
 		//Reset the session name
 			$_SESSION['currentModule'] = $name;
 			$_SESSION['category'] = $category;
@@ -104,7 +114,7 @@
 //If the settings are being inserted	
 	} else {
 	//Process the form
-		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && is_numeric($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
@@ -178,7 +188,7 @@
 		
 		if($name = mysql_fetch_array($checkName)) {					
 			if (isset($_SESSION['currentModule'])) {
-				if ($name['name'] !== $_SESSION['currentModule']) {
+				if (strtolower($name['name']) !== strtolower($_SESSION['currentModule'])) {
 					echo "<div class=\"error\" id=\"errorWindow\">A module with this name already exists</div>";
 				} else {
 					echo "<p>&nbsp;</p>";
@@ -211,11 +221,9 @@
 <p>Setup the module's initial settings, such as the name, time frame, and any comments.</p>
 <?php errorWindow("database", "A module with this name already exists", "error", "identical", "true"); ?>
       <form name="lessonSettings" action="lesson_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider">
-        <?php
-			step("1", "Module Information", "1" , "Module Information")
-		?>
-      </div>
+	  <?php
+          step("one", "Module Information", "one" , "Module Information")
+      ?>
       <div class="stepContent">
         <blockquote>
           <p>Module Name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of the module')" onmouseout="UnTip()" /></p>
@@ -274,7 +282,7 @@
 					echo "<select name=\"time\" id=\"time\">";					
 					for ($count=1; $count <= 24; $count++) {
 						echo "<option value=\"" . $count . "\"";
-						if ($count == "3") {
+						if ($count == "2") {
 							echo " selected=\"selected\"";
 						}
 						echo ">" . $count . "</option>";
@@ -283,8 +291,8 @@
 					
 					echo "<select name=\"timeLabel\" id=\"timeLabel\">
 						<option value=\"Days\">Days</option>
-						<option value=\"Weeks\">Weeks</option>
-						<option value=\"Months\" selected=\"selected\">Months</option>
+						<option value=\"Weeks\" selected=\"selected\">Weeks</option>
+						<option value=\"Months\">Months</option>
 						<option value=\"Years\">Years</option>
 					  </select>";
 				}
@@ -305,9 +313,9 @@
 					if (isset($_SESSION['currentModule'])) {
 						echo "<option value=\"\">- Select -</option>";
 						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
+							echo "<option value=\"" . $category['id'] . "\"";
 							
-							if ($category['category'] == $moduleData['category']) {
+							if ($category['id'] == $moduleData['category']) {
 								echo " selected=\"selected\"";
 							}
 							
@@ -316,7 +324,7 @@
 					} else {
 						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
 						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\">" . stripslashes(htmlentities($category['category'])) . "</option>";
+							echo "<option value=\"" . $category['id'] . "\">" . stripslashes(htmlentities($category['category'])) . "</option>";
 						}
 					}
 				?>
@@ -335,9 +343,9 @@
 					if (isset($_SESSION['currentModule'])) {
 						echo "<option value=\"\">- Select -</option>";
 						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\"";
+							echo "<option value=\"" . $employee['id'] . "\"";
 							
-							if ($employee['employee'] == $moduleData['employee']) {
+							if ($employee['id'] == $moduleData['employee']) {
 								echo " selected=\"selected\"";
 							}
 							
@@ -346,7 +354,7 @@
 					} else {
 						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
 						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
+							echo "<option value=\"" . $employee['id'] . "\">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
 						}
 					}
 
@@ -391,11 +399,9 @@
           </blockquote>
         </blockquote>
         </div>
-        <div class="catDivider">
         <?php
-			step("2", "Module Settings", "2" , "Module Settings")
-		?>
-        </div>
+          step("two", "Module Settings", "two" , "Module Settings")
+      	?>
         <div class="stepContent">
           <blockquote>
             <p>Lock module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Prevent organizations from customizing these settings for their needs')" onmouseout="UnTip()" /></p>
@@ -535,13 +541,12 @@
             </blockquote>
           </blockquote>        
         </div>
-        <div class="catDivider">
         <?php
-			step("3", "Submit", "3" , "Submit")
+			step("three", "Submit", "three" , "Submit")
 		?>
-        </div>
         <div class="stepContent">
         <blockquote>
+        <p>
           <?php
 		  //Selectively display the buttons
 		  		if (isset ($_SESSION['review'])) {
@@ -555,6 +560,7 @@
 					}
 				}
 		  ?>
+          </p>
           <?php formErrors(); ?>
           </blockquote> 
         </div>

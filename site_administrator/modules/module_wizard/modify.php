@@ -24,21 +24,13 @@
 <head>
 <?php title("Modify a Module"); ?>
 <?php headers(); ?>
-<script type="text/javascript">
-<!--
-function MM_goToURL() { //v3.0
-  var i, args=MM_goToURL.arguments; document.MM_returnValue = false;
-  for (i=0; i<(args.length-1); i+=2) eval(args[i]+".location='"+args[i+1]+"'");
-}
-//-->
-</script>
+<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <h2>Modify a Module</h2>
 <p>Select a specific part of the module to modify:</p>
-<p>
-  <?php
+<?php
 //Display a success message
 	if (isset ($_GET['updated'])) {
 		switch ($_GET['updated']) {
@@ -47,17 +39,18 @@ function MM_goToURL() { //v3.0
 			case "testSettings" : successMessage("The test settings were updated"); break;
 			case "testContent" : successMessage("The test content was updated"); break;
 		}
+	} else {
+		echo "<p>&nbsp;</p>";
 	}
 ?>
-</p>
-<div class="catDivider"><img src="../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Modify Module</div>
+<div class="catDivider one">Modify Module</div>
 <div class="stepContent">
 <blockquote>
   <p><a href="lesson_settings.php">Module Settings</a><br/ >
   <a href="lesson_content.php">Module Content</a></p>
 </blockquote>
 </div>
-<div class="catDivider"><img src="../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Modify Test</div>
+<div class="catDivider two">Modify Test</div>
 <div class="stepContent">
 <blockquote>
     <?php
@@ -71,7 +64,7 @@ function MM_goToURL() { //v3.0
   ?>
 </blockquote>
 </div>
-<div class="catDivider"><img src="../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
+<div class="catDivider three">Finish</div>
 <div class="stepContent">
   <p>
     <blockquote>

@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && isset ($_POST['question']) && isset ($_POST['points']) && isset ($_POST['answer'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['answer'])) {
 		//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -61,6 +61,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$randomize = $_POST['randomize'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -68,7 +69,7 @@
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 		
-			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}' WHERE id = '{$update}'";
+			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}' WHERE id = '{$update}'";
 							
 			$updateMatching = mysql_query($updateMatchingQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=truefalse");
@@ -88,6 +89,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$randomize = $_POST['randomize'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -102,7 +104,7 @@
 							)";
 							
 			$insertChoice = mysql_query($insertChoiceQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=truefalse");
 			exit;
 		}
 	}
@@ -127,7 +129,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="trueFalse" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -142,7 +144,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -218,6 +220,8 @@
 							unset($descriptionImport);
 						}
 					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -248,7 +252,7 @@
         </blockquote>
       </blockquote>
       </div>
-        <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
+        <div class="catDivider three">Answer</div>
         <div class="stepContent">
         <blockquote>
           <p>Select the correct answer<span class="require">*</span>:</p>
@@ -276,7 +280,7 @@
     	</blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer:</p>
@@ -289,7 +293,7 @@
 		  ?></textarea>
           </p>
         </blockquote>
-        <p>Feedback for incorrect answer: </p>
+<p>Feedback for incorrect answer: </p>
         <blockquote>
           <p>
             <textarea id="feedBackIncorrect" name="feedBackIncorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -301,7 +305,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

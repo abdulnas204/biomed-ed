@@ -74,8 +74,10 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 				if (extensionInput != undefined) {
 					var extensionSplit = extensionInput.split(".");
 					var n;
-					for (n in extensionSplit) {								
-						if (fileCheck.match(extensionSplit[n])) {					
+					for (n in extensionSplit) {
+						var lowerCase = fileCheck.toLowerCase();
+													
+						if (lowerCase.match(extensionSplit[n])) {					
 							var extensionCheck = "1";
 						}
 					}
@@ -122,7 +124,7 @@ function errorDisplay(errorShow, progressClear, errorWinShow, errorReturn) {
 		errorBox.style.display = 'block';
 		errorBox.style.border = '1px solid #CC3333';
 		errorBox.style.color = '#CC3333';
-		errorBox.style.width = '410px';
+		errorBox.style.width = '398px';
 	}
 	
 	

@@ -11,5 +11,6 @@
 	$footerArray = mysql_fetch_array($footerGrabber);
 	$footer = $footerArray['siteFooter'];
 	echo stripslashes($footer);
+	stats("true");
 ?>
 </div>

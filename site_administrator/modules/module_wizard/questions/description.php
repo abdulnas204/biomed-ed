@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -84,11 +84,11 @@
 			$insertDescriptionQuery = "INSERT INTO moduletest_{$currentTable} (
 							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 							) VALUES (
-							NULL, '0', '', '{$lastQuestion}', 'Description', '0', 'off', '0', '', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''
+							NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''
 							)";
 							
 			$insertDescription = mysql_query($insertDescriptionQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=description");
 			exit;
 		}
 	}
@@ -107,17 +107,17 @@
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
       
     <h2>Module Setup Wizard : Description</h2>
-    <p>A description is not a question field, however, it allows test creators to  insert text into the test without asking any questions or scoring the  viewer on this content.</p>
+    <p>A description is not a question field, however, it allows test creators to insert text into the test without asking any questions or scoring the viewer on this content.</p>
     <p>&nbsp;</p>
     <form action="description.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
+      <div class="catDivider one">Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Description Content<span class="require">*</span>: </p>
+        <p>Description content<span class="require">*</span>: </p>
       <blockquote>
             <p align="left"><span id="questionCheck">
               <textarea name="question" id="question" cols="45" rows="5" style="width:640px; height:320px;"><?php 
@@ -130,7 +130,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
+      <div class="catDivider two">Settings</div>
       <div class="stepContent">
         <blockquote>
          <p>Tags (Seperate with commas):</p>
@@ -146,7 +146,7 @@
         </blockquote>
         </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
+      <div class="catDivider three">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

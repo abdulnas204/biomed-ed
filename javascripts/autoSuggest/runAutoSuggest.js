@@ -27,6 +27,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/************************************************************************
+Developer enhancements are denoted by a "//Developer Enhancement" comment
+************************************************************************/
+
 var Spry;
 if (!Spry) Spry = {};
 if (!Spry.Widget) Spry.Widget = {};
@@ -858,7 +862,9 @@ Spry.Widget.Utils.makePositioned = function(element)
 	var pos = Spry.Widget.Utils.getStyleProp(element, 'position');
 	if (!pos || pos == 'static')
 	{
-		element.style.position = 'relative';
+		//Developer Enhancement
+		//element.style.position = 'relative';
+		element.style.position = 'absolute';
 
 		// Opera returns the offset relative to the positioning context, when an
 		// element is position relative but top and left have not been defined

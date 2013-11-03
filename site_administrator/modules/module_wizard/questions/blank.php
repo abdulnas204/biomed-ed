@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -19,11 +19,11 @@
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
-			header ("Location: test_check.php");
+			header ("Location: ../test_check.php");
 			exit;
 		}
 	} else {
-		header ("Location: ../index.php");
+		header ("Location: ../../index.php");
 		exit;
 	}
 ?>
@@ -61,6 +61,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$case = $_POST['case'];
@@ -71,7 +72,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateBlankQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `case` = '{$case}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateBlankQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `case` = '{$case}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateBlank = mysql_query($updateBlankQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=blank");
@@ -91,6 +92,7 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$case = $_POST['case'];
@@ -105,11 +107,11 @@
 			$insertBlankQuery = "INSERT INTO moduletest_{$currentTable} (
 							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 							) VALUES (							
-							NULL, '0', '0', '{$lastQuestion}', 'Fill in the Blank', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
+							NULL, '0', '0', '{$lastQuestion}', 'Fill in the Blank', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '{$questionValue}', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
 							)";
 							
 			$insertBlank = mysql_query($insertBlankQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=blank");
 			exit;
 		}
 	}
@@ -124,11 +126,11 @@
 <script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/showHide.js" type="text/javascript"></script>
-<script src="../../../../javascripts/insert/newTextFieldAdvanced.js" type="text/javascript"></script>
+<script src="../../../../javascripts/insert/newFillBlank.js" type="text/javascript"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>      
-    <h2>Module Setup Wizard :  Fill in the Blank</h2>
+    <h2>Module Setup Wizard : Fill in the Blank</h2>
 <p>A fill in the blank question will prompt a user to  complete a sentence with missing values by filling in the blanks.</p>
     <p>&nbsp;</p>
 	<form action="blank.php<?php
@@ -136,7 +138,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="blank" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -151,7 +153,7 @@
         </blockquote>
       </blockquote>
       </div>
-  <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+  <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -227,6 +229,8 @@
 							unset($descriptionImport);
 						}
 					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -269,10 +273,10 @@
         </blockquote>
       </blockquote>
       </div>
-  <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
+  <div class="catDivider three">Question Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question content<span class="require">*</span>:<br />
+        <p>Question content<span class="require">*</span>: <a href="../help.php?tab=2" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a><br />
           <strong>Hint:</strong> Do not include any characters or spaces in the values section, otherwise this question may be scored incorrectly.<br />
         </p>
         <table width="100%" border="0">
@@ -280,16 +284,14 @@
             <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
-					$value = mysql_fetch_array($valueGrabber);
-					$questions = unserialize($value['questionValue']);
-					$answers = unserialize($value['answerValue']);
+					$questions = unserialize($testData['questionValue']);
+					$answers = unserialize($testData['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr>
 							<td width=\"100%\"><div align=\"center\"><strong>Sentence</strong></div></td>
 						  </tr>";
 					while (list($questionKey, $questionArray) = each($questions)) {
-						echo "<tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q"; echo $questionKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($questionArray));  echo "\" class=\"validate[required]\" /></div>";
+						echo "<tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q"; echo $questionKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($questionArray));  echo "\" class=\"validate[required]\" /></div></td></tr>";
 					}
 					echo "</table>";
 					echo "</td><td>";
@@ -297,9 +299,9 @@
 							<td width=\"100%\"><div align=\"center\"><strong>Values</strong></div></td>
 						  </tr>";
 					while (list($answerKey, $answerArray) = each($answers)) {
-						echo "<tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\""; echo $answerKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" /></div>";
+						echo "<tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a"; echo $answerKey+1; echo "\" size=\"65\" value=\""; echo stripslashes(htmlentities($answerArray));  echo "\" /></div></td></tr>";
 					}
-					echo "</table>";
+					echo "</td></tr></table>";
 			//Echo empty fields if the page is not editing a question
 				} else {
 					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr><td width=\"100%\"><div align=\"center\"><strong>Sentence</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"questionValue[]\" autocomplete=\"off\" type=\"text\" id=\"q1\" size=\"65\" class=\"validate[required]\" /></div></td></tr></table></td><td><table width=\"50%\" name=\"answers\" id=\"answers\"><tr><td width=\"100%\"><div align=\"center\"><strong>Values</strong></div></td></tr><tr><td><div align=\"center\"><input name=\"answerValue[]\" autocomplete=\"off\" type=\"text\" id=\"a1\" size=\"65\" /></div></td></tr></table>";
@@ -308,14 +310,13 @@
             </td>
            </tr>
         </table>
-        <div style="float:left"></span></div>
         <p>
           <input value="Add Another Line" type="button" onclick="appendRow('questions', '<div align=\'center\'><input name=\'questionValue[]\' type=\'text\' id=\'q', '\' autocomplete=\'off\' size=\'65\' class=\'validate[required]\' /></div>'); appendRow('answers', '<div align=\'center\'><input name=\'answerValue[]\' type=\'text\' id=\'a', '\' autocomplete=\'off\' size=\'65\' /></div>')" />
           <input value="Remove Last Line" type="button" onclick="deleteLastRow('questions'); deleteLastRow('answers')" />
         </p>
       </blockquote>
       </div>
-  <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+  <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer:</p>
@@ -353,7 +354,7 @@
         </blockquote>
       </blockquote>
       </div>
-  <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+  <div class="catDivider five">Finish</div>
         <div class="stepContent">
         <blockquote>
           <p>

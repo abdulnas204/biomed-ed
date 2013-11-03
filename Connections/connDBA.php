@@ -4,6 +4,7 @@ ob_start();
 
 //Root address for entire site
 	$root = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
+	$strippedRoot = str_replace("http://" . $_SERVER['HTTP_HOST'], "", $root);
 
 //Database connection
 	//Create database connection.
@@ -12,13 +13,25 @@ ob_start();
 	//Select database to use
 	$dbSelect = mysql_select_db("biomed-ed", $connDBA);
 	
+//Set activity meter
+	if (!isset($_SESSION['MM_Username']) && isset($_COOKIE['userStatus'])) {
+		$cookie = $_COOKIE['userStatus'];
+		
+		mysql_query("UPDATE `users` SET active = '0' WHERE `sysID` = '{$cookie}' LIMIT 1", $connDBA);
+		setcookie("userStatus", "", time()-1000000000); 
+	}
+	
+//Define time zone
+	$timeZoneGrabber = mysql_query("SELECT * FROM `siteProfiles` WHERE `id` = '1'", $connDBA);
+	$timeZone = mysql_fetch_array($timeZoneGrabber);
+	date_default_timezone_set($timeZone['timeZone']);
 
 //Messages
 	//Alerts
-	function alert ($alertConent = NULL){
-		echo "<p><div align=\"center\"><div align=\"center\" class=\"announcement\">$alertConent</div></div></p><br />";
+	function alert($errorContent = NULL) {
+		echo "<p><div align=\"center\"><div align=\"center\" class=\"alert\">$errorContent</div></div></p><br />";
 	}
-
+	
 	//Response for errors
 	function errorMessage($errorContent = NULL) {
 		echo "<p><div align=\"center\"><div align=\"center\" class=\"error\">$errorContent</div></div></p><br />";
@@ -51,6 +64,7 @@ ob_start();
 	function headers() {
 		global $connDBA;
 		global $root;
+		global $strippedRoot;
 		
 		$requestURL = $_SERVER['REQUEST_URI'];
 		if (strstr($requestURL, "enable_javascript.php")) {
@@ -62,7 +76,23 @@ ob_start();
 			echo "<script type=\"text/javascript\">window.location = \"index.php\"</script>
 ";
 		}
-		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "styles/common/universal.css\" /><link type=\"image/x-icon\" rel=\"shortcut icon\" href=\"" . $root . "images/icon.ico\" /><script src=\"" . $root . "javascripts/common/hoverEffect.js\" type=\"text/javascript\"></script>";
+		
+		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "styles/common/universal.css\" /><link type=\"";
+		
+		$iconExtensionGrabber = mysql_query("SELECT * FROM siteProfiles", $connDBA);
+		$iconExtension = mysql_fetch_array($iconExtensionGrabber);
+		
+		switch ($iconExtension['iconType']) {
+			case "ico" : echo "image/x-icon"; break;
+			case "jpg" : echo "image/jpeg"; break;
+			case "gif" : echo "image/gif"; break;
+		}
+		
+		echo "\" rel=\"shortcut icon\" href=\"" . $root . "images/icon." . $iconExtension['iconType'] . "\" /><script src=\"" . $root . "javascripts/common/hoverEffect.js\" type=\"text/javascript\"></script>";
+		
+		if (isset($_SESSION['MM_Username'])) {
+			echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/extendSession/extendSessionCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/extendSession/runExtendSession.js\" type=\"text/javascript\"></script>";
+		}
 		
 		$siteStyleGrabber = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 		$siteStyle = $siteStyleGrabber['style'];
@@ -154,32 +184,20 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		$siteAssist = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
+		$siteName = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 		
-		if ($siteAssist['assist'] == "no") {
-			echo "<div id=\"page\">
-			<div id=\"header_bg\">
-			<div id=\"header\" class=\"clearfix\"><h1 class=\"headermain\">";
-			echo $siteAssist['siteName'];
-			echo "</h1><div class=\"headermenu\"><div class=\"logininfo\">";
-			loginStatus();
-			echo "</div></div></div><div id=\"banner_bg\"><div id=\"banner\">";
-			logo();
-			echo "</div></div>";
-			navigation($URL);
-			echo "</div>";
-			echo "<div id=\"content\"><div class=\"box generalbox generalboxcontent boxaligncenter boxwidthwide\">";
-		} else {
-			echo "<div id=\"page\">
-			<div id=\"header_bg\">
-			<div id=\"header\" class=\"clearfix\"><h1 class=\"headermain\">";
-			logo();
-			echo "</h1><div class=\"headermenu\"><div class=\"logininfo\">";
-			loginStatus();
-			echo"</div></div></div>";
-			navigation($URL);
-			echo "<div id=\"content\"><div class=\"box generalbox generalboxcontent boxaligncenter boxwidthwide\">";
-		}		
+		echo "<div id=\"page\">
+		<div id=\"header_bg\">
+		<div id=\"header\" class=\"clearfix\"><h1 class=\"headermain\">";
+		echo $siteName['siteName'];
+		echo "</h1><div class=\"headermenu\"><div class=\"logininfo\">";
+		loginStatus();
+		echo "</div></div></div><div id=\"banner_bg\"><div id=\"banner\">";
+		logo();
+		echo "</div></div>";
+		navigation($URL);
+		echo "</div>";
+		echo "<div id=\"content\"><div class=\"box generalbox generalboxcontent boxaligncenter boxwidthwide\">";		
 	}
 	
 	//Include a footer
@@ -202,93 +220,111 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-
-		if (!function_exists("GetSQLValueString")) {
-		function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "") 
-		{
-		  $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
-		
-		  $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
-		
-		  switch ($theType) {
-			case "text":
-			  $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
-			  break;    
-			case "long":
-			case "int":
-			  $theValue = ($theValue != "") ? intval($theValue) : "NULL";
-			  break;
-			case "double":
-			  $theValue = ($theValue != "") ? "'" . doubleval($theValue) . "'" : "NULL";
-			  break;
-			case "date":
-			  $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
-			  break;
-			case "defined":
-			  $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue;
-			  break;
-		  }
-		  return $theValue;
-		}
-		}
-		
-		$loginFormAction = $_SERVER['PHP_SELF'];
-		if (isset($_GET['accesscheck'])) {
-		  $_SESSION['PrevUrl'] = $_GET['accesscheck'];
-		}
-		
-		if (isset($_POST['username'])) {
-		  $loginUsername=$_POST['username'];
-		  $password=$_POST['password'];
-		  $MM_fldUserAuthorization = "role";
+		if (isset ($_SESSION['MM_Username'])) {
+			$requestedURL = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+			$homePageCheck = str_replace($root, "", $requestedURL);
 			
-			$userRoleGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$loginUsername}' AND `passWord` = '{$password}'");
-			if ($userRole = mysql_fetch_array($userRoleGrabber)) {
-				$success = "";
-				$failure = "";
+			if ($homePageCheck !== "index.php") {
+				$userRole = $_SESSION['MM_UserGroup'];
 				
-				if (isset($_GET['accesscheck'])) {
-					$returnAddressStrip = "http://" . $_SERVER['HTTP_HOST'] . "/" . $_GET['accesscheck'];
-					$success .= str_replace($root, "", $returnAddressStrip);
-				} else {
-					switch ($userRole['role']) {
-						case "Student": $success .= "instructor/index.php"; break;
-						case "Instructor": $success .= "Location: instructor/index.php"; break;
-						case "Organization Administrator": $success .= "Location: admin/index.php"; break;
-						case "Site Administrator": $success .= "Location: site_administrator/index.php"; break;
-					}
+				switch ($userRole) {
+					case "Student": header ("Location: student/index.php"); exit; break;
+					case "Instructor": header ("Location: instructor/index.php"); exit; break;
+					case "Organization Administrator": header ("Location: organization_administrator/index.php"); exit; break;
+					case "Site Administrator": header ("Location: site_administrator/index.php"); exit; break;
 				}
-			} else {
-				$success = "";
-				$failure = "login.php?alert";
 			}
-		  
-		  $MM_redirectLoginSuccess = $success;
-		  $MM_redirectLoginFailed = $failure;
-		  $MM_redirecttoReferrer = false;
-		  mysql_select_db($database_connDBA, $connDBA);
-			
-		  $LoginRS__query=sprintf("SELECT userName, passWord, role FROM users WHERE userName=%s AND passWord=%s",
-		  GetSQLValueString($loginUsername, "text"), GetSQLValueString($password, "text")); 
-		   
-		  $LoginRS = mysql_query($LoginRS__query, $connDBA) or die(mysql_error());
-		  $loginFoundUser = mysql_num_rows($LoginRS);
-		  if ($loginFoundUser) {
-			
-			$loginStrGroup  = mysql_result($LoginRS,0,'role');
-			
-			//declare two session variables and assign them
-			$_SESSION['MM_Username'] = $loginUsername;
-			$_SESSION['MM_UserGroup'] = $loginStrGroup;	      
+		} else {
+			if (!function_exists("GetSQLValueString")) {
+				function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "") {
+		  			$theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
+					$theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
 		
-			if (isset($_SESSION['PrevUrl']) && false) {
-			  $MM_redirectLoginSuccess = $_SESSION['PrevUrl'];	
+					switch ($theType) {
+					  case "text" : $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL"; break;    
+					  case "long":
+					  case "int": $theValue = ($theValue != "") ? intval($theValue) : "NULL"; break;
+					  case "double": $theValue = ($theValue != "") ? "'" . doubleval($theValue) . "'" : "NULL"; break;
+					  case "date": $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL"; break;
+					  case "defined": $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue; break;
+					}
+					
+					return $theValue;
+				}
 			}
-			header("Location: " . $root . $MM_redirectLoginSuccess );
-		  }
-		  else {
-			header("Location: " . $root . $MM_redirectLoginFailed );
-		  }
+		
+			$loginFormAction = $_SERVER['PHP_SELF'];
+			
+			if (isset($_GET['accesscheck'])) {
+				$_SESSION['PrevUrl'] = $_GET['accesscheck'];
+			}
+			
+			if (isset($_POST['username'])) {
+				$loginUsername=$_POST['username'];
+				$password=$_POST['password'];
+				$MM_fldUserAuthorization = "role";
+				
+				$userRoleGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$loginUsername}' AND `passWord` = '{$password}'");
+				
+				if ($userRole = mysql_fetch_array($userRoleGrabber)) {
+					$success = "";
+					$failure = "";
+					
+					if (isset($_GET['accesscheck'])) {
+						$success .= "http://" . $_SERVER['HTTP_HOST'] . urldecode($_GET['accesscheck']);
+					} else {
+						switch ($userRole['role']) {
+							case "Student": $success .= "instructor/index.php"; break;
+							case "Instructor": $success .= "instructor/index.php"; break;
+							case "Organization Administrator": $success .= "admin/index.php"; break;
+							case "Site Administrator": $success .= "site_administrator/index.php"; break;
+						}
+					}
+				} else {
+					$success = "";
+					$failure = "login.php?alert";
+				}
+			  
+				$MM_redirectLoginSuccess = $success;
+				$MM_redirectLoginFailed = $failure;
+				$MM_redirecttoReferrer = false;
+				  
+				$LoginRS__query=sprintf("SELECT userName, passWord, role FROM users WHERE userName=%s AND passWord=%s",
+				GetSQLValueString($loginUsername, "text"), GetSQLValueString($password, "text")); 
+				 
+				$LoginRS = mysql_query($LoginRS__query, $connDBA) or die(mysql_error());
+				$loginFoundUser = mysql_num_rows($LoginRS);
+				
+				if ($loginFoundUser) {
+					$loginStrGroup  = mysql_result($LoginRS,0,'role');
+					
+					$_SESSION['MM_Username'] = $loginUsername;
+					$_SESSION['MM_UserGroup'] = $loginStrGroup;	
+					
+					$userIDGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$loginUsername}' AND `passWord` = '{$password}' LIMIT 1");
+					$userID = mysql_fetch_array($userIDGrabber);
+					setcookie("userStatus", $userID['sysID'], time()+1000000000); 
+					
+					$cookie = $userID['sysID'];
+					mysql_query("UPDATE `users` SET `active` = '1' WHERE `sysID` = '{$cookie}'", $connDBA);
+					
+			  
+				  if (isset($_SESSION['PrevUrl']) && false) {
+					  $MM_redirectLoginSuccess = $_SESSION['PrevUrl'];	
+				  }
+				  
+				  if (!isset($_GET['accesscheck'])) {
+					  header("Location: " . $root . $MM_redirectLoginSuccess);
+					  exit;
+				  } else {
+					  header ("Location: " . $success);
+					  exit;
+				  }
+				} else {
+				  header("Location: " . $root . $MM_redirectLoginFailed);
+				  exit;
+				}
+			}
 		}
 	}
 	
@@ -327,7 +363,10 @@ ob_start();
 		}
 		
 		$MM_restrictGoTo = "" . $root . "login.php";
-		if (!((isset($_SESSION['MM_Username'])) && (isAuthorized("",$MM_authorizedUsers, $_SESSION['MM_Username'], $_SESSION['MM_UserGroup'])))) {   
+		if (!((isset($_SESSION['MM_Username'])) && (isAuthorized("",$MM_authorizedUsers, $_SESSION['MM_Username'], $_SESSION['MM_UserGroup']))) || !isset($_COOKIE['userStatus'])) { 
+		  setcookie("userStatus", "", time()-1000000000);  
+		  unset($_SESSION['MM_Username']);
+		  unset($_SESSION['MM_Usergroup']);
 		  $MM_qsChar = "?";
 		  $MM_referrer = $_SERVER['PHP_SELF'];
 		  if (strpos($MM_restrictGoTo, "?")) $MM_qsChar = "&";
@@ -350,8 +389,9 @@ ob_start();
 		<meta http-equiv=\"content-language\" content=\"" . stripslashes($meta['language']) . "\" />
 		<meta name=\"copyright\" content=\"" . stripslashes($meta['copyright']) . "\" />
 		<meta name=\"description\" content=\"" . stripslashes($meta['description']) . "\" />
-		<meta name=\"keywords\" content=\"" . stripslashes($meta['meta']) . "\" />";
-
+		<meta name=\"keywords\" content=\"" . stripslashes($meta['meta']) . "\" />
+		<meta name=\"generator\" content=\"Ensigma Pro\" />
+		<meta name=\"robots\" content=\"index,follow\">";
 	}
 	
 //Include the tiny_mce simple widget
@@ -367,7 +407,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script>";
+		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.php\"></script><script type=\"text/javascript\" src=\"" . $root . "tiny_mce/plugins/tinybrowser/tb_tinymce.js.php\"></script>";
 	}
 	
 //Include a form validator
@@ -451,7 +491,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/animateModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/dragDropModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowOptions.js\" type=\"text/javascript\"></script>";
+		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowOptions.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/animateModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/dragDropModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "styles/common/modalWindow.css\" type=\"text/javascript\"></script>";
 	}
 	
 //Submit a form and toggle the tinyMCE to save its content
@@ -468,9 +508,9 @@ ob_start();
 		global $root;
 		
 		if (isset ($_SESSION['review'])) {
-			echo "<img src=\"" . $root . "images/numbering/" . $sessionNumber . ".gif\" alt=\"" . $sessionNumber . ".\" width=\"22\" height=\"22\" /> " . $sessionText;
+			echo "<div class=\"catDivider " . $sessionNumber . "\">" . $sessionText . "</div>";
 		} else {
-			echo "<img src=\"" . $root . "images/numbering/" .$number . ".gif\" alt=\"" . $number . ".\" width=\"22\" height=\"22\" /> " . $text;
+			echo "<div class=\"catDivider " . $number . "\">" . $text . "</div>";
 		}
 	}
 	
@@ -521,11 +561,11 @@ ob_start();
 	
 //A function to check the extension of a file
 	function extension ($targetFile) {
-		$fileName = strtolower($targetFile);
 		$entension = explode(".", $targetFile);
 		$value = count($entension)-1;
 		$entension = $entension[$value];
-		return $entension;
+		$output = strtolower($entension);
+		return $output;
 	}
 	
 //A function to delete a folder and all of its contents
@@ -545,12 +585,10 @@ ob_start();
 				if($contents != '.' && $contents != '..') {
 					$path = $directory . "/" . $contents;
 					
-					echo $path . "<br />";
-					
 					if(is_dir($path)) {
 						deleteAll($path);
 					} else {
-						echo "unlink($path)" . "<br />";;
+						unlink($path);
 					}
 				}
 			}
@@ -558,13 +596,36 @@ ob_start();
 			closedir($directoryHandle);
 	
 			if($empty == false) {
-				echo "rmdir($directory)" . "<br />";
-				//if(!rmdir($directory)) {
-					//return false;
-				//}
+				if(!rmdir($directory)) {
+					return false;
+				}
 			}
 			
 			return true;
 		}
 	}
+	
+/* Begin statistics tracker */
+//Overall statistics
+	function stats($doAction = "false") {
+		global $root;
+		global $connDBA;
+		
+		if ($doAction == "true") {
+			$date = date("M-d-Y");
+			$statisticsCheck = mysql_query("SELECT * FROM `overallstatistics` WHERE `date` = '{$date}' LIMIT 1", $connDBA);
+			if ($result = mysql_fetch_array($statisticsCheck)) {
+				$newHit = $result['hits']+1;
+				mysql_query("UPDATE `overallstatistics` SET `hits` = '{$newHit}' WHERE `date` = '{$date}' LIMIT 1", $connDBA);
+			} else {
+				mysql_query("INSERT INTO `overallstatistics` (
+							`id`, `date`, `hits`
+							) VALUES (
+							NULL, '{$date}', '1'
+							)");
+			}
+		}
+	}
+	
+/* End statistics tracker */
 ?>

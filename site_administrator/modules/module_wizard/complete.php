@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -24,7 +24,7 @@
 //Process the form
 	if (isset ($_POST['submit'])) {
 		$currentModule = $_SESSION['currentModule'];
-		$setAvaliable = "UPDATE moduledata SET `avaliable` = '1' WHERE `name` = '{$currentModule}'";
+		$setAvaliable = "UPDATE moduledata SET `avaliable` = 'on' WHERE `name` = '{$currentModule}'";
 		mysql_query($setAvaliable, $connDBA);
 		
 		header("Location: ../index.php");

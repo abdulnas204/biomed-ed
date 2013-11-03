@@ -49,7 +49,6 @@
 							)";
 							
 			$insertDescription = mysql_query($insertDescriptionQuery, $connDBA);
-			
 			header ("Location: ../index.php?inserted=description");
 			exit;
 		}
@@ -76,7 +75,7 @@
 			echo "?id=" . $feedBackData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
+      <div class="catDivider one">Content</div>
       <div class="stepContent">
       <blockquote>
         <p>Description content<span class="require">*</span>: </p>
@@ -92,13 +91,13 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Finish</div>
+      <div class="catDivider two">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
           <?php submit("submit", "Submit"); ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
+          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php');return document.MM_returnValue" value="Cancel" />
         </p>
         <?php formErrors(); ?>
       </blockquote>

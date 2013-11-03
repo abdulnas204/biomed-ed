@@ -1,33 +1,54 @@
 <?php require_once('Connections/connDBA.php'); ?>
 <?php
-//Logout the user and destroy all attached sessions
+//Logout the user, destroy all attached sessions and cookies, and update the database to inactive user
+	$cookie = $_COOKIE['userStatus'];
+	
 	session_destroy();
+	mysql_query("UPDATE `users` SET `active` = '0' WHERE `sysID` = '{$cookie}' LIMIT 1");
+	setcookie("userStatus", "", time()-1000000000); 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <?php title("Logout"); ?>
 <?php headers(); ?>
-<meta http-equiv="refresh" content="3; url=index.php">
+<?php
+	if (isset($_GET['action']) && $_GET['action'] == "relogin") {
+		echo "<meta http-equiv=\"refresh\" content=\"8; url=login.php\">";
+	} else {
+		echo "<meta http-equiv=\"refresh\" content=\"3; url=index.php\">";
+	}
+?>
 <script src="javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("includes/top_menu.php"); ?>
-
-      
-    <h2>Logout</h2>
-    <div align="right" class="main_text_box">
-      <p align="center">&nbsp;</p>
-      <div align="center">You have successfully logged out.</div>
-      <br />
-      <div align="center">
-        <input name="continue" type="button" id="continue" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Continue" />
-      </div>
-      <p align="center">&nbsp;</p>
-      <p align="center">&nbsp;</p>
-      <p align="center">&nbsp;</p>
-    </div>
-    <p>&nbsp;</p>
+<h2>Logout</h2>
+<?php
+	if (isset($_GET['action']) && $_GET['action'] == "relogin") {
+		echo "<p align=\"center\">&nbsp;</p>
+		<div align=\"center\">Your profile has been updated. Since your role in this site has changed, you must login again.</div>
+		<br />
+		<div align=\"center\">
+		   <input name=\"continue\" type=\"button\" id=\"continue\" onclick=\"MM_goToURL('parent','login.php');return document.MM_returnValue\" value=\"Continue\" />
+		 </div>
+		 <p align=\"center\">&nbsp;</p>
+		 <p align=\"center\">&nbsp;</p>
+		 <p align=\"center\">&nbsp;</p>
+		 <p>&nbsp;</p>";
+	} else {
+		echo "<p align=\"center\">&nbsp;</p>
+		<div align=\"center\">You have successfully logged out</div>
+		<br />
+		<div align=\"center\">
+		   <input name=\"continue\" type=\"button\" id=\"continue\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Continue\" />
+		 </div>
+		 <p align=\"center\">&nbsp;</p>
+		 <p align=\"center\">&nbsp;</p>
+		 <p align=\"center\">&nbsp;</p>
+		 <p>&nbsp;</p>";
+	}
+?>
 <?php footer("includes/bottom_menu.php"); ?>
 </body>
 </html>
