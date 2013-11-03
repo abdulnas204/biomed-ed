@@ -4,107 +4,67 @@
 //If the page is updating an item
 	if (isset ($_GET['id'])) {
 		$update = $_GET['id'];
-		$testDataGrabber = mysql_query("SELECT * FROM questionbank WHERE id = '{$update}'", $connDBA);
+		$testDataGrabber = mysql_query("SELECT * FROM questionBank WHERE id = '{$update}'", $connDBA);
 		if ($testDataCheck = mysql_fetch_array($testDataGrabber)) {
 			if ($testDataCheck['type'] == "Essay") {
 				$testData = $testDataCheck;
 			} else {
-				header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
+				header ("Location: ../index.php");
 				exit;
 			}
 		} else {
-			header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
+			header ("Location: ../index.php");
 			exit;
 		}
-	} elseif (isset ($_GET['question']) || isset ($_GET['id'])) {
-		header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
-		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['category'])) {
+	if (isset ($_POST['submit']) && !empty ($_POST['question']) && !empty ($_POST['points']) && !empty ($_POST['category'])) {
 	//If the page is updating an item
-		if (isset ($update)) {			
+		if (isset ($update)) {
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
+			$category = $_POST['category'];
 			$extraCredit = $_POST['extraCredit'];
-			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_POST['category']);
-			$link = $_POST['link'];
-			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
-			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
+			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 		
-			$updateEssayQuery = "UPDATE questionbank SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateEssayQuery = "UPDATE questionBank SET `category` = '{$category}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackInorrect}' WHERE id = '{$update}'";
 							
 			$updateEssay = mysql_query($updateEssayQuery, $connDBA);
-			header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&updated=essay");
+			$location = urlencode($category);
+			header ("Location: ../index.php?updated=essay&category=" . $location);
 			exit;
 	//If the page is inserting an item		
-		} else {			
+		} else {
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
+			$category = $_POST['category'];
 			$extraCredit = $_POST['extraCredit'];
-			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_POST['category']);
-			$link = $_POST['link'];
-			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
-			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
+			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			
 		
-			$insertEssayQuery = "INSERT INTO questionbank (
-							`id`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+			$insertEssayQuery = "INSERT INTO questionBank (
+							`id`, `category`, `type`, `points`, `extraCredit`, `partialCredit`, `totalFiles`, `case`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`
 							) VALUES (
-							NULL, 'Essay', '{$points}', '{$extraCredit}', '0', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
+							NULL, '{$category}', 'Essay', '{$points}', '{$extraCredit}', '0', '0', '1', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackInorrect}'
 							)";
 							
 			$insertEssay = mysql_query($insertEssayQuery, $connDBA);
-			
-		//Automatically insert this question into tests of a similar category
-			$questionBankCheckGrabber = mysql_query("SELECT * FROM moduledata WHERE category = '{$category}'", $connDBA);
-			
-			if ($questionBankCheck = mysql_fetch_array($questionBankCheckGrabber)) {
-				$linkIDGrabber = mysql_query("SELECT * FROM questionbank ORDER BY id DESC LIMIT 1");
-				$linkIDArray = mysql_fetch_array($linkIDGrabber);
-				$linkID = $linkIDArray['id'];
-				$questionBankInsertGrabber = mysql_query("SELECT * FROM moduledata WHERE category = '{$category}'", $connDBA);
-				
-				while ($questionBankInsert = mysql_fetch_array($questionBankInsertGrabber)) {
-					if ($questionBankInsert['questionBank'] == "1") {
-						$currentTable = str_replace(" ", "", $questionBankInsert['name']);
-						$lastQuestionGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} ORDER BY position DESC LIMIT 1");
-						$lastQuestionArray = mysql_fetch_array($lastQuestionGrabber);
-						$lastQuestion = $lastQuestionArray['position']+1;
-						
-						$insertBankQuery = "INSERT INTO moduletest_{$currentTable} (
-								`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
-								) VALUES (							
-								NULL, '1', '{$linkID}', '{$lastQuestion}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-								)";
-								
-						$insertBank = mysql_query($insertBankQuery, $connDBA);
-						
-						header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=essay&export=true&exportID=" . $linkID);
-						exit;
-					}
-				}
-			} else {
-				header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=essay");
-				exit;
-			}
+			$location = urlencode($category);
+			header ("Location: ../index.php?inserted=essay&category=" . $location);
+			exit;
 		}
 	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php title("Question Bank : Essay"); ?>
+<?php title("Question Bank : Essay Question"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
 <?php validate(); ?>
@@ -113,9 +73,9 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Question Bank : Essay</h2>
-<p>An essay question is  a question that requires a long, written response. Essays must be scored manually.</p>
-<p>&nbsp;</p>
+    <h2>Question Bank : Essay Question</h2>
+<p>This will insert an essay question into the test. Essays must be scored manually.</p>
+    <p>&nbsp;</p>
     <form action="essay.php<?php
 		if (isset ($update)) {
 			echo "?id=" . $testData['id'];
@@ -124,7 +84,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question directions<span class="require">*</span>:</p>
+        <p>Question Directions<span class="require">*</span>:</p>
         <blockquote>
           <p><span id="directionsCheck">
           <textarea id="question" name="question" rows="5" cols="45" style="width: 450px"><?php
@@ -134,33 +94,33 @@
 		  ?></textarea>
           <span class="textareaRequiredMsg"></span></span></p>
         </blockquote>
+        <p>&nbsp;</p>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question points<span class="require">*</span>:</p>
-        <blockquote>
-        <p>
-          <input name="points" type="text" id="points" size="5" autocomplete="off" maxlength="5" class="validate[required,custom[onlyNumber]]"<?php
-                if (isset ($update)) {
-                    echo " value=\"" . $testData['points'] . "\"";
-                }
-              ?> />
+        <p>Question Points<span class="require">*</span>:
           <label>
-            <input type="checkbox" name="extraCredit" id="extraCredit"<?php
+          <input name="points" type="text" id="points" size="5" autocomplete="off" maxlength="5" class="validate[required,custom[onlyNumber]]"<?php
+		  	if (isset ($update)) {
+				echo " value=\"" . $testData['points'] . "\"";
+			}
+		  ?> />
+          </label>
+          <label>
+              <input type="checkbox" name="extraCredit" id="extraCredit"<?php
 				if (isset ($update)) {
 					if ($testData['extraCredit'] == "on") {
 						echo " checked=\"checked\"";
 					}
 				}
 			  ?> />
-            Extra Credit </label>
+              Extra Credit </label>
         </p>
-        </blockquote>
-        <p>Category<span class="require">*</span>: </p>
-        <blockquote>
-          <select name="category" id="category" class="validate[required]">
+        <p>
+        Category<span class="require">*</span>: 
+            <select name="category" id="category" class="validate[required]">
             <?php
             //Select all of the category items
                 $categoryGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
@@ -168,101 +128,27 @@
                 if (isset($update)) {
                     echo "<option value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" .  stripslashes(htmlentities($category['category'])) . "\"";
+                        echo "<option value=\"" . stripslashes($category['category']) . "\"";
                         
                         if ($category['category'] == $testData['category']) {
                             echo " selected=\"selected\"";
                         }
                         
-                        echo ">" .  stripslashes(htmlentities($category['category'])) . "</option>";
+                        echo ">" . stripslashes($category['category']) . "</option>";
                     }
                 } else {
                     echo "<option selected=\"selected\" value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
-						
-						if ($category['category'] == urldecode($_SESSION['bankCategory'])) {
+                        echo "<option value=\"" . stripslashes($category['category']) . "\"";
+						if (isset ($_SESSION['category']) && urldecode($_SESSION['category']) == stripslashes($category['category'])) {
 							echo " selected=\"selected\"";
-						}
-						
-						echo ">" .  stripslashes(htmlentities($category['category'])) . "</option>";
+                        }
+						echo ">" . stripslashes($category['category']) . "</option>";
                     }
                 }
             ?>
-          </select>
-        </blockquote>
-<p>Difficulty:</p>
-<blockquote>
-  <p>
-    <select name="difficulty" id="difficulty">
-      <option value="Easy"<?php if (isset ($update)) {if ($testData['difficulty'] == "Easy") {echo " selected=\"selected\"";}} ?>>Easy</option>
-      <option value="Average"<?php if (isset ($update)) {if ($testData['difficulty'] == "Average") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Average</option>
-      <option value="Difficult"<?php if (isset ($update)) {if ($testData['difficulty'] == "Difficult") {echo " selected=\"selected\"";}} ?>>Difficult</option>
-    </select>
-  </p>
-</blockquote>
-<p>Link to description:</p>
-        <blockquote>
-          <p>
-            <select name="link" id="link">
-            <?php
-			//Select all of the descriptions in this category
-				$category = urldecode($_SESSION['bankCategory']);
-				$descriptionCheck = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}' AND `type` = 'Description'", $connDBA);
-				
-				if (mysql_fetch_array($descriptionCheck)) {
-					$descriptionGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}' AND `type` = 'Description' ORDER BY `id` ASC", $connDBA);
-					
-					echo "<option value=\"\">- Select -</option>";
-					while ($description = mysql_fetch_array($descriptionGrabber)) {
-						if ($description['type'] == "Description") {
-							echo "<option value=\"" . $description['id'] ."\"";
-							if (isset($update)) {
-								if ($testData['link'] == $description['id']) {
-									echo " selected=\"selected\"";
-								}
-							}
-							echo ">" . stripslashes(htmlentities(commentTrim(25, $description['question']))) . "</option>";
-						}
-						
-						if ($description['questionBank'] == "1") {
-							$importID = $description['linkID'];
-							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionBank` WHERE `id` = '{$importID}'", $connDBA);
-							$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
-							
-							if ($descriptionImport['type'] == "Description") {
-								echo "<option value=\"" . $description['id'] ."\"";
-							if (isset($update)) {
-								if ($testData['link'] == $description['id']) {
-									echo " selected=\"selected\"";
-								}
-							}
-							echo ">" . $description['position'] . ". " . stripslashes(htmlentities(commentTrim(25, $descriptionImport['question']))) . "</option>";
-							}
-							
-							unset($importID);
-							unset($descriptionImportGrabber);
-							unset($descriptionImport);
-						}
-					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
-				}
-			?>
             </select>
-          </p>
-        </blockquote>
-<p>Tags (Seperate with commas):</p>
-        <blockquote>
-          <p>
-            <input name="tags" type="text" id="tags" size="50" autocomplete="off"<?php 
-			  //If the page is updating an item
-			  		if (isset ($update)) {
-						echo " value=\"" . stripslashes(htmlentities($testData['tags'])) . "\"";
-					}
-			  ?> />
-          </p>
-        </blockquote>
+        </p>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
@@ -283,7 +169,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
       <div class="stepContent">
       <blockquote>
-        <p>Feedback for correct answer: </p>
+        <p>Feedback for Correct Answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackCorrect" name="feedBackCorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -293,17 +179,8 @@
 		  ?></textarea>
           </p>
         </blockquote>
-        <p>Feedback for partially correct answer:</p>
-        <blockquote>
-          <p>
-            <textarea id="feedBackPartial" name="feedBackPartial" rows="5" cols="45" style="width: 450px"><?php
-		  	if (isset ($update)) {
-				echo stripslashes($testData['partialFeedback']);
-			}
-		  ?></textarea>
-          </p>
-        </blockquote>
-        <p>Feedback for incorrect answer: </p>
+        <p>&nbsp;</p>
+        <p>Feedback for Incorrect Answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackIncorrect" name="feedBackIncorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -313,15 +190,22 @@
 		  ?></textarea>
           </p>
         </blockquote>
+        <p>&nbsp;</p>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
+          <label>
           <?php submit("submit", "Submit"); ?>
+          </label>
+          <label>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
+          </label>
+          <label>
+          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php<?php if (isset ($_SESSION['category'])) {echo "?category=" . urldecode($_SESSION['category']);} ?>');return document.MM_returnValue" value="Cancel" />
+          </label>
         </p>
       <?php formErrors(); ?>
       </blockquote>

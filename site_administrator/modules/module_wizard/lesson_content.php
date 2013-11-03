@@ -232,7 +232,7 @@
 								  echo "</select>";
 							  echo "</div></td>";
 						  echo "<td width=\"150\"><div align=\"center\">" . $lessonData['type'] . "</div></td>";
-						  echo "<td width=\"250\" align=\"center\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?page=" . $lessonData['position'] . "','','status=yes,scrollbars=yes,resizable=yes,width=800,height=600')\" onmouseover=\"Tip('Preview the <strong>" . stripslashes(htmlentities($lessonData['title'])) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
+						  echo "<td width=\"250\" align=\"center\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?page=" . $lessonData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=800,height=600')\" onmouseover=\"Tip('Preview the <strong>" . stripslashes(htmlentities($lessonData['title'])) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
 						  echo "</a></div></td>";
 						  echo "<td align=\"center\"><div align=\"center\">" ;
 						  if ($lessonData['type'] == "Custom Content") {

@@ -42,7 +42,7 @@
         <ul>
           <li>Site Administrators: <?php userCount("Site Administrator"); ?></li>
           <li>Site Managers: <?php userCount("Site Manager"); ?></li>
-          <li>Organization Administrators: <?php userCount("Organization Administrator"); ?></li>
+          <li>Oraganization Administrators: <?php userCount("Oraganization Administrator"); ?></li>
           <li>Administrative Assistants: <?php userCount("Administrative Assistant"); ?></li>
           <li>Instructors: <?php userCount("Instructor"); ?></li>
           <li>Instructorial Assisstants: <?php userCount("Instructorial Assisstant"); ?></li>

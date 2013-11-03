@@ -17,7 +17,6 @@ tinyMCE.init({
 		theme_advanced_toolbar_align : "left",
 		theme_advanced_statusbar_location : "bottom",
 		theme_advanced_resizing : true,
-		file_browser_callback: "tinyBrowser",
 
 		// Example content CSS (should be your site CSS)
 		content_css : "css/content.css",
@@ -35,20 +34,33 @@ tinyMCE.init({
 		}
 	});
 	
-function filebrowser(field_name, url, type, win) {
-		
-	fileBrowserURL = "/biomed-ed/tiny_mce/serverfiles/index.php?filter=" + type;
-			
-	tinyMCE.activeEditor.windowManager.open({
-		title: "Server Files",
-		url: fileBrowserURL,
-		width: 950,
-		height: 500,
-		inline: 0,
-		maximizable: 1,
-		close_previous: 0
-	},{
-		window : win,
-		input : field_name
-	});		
-}
+$(function() {
+	var validator = $("#myform").submit(function() {
+		tinyMCE.triggerSave();
+	}).validate({
+		rules: {
+			title: "required",
+			content: "required"
+		},
+		errorPlacement: function(label, element) {
+			if (element.is("textarea")) {
+				label.insertAfter(element.next());
+			} else {
+				label.insertAfter(element)
+			}
+		}
+	});
+	validator.focusInvalid = function() {
+		if( this.settings.focusInvalid ) {
+			try {
+				var toFocus = $(this.findLastActive() || this.errorList.length && this.errorList[0].element || []);
+				if (toFocus.is("textarea")) {
+					tinyMCE.get(toFocus.attr("id")).focus();
+				} else {
+					toFocus.filter(":visible").focus();
+				}
+			} catch(e) {
+			}
+		}
+	}
+})

@@ -109,7 +109,7 @@
 				$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 				$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 			
-				$updateFileQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+				$updateFileQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 		//If a new file is not uploaded	
 			} else {	
 			//Get form data values
@@ -126,7 +126,7 @@
 				$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 				$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 			
-				$updateFileQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+				$updateFileQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 			}
 			
 			$updateFile = mysql_query($updateFileQuery, $connDBA);
@@ -199,7 +199,7 @@
 							)";
 							
 			$insertFileResponse = mysql_query($insertFileResponseQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=file");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -227,7 +227,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question directions<span class="require">*</span>:</p>
+        <p>Question Directions<span class="require">*</span>:</p>
         <blockquote>
           <p><span id="directionsCheck">
           <textarea id="question" name="question" rows="5" cols="45" style="width: 450px"><?php
@@ -315,8 +315,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -326,7 +324,7 @@
         <blockquote>
           <p>
             <select name="totalFiles" id="totalFiles">
-              <option value="1"<?php if (isset ($update)) { if ($testData['totalFiles'] == "1") { echo " selected=\"selected\"";}} else { echo " selected=\"selected\"";} ?>>1</option>
+              <option value="1"<?php if (isset ($update)) { if ($testData['totalFiles'] == "1") { echo " selected=\"selected\"";}} ?>>1</option>
               <option value="2"<?php if (isset ($update)) { if ($testData['totalFiles'] == "2") { echo " selected=\"selected\"";}} ?>>2</option>
               <option value="3"<?php if (isset ($update)) { if ($testData['totalFiles'] == "3") { echo " selected=\"selected\"";}} ?>>3</option>
               <option value="4"<?php if (isset ($update)) { if ($testData['totalFiles'] == "4") { echo " selected=\"selected\"";}} ?>>4</option>
@@ -394,7 +392,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
       <div class="stepContent">
       <blockquote>
-        <p>Feedback for correct answer: </p>
+        <p>Feedback for Correct Answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackCorrect" name="feedBackCorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -415,7 +413,7 @@
             </textarea>
           </p>
         </blockquote>
-<p>Feedback for incorrect answer: </p>
+<p>Feedback for Incorrect Answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackIncorrect" name="feedBackIncorrect" rows="5" cols="45" style="width: 450px"><?php

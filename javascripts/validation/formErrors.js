@@ -74,10 +74,8 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 				if (extensionInput != undefined) {
 					var extensionSplit = extensionInput.split(".");
 					var n;
-					for (n in extensionSplit) {
-						var lowerCase = fileCheck.toLowerCase();
-													
-						if (lowerCase.match(extensionSplit[n])) {					
+					for (n in extensionSplit) {								
+						if (fileCheck.match(extensionSplit[n])) {					
 							var extensionCheck = "1";
 						}
 					}

@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['answerValue'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric ($_POST['points']) && !empty($_POST['answerValue'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -60,8 +60,15 @@
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
+			$case = $_POST['case'];
+			$answer = mysql_real_escape_string(serialize($_POST['answerValue']));
+			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
+			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
+			
+			$question = mysql_real_escape_string($_POST['question']);
+			$points = $_POST['points'];
+			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$case = $_POST['case'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -70,7 +77,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateShortAnswerQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateShortAnswerQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateShortAnswer = mysql_query($updateShortAnswerQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=answer");
@@ -90,7 +97,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$case = $_POST['case'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -107,7 +113,7 @@
 							)";
 							
 			$insertShortAnswer = mysql_query($insertShortAnswerQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=answer");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -125,8 +131,8 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard : Short Answer</h2>
-    <p>A short answer is a question in which a user must provide a one or two word   response. These questions are scored automatically.</p>
+    <h2>Module Setup Wizard :  Short Answer</h2>
+    <p>This will insert a text box, which a user must provide a one or two word response to a question. These questions are scored automatically.</p>
 <p>&nbsp;</p>
     <form action="short_answer.php<?php
 		if (isset ($update)) {
@@ -224,8 +230,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -259,12 +263,14 @@
       <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
       <div class="stepContent">
       <blockquote>
-        <p>Provide correct answer(s)<span class="require">*</span>: <a href="../help.php?tab=5" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a></p>
+        <p>Provide correct answer(s)<span class="require">*</span>:</p>
         <blockquote>
         <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$answers = unserialize($testData['answerValue']);
+					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
+					$value = mysql_fetch_array($valueGrabber);
+					$answers = unserialize($value['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"answers\" id=\"answers\">";
 					while (list($answerKey, $answerArray) = each($answers)) {
@@ -327,8 +333,8 @@
           <?php submit("submit", "Submit"); ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
           <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../test_content.php');return document.MM_returnValue" value="Cancel" />
+          <?php formErrors(); ?>
         </p>
-        <?php formErrors(); ?>
       </blockquote>
       </div>
 </form>

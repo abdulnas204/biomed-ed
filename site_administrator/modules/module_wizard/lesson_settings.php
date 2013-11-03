@@ -542,7 +542,6 @@
         </div>
         <div class="stepContent">
         <blockquote>
-        <p>
           <?php
 		  //Selectively display the buttons
 		  		if (isset ($_SESSION['review'])) {
@@ -556,7 +555,6 @@
 					}
 				}
 		  ?>
-          </p>
           <?php formErrors(); ?>
           </blockquote> 
         </div>

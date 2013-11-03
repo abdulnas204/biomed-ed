@@ -53,22 +53,13 @@
 <?php
 //Process the form
 	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll']) && is_numeric($_POST['questionBank'])) {
-	//Do not process if a module with the same name exists
-		$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
-		$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `testName` = '{$name}'", $connDBA);
-		if (mysql_fetch_array($moduleCheck)) {
-			if ($testData['testName'] !== $name) {
-				header("Location:test_settings.php?error=identical");
-				exit;
-			}
-		}
 	//Use the session to find where to insert the test data
 		$currentModule = $_SESSION['currentModule'];
 		
 	//Check to see if the timer is set and if the time does not equal zero
 		if (isset($_POST['timer']) && isset($_POST['timeHours']) && isset($_POST['timeMinutes'])) {
 			if ($_POST['timer'] == "on" && $_POST['timeHours'] == "0" && $_POST['timeMinutes'] == "00") {
-				$timeValue = serialize(array("0", "00"));
+				$timeValue = serialize("1");
 				$timerValue = "0";
 			} else {
 			//Convert the time values to an array	
@@ -78,7 +69,7 @@
 				$timerValue = "on";
 			}
 		} else {
-			$timeValue = serialize(array("0", "00"));
+			$timeValue = serialize("1");
 			$timerValue = "0";
 		}
 		
@@ -443,7 +434,7 @@
             Randomize</label>
         </p>
       </blockquote>
-      <p>Automatically pull questions from bank: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added')" onmouseout="UnTip()" /></p>
+      <p>Pull questions from bank: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not questions will be automatically pulled from <br />the question bank with the same questions in the same category')" onmouseout="UnTip()" /></p>
       <blockquote>
           <p>
             <label>

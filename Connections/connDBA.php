@@ -2,7 +2,6 @@
 session_start();
 ob_start();
 
-
 //Root address for entire site
 	$root = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
 
@@ -368,7 +367,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script><script type=\"text/javascript\" src=\"" . $root . "tiny_mce/plugins/tinybrowser/tb_tinymce.js.php\">";
+		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script>";
 	}
 	
 //Include a form validator
@@ -452,7 +451,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowOptions.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/animateModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/dragDropModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "styles/common/modalWindow.css\" type=\"text/javascript\"></script>";
+		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/animateModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/dragDropModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowOptions.js\" type=\"text/javascript\"></script>";
 	}
 	
 //Submit a form and toggle the tinyMCE to save its content
@@ -522,11 +521,11 @@ ob_start();
 	
 //A function to check the extension of a file
 	function extension ($targetFile) {
+		$fileName = strtolower($targetFile);
 		$entension = explode(".", $targetFile);
 		$value = count($entension)-1;
 		$entension = $entension[$value];
-		$output = strtolower($entension);
-		return $output;
+		return $entension;
 	}
 	
 //A function to delete a folder and all of its contents
@@ -546,10 +545,12 @@ ob_start();
 				if($contents != '.' && $contents != '..') {
 					$path = $directory . "/" . $contents;
 					
+					echo $path . "<br />";
+					
 					if(is_dir($path)) {
 						deleteAll($path);
 					} else {
-						unlink($path);
+						echo "unlink($path)" . "<br />";;
 					}
 				}
 			}
@@ -557,9 +558,10 @@ ob_start();
 			closedir($directoryHandle);
 	
 			if($empty == false) {
-				if(!rmdir($directory)) {
-					return false;
-				}
+				echo "rmdir($directory)" . "<br />";
+				//if(!rmdir($directory)) {
+					//return false;
+				//}
 			}
 			
 			return true;

@@ -61,7 +61,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$case = $_POST['case'];
@@ -72,7 +71,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateBlankQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `case` = '{$case}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateBlankQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `case` = '{$case}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateBlank = mysql_query($updateBlankQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=blank");
@@ -92,7 +91,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$case = $_POST['case'];
@@ -107,11 +105,11 @@
 			$insertBlankQuery = "INSERT INTO moduletest_{$currentTable} (
 							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 							) VALUES (							
-							NULL, '0', '0', '{$lastQuestion}', 'Fill in the Blank', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '{$questionValue}', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
+							NULL, '0', '0', '{$lastQuestion}', 'Fill in the Blank', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
 							)";
 							
 			$insertBlank = mysql_query($insertBlankQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=blank");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -130,7 +128,7 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>      
-    <h2>Module Setup Wizard : Fill in the Blank</h2>
+    <h2>Module Setup Wizard :  Fill in the Blank</h2>
 <p>A fill in the blank question will prompt a user to  complete a sentence with missing values by filling in the blanks.</p>
     <p>&nbsp;</p>
 	<form action="blank.php<?php
@@ -229,8 +227,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -276,7 +272,7 @@
   <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question content<span class="require">*</span>: <a href="../help.php?tab=2" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a><br />
+        <p>Question content<span class="require">*</span>:<br />
           <strong>Hint:</strong> Do not include any characters or spaces in the values section, otherwise this question may be scored incorrectly.<br />
         </p>
         <table width="100%" border="0">
@@ -284,8 +280,10 @@
             <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$questions = unserialize($testData['questionValue']);
-					$answers = unserialize($testData['answerValue']);
+					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
+					$value = mysql_fetch_array($valueGrabber);
+					$questions = unserialize($value['questionValue']);
+					$answers = unserialize($value['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr>
 							<td width=\"100%\"><div align=\"center\"><strong>Sentence</strong></div></td>

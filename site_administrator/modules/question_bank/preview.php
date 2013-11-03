@@ -30,7 +30,8 @@
 	  echo "<table width=\"100%\" class=\"dataTable\">";
 	  
 	  $testDataGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$id}' LIMIT 1", $connDBA);
-//Loop through the items
+	  
+ //Loop through the items
 	  while ($testData = mysql_fetch_array($testDataGrabber)) {
 	  //Detirmine what kind of question is being displayed
 		  switch ($testData ['type']) {
@@ -99,7 +100,9 @@
 			  //Echo the fill in the blank content
 				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >"; 
 				  //Grab the necessary data
-				  $blankQuestion = $testData['questionValue'];
+				  $blankValuesGrabber = mysql_query("SELECT * FROM questionbank WHERE id = {$testData['id']} LIMIT 1", $connDBA);
+				  $blankValues = mysql_fetch_array($blankValuesGrabber);
+				  $blankQuestion = $blankValues['questionValue'];
 				  $blank = unserialize($blankQuestion);
 			  
 				  //Do not display the last value if it is blank
@@ -143,16 +146,18 @@
 			  //Echo the matching content
 				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
 				  //Grab the necessary data
-				  $question = unserialize($testData['questionValue']);
-				  $answer = unserialize($testData['answerValue']);
+				  $matchingValuesGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = {$testData['id']} LIMIT 1", $connDBA);
+				  $matchingValues = mysql_fetch_array($matchingValuesGrabber);
+				  $question = unserialize($matchingValues['questionValue']);
+				  $answer = unserialize($matchingValues['answerValue']);
 				  $answerValues = shuffle($answer);
 				  $valueNumbers = sizeof($question);
 				  //Display the left column
 				  echo "<table width=\"100%\"><tr><td width=\"200\">";
 				  echo "<table width=\"200\">";
-				  $matchingCount = 1;
+				  $count = 1;
 				  while (list($matchingKey, $matchingArray) = each($question)) {
-					  echo "<tr><td width=\"20\"><select name=\"" . $testData['id'] . "\" type=\"select\" id=\"" . $testData['id'] . "." . $matchingCount++ . "\"/><option value=\"\" selected=\"selected\">-</option>"; 
+					  echo "<tr><td width=\"20\"><select name=\"" . $testData['id'] . "\" type=\"select\" id=\"" . $testData['id'] . "." . $count++ . "\"/><option value=\"\" selected=\"selected\">-</option>"; 
 					  for ($value = 1; $value <= $valueNumbers; $value++) {
 						  echo "<option value=\"". $value . "\">" . $value . "</option>";
 					  }
@@ -186,11 +191,7 @@
 			  //Echo the multiple choice content
 				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
 				  $answers = unserialize($testData['answerValue']);
-				  if ($testData['randomize'] == "1") {
-					  $answersDisplay = shuffle($answers);
-				  } else {
-					  $answersDisplay = $answers;
-				  }
+				  $answersDisplay = $answers;
 				  
 				  $start = sizeof ($answers);
 				  if ($testData['choiceType'] == "radio") {
@@ -221,7 +222,7 @@
 					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
 				  }
 			  //Echo the short answer content	
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><input type=\"text\" size=\"50\" id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\"><br /><br/ ></td></tr>"; break;
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><input type=\"text\" size=\"50\" id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\" style=\"width:450px;\"><br /><br/ ></td></tr>"; break;
 				  
 		  //If the question is true or false
 			  case "True False" : 
@@ -238,7 +239,7 @@
 					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
 				  }
 				  //Echo the short answer content	
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><label><input type=\"radio\" id=\"" . $testData['id'] . "1\" name=\"" . $testData['id'] . "\" value=\"1\">True</label><br /><label><input type=\"radio\" id=\"" . $testData['id'] . "0\" name=\"" . $testData['id'] . "\" value=\"0\">False</label><br /><br/ ></td></tr>"; break;
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><label><input type=\"radio\" id=\"" . $testData['id'] . "1\" name=\"" . $testData['id'] . "\" value=\"1\">True</label><label><input type=\"radio\" id=\"" . $testData['id'] . "0\" name=\"" . $testData['id'] . "\" value=\"0\">False</label><br /><br/ ></td></tr>"; break;
 		  }
 	  }
 //Echo the closing table HTML

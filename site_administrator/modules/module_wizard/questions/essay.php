@@ -61,7 +61,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
@@ -69,7 +68,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
+			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateEssay = mysql_query($updateEssayQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=essay");
@@ -105,7 +104,7 @@
 							)";
 							
 			$insertEssay = mysql_query($insertEssayQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=essay");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -122,9 +121,9 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard : Essay</h2>
-<p>An essay question is  a question that requires a long, written response. Essays must be scored manually.</p>
-<p>&nbsp;</p>
+    <h2>Module Setup Wizard :  Essay</h2>
+<p>This will insert an essay question into the test. Essays must be scored manually.</p>
+    <p>&nbsp;</p>
     <form action="essay.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
@@ -221,8 +220,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>

@@ -779,12 +779,6 @@ a.ascending:hover, a.ascending:active {
 	height:23px;
 }
 
-.extraCredit {
-	background-image:url(../../images/common/extraCredit.png);
-	background-position:left;
-	background-repeat:no-repeat;
-}
-
 /* Display Info for tables displaying data */
 .dataTable{
 width:100%;

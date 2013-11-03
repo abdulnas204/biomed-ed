@@ -65,39 +65,35 @@
 <?php
 //Display a forced completion alert
 	if ($testInfo['forceCompletion'] == "on") {
-		echo "<br /><b>Force Completion</b>: This test must be completed now, otherwise penalties will be applied";
+		echo "<br /><b>Forece Completion</b>: This test must be completed now, otherwise penalties will be applied";
 	}
 ?>
 <?php
-//Display a timer alert<br />
+//Display a timer alert
 	if ($testInfo['timer'] == "on") {
 		$time = unserialize($testInfo['time']);
-		if ($testInfo['time'] !== "") {
+		if ($testInfo['time'] !== 's:1:"1";') {
 			$testH = $time['0'];
 			$testM = $time['1'];
 		}
 		
-		echo "<br /><b>Time limit</b>: This test must be completed within <strong>" . $time['0'];
-		if ($time['0'] == "1") {
-			echo " hour and ";
-		} elseif ($testH !== "1") {
-			echo " hours and ";
+		echo "<br /><b>Time limit</b>: This test must be completed within <b>";
+		
+		if ($testH !== "0") {
+			if ($testH == "1") {
+				echo $testH . " hour and ";
+			} elseif ($testH !== "1") {
+				echo $testH . " hours and ";
+			}
 		}
 		
-		echo $time['1'] . " minutes</strong>, otherwise the test will close.";
+		echo $testM . " minutes</b>, otherwise the test will close.";
 	}
 ?>
 </div>
 <?php
 //Display a randomizing alert any part of this test randomizes
-	$randomizeGrabber = mysql_query ("SELECT * FROM moduletest_{$currentTable} WHERE randomize = '1'", $connDBA);
-	if (mysql_fetch_array($randomizeGrabber)) {
-		$randomize = "true";
-	} else {
-		$randomize = "false";
-	}
-	
-	if ($testInfo['randomizeAll'] == "Randomize" || $randomize == "true") {
+	if ($testInfo['randomizeAll'] == "Randomize" || $testInfo['randomizeQuestions'] == "Randomize") {
 		alert("Since you are only previewing this test, note the questions may appear in a differnet order if the page is refreshed, or left and returned to later.");
 	}
 ?>
@@ -118,16 +114,7 @@
 			$count = 1;
 			
 	   //Loop through the items
-			while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
-			//Detirmine whether or not this question will come from the question bank, and pull accordingly
-				if ($testDataLoop['questionBank'] == "1") {
-					$importID = $testDataLoop['linkID'];
-					$importQuestion = mysql_query("SELECT * FROM questionBank WHERE `id` = '{$importID}'", $connDBA);
-					$testData = mysql_fetch_array($importQuestion);
-				} else {
-					$testData = $testDataLoop;
-				}
-				
+			while ($testData = mysql_fetch_array($testDataGrabber)) {
 			//Detirmine what kind of question is being displayed
 				switch ($testData ['type']) {
 				//If the question is a description
@@ -195,7 +182,9 @@
 					//Echo the fill in the blank content
 						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >"; 
 						//Grab the necessary data
-						$blankQuestion = $testData['questionValue'];
+						$blankValuesGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = {$testData['id']} LIMIT 1", $connDBA);
+						$blankValues = mysql_fetch_array($blankValuesGrabber);
+						$blankQuestion = $blankValues['questionValue'];
 						$blank = unserialize($blankQuestion);
 					
 						//Do not display the last value if it is blank
@@ -239,16 +228,18 @@
 					//Echo the matching content
 						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
 						//Grab the necessary data
-						$question = unserialize($testData['questionValue']);
-						$answer = unserialize($testData['answerValue']);
+						$matchingValuesGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = {$testData['id']} LIMIT 1", $connDBA);
+						$matchingValues = mysql_fetch_array($matchingValuesGrabber);
+						$question = unserialize($matchingValues['questionValue']);
+						$answer = unserialize($matchingValues['answerValue']);
 						$answerValues = shuffle($answer);
 						$valueNumbers = sizeof($question);
 						//Display the left column
 						echo "<table width=\"100%\"><tr><td width=\"200\">";
 						echo "<table width=\"200\">";
-						$matchingCount = 1;
+						$count = 1;
 						while (list($matchingKey, $matchingArray) = each($question)) {
-							echo "<tr><td width=\"20\"><select name=\"" . $testData['id'] . "\" type=\"select\" id=\"" . $testData['id'] . "." . $matchingCount++ . "\"/><option value=\"\" selected=\"selected\">-</option>"; 
+							echo "<tr><td width=\"20\"><select name=\"" . $testData['id'] . "\" type=\"select\" id=\"" . $testData['id'] . "." . $count++ . "\"/><option value=\"\" selected=\"selected\">-</option>"; 
 							for ($value = 1; $value <= $valueNumbers; $value++) {
 								echo "<option value=\"". $value . "\">" . $value . "</option>";
 							}
@@ -282,7 +273,7 @@
 					//Echo the multiple choice content
 						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
 						$answers = unserialize($testData['answerValue']);
-						if ($testData['randomize'] == "1") {
+						if ($testInfo['randomizeQuestions'] == "Randomize") {
 							$answersDisplay = shuffle($answers);
 						} else {
 							$answersDisplay = $answers;
@@ -317,7 +308,7 @@
 							echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
 						}
 					//Echo the short answer content	
-						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><input type=\"text\" size=\"50\" id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\"><br /><br/ ></td></tr>"; break;
+						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><input type=\"text\" size=\"50\" id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\" style=\"width:450px;\"><br /><br/ ></td></tr>"; break;
 						
 				//If the question is true or false
 					case "True False" : 
@@ -334,7 +325,7 @@
 							echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
 						}
 						//Echo the short answer content	
-						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><label><input type=\"radio\" id=\"" . $testData['id'] . "1\" name=\"" . $testData['id'] . "\" value=\"1\">True</label><br /><label><input type=\"radio\" id=\"" . $testData['id'] . "0\" name=\"" . $testData['id'] . "\" value=\"0\">False</label><br /><br/ ></td></tr>"; break;
+						echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><label><input type=\"radio\" id=\"" . $testData['id'] . "1\" name=\"" . $testData['id'] . "\" value=\"1\">True</label><label><input type=\"radio\" id=\"" . $testData['id'] . "0\" name=\"" . $testData['id'] . "\" value=\"0\">False</label><br /><br/ ></td></tr>"; break;
 				}
 			}
 	  //Echo the closing table HTML

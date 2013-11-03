@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['answer'])) {
+	if (isset ($_POST['submit']) && isset ($_POST['question']) && isset ($_POST['points']) && isset ($_POST['answer'])) {
 		//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -61,7 +61,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$randomize = $_POST['randomize'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -69,7 +68,7 @@
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 		
-			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}' WHERE id = '{$update}'";
+			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}' WHERE id = '{$update}'";
 							
 			$updateMatching = mysql_query($updateMatchingQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=truefalse");
@@ -89,7 +88,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$randomize = $_POST['randomize'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -104,7 +102,7 @@
 							)";
 							
 			$insertChoice = mysql_query($insertChoiceQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=truefalse");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -220,8 +218,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -293,7 +289,7 @@
 		  ?></textarea>
           </p>
         </blockquote>
-<p>Feedback for incorrect answer: </p>
+        <p>Feedback for incorrect answer: </p>
         <blockquote>
           <p>
             <textarea id="feedBackIncorrect" name="feedBackIncorrect" rows="5" cols="45" style="width: 450px"><?php

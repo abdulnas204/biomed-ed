@@ -61,7 +61,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -71,7 +70,7 @@
 			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'
+			$updateMatchingQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'
 			";
 							
 			$updateMatching = mysql_query($updateMatchingQuery, $connDBA);
@@ -92,7 +91,6 @@
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
 			$difficulty = $_POST['difficulty'];
-			$category = mysql_real_escape_string($_SESSION['category']);
 			$link = $_POST['link'];
 			$partialCredit = $_POST['partialCredit'];
 			$tags = mysql_real_escape_string($_POST['tags']);
@@ -109,7 +107,7 @@
 							)";
 							
 			$insertMatching = mysql_query($insertMatchingQuery, $connDBA);
-			header ("Location: ../test_content.php?inserted=matching");
+			header ("Location: ../test_content.php");
 			exit;
 		}
 	}
@@ -129,7 +127,7 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard : Matching</h2>
+    <h2>Module Setup Wizard :  Matching</h2>
     <p>A matching question will ask a user to match a series of similar values from a list of values.</p>
     <p>&nbsp;</p>
 	<form name="matching" method="post" action="matching.php<?php
@@ -228,8 +226,6 @@
 							unset($descriptionImport);
 						}
 					}
-				} else {
-					echo "<option value=\"\">- None -</option>";
 				}
 			?>
             </select>
@@ -263,17 +259,17 @@
       <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question content<span class="require">*</span>: <a href="../help.php?tab=3" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a><br />
-          The values below will be automatically scrambled.
-          <br />
+        <p>Question content<span class="require">*</span>:<br />
         </p>
         <table width="100%" border="0">
         <tr><td>
             <?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$questions = unserialize($testData['questionValue']);
-					$answers = unserialize($testData['answerValue']);
+					$valueGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);	
+					$value = mysql_fetch_array($valueGrabber);
+					$questions = unserialize($value['questionValue']);
+					$answers = unserialize($value['answerValue']);
 					
 					echo "<table width=\"50%\" name=\"questions\" id=\"questions\"><tr>
 							<td width=\"100%\"><div align=\"center\"><strong>Left-Column Values</strong></div></td>

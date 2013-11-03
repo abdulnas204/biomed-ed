@@ -9,7 +9,7 @@
 			case "lessonVerify" : header ("Location: lesson_verify.php"); exit; break;
 			case "testCheck" : header ("Location: test_check.php"); exit; break;
 			//case "testSettings" : header ("Location: test_settings.php"); exit; break;
-			case "testContent" : header ("Location: test_content.php"); exit; break;
+			//case "testContent" : header ("Location: test_content.php"); exit; break;
 			case "testVerify" : header ("Location: test_verify.php"); exit; break;
 		}
 	} elseif (isset ($_SESSION['review'])) {
@@ -42,6 +42,7 @@
 			} else {
 			//Select all of the questions from the bank
 				$category = $_SESSION['category'];
+				echo $category;
 				$importQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}'", $connDBA);	
 				
 			//Import the questions into the test
@@ -51,62 +52,39 @@
 				if ($lastQuestionFetch['position'] == "") {
 					$lastQuestion = 1;
 				} else {
-					$lastQuestion = $lastQuestionFetch['position']+1;
+					$lastQuestion = $lastQuestionFetch['position'];
 				}
 				
 				
 				while ($importQuestions = mysql_fetch_array($importQuestionsGrabber)) {			
 					$position = $lastQuestion++;
 					$id = $importQuestions['id'];
-					$type = $importQuestions['type'];
 					
-					$insertQuestionQuery = "INSERT INTO moduletest_{$currentTable} (
-										`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+					$insertQuestionQuery = "INSERT INTO `moduletest_{$currentTable}` (
+										`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialCorrect`
 										) VALUES (
 										NULL, '1', '{$id}', '{$position}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '','','','','',''
 										)";
 										
 					mysql_query($insertQuestionQuery, $connDBA);
-										
-					$location = $currentTable;
-										
-					if ($type == "File Response") {
-						if (!file_exists("../../../../modules/{$location}")) {
-							mkdir("../../../../modules/{$location}");
-						}
-						if (!file_exists("../../../../modules/{$location}/test")) {
-							mkdir("../../../../modules/{$location}/test", 0777);
-						}
-						if (!file_exists("../../../../modules/{$location}/test/fileresponse")) {
-							mkdir("../../../../modules/{$location}/test/fileresponse", 0777);
-						}
-						if (!file_exists("../../../../modules/{$location}/test/fileresponse/responses")) {
-							mkdir("../../../../modules/{$location}/test/fileresponse/responses", 0777);
-						}
-					}
 				}
 			}
 		}
-		
-		
-		if (isset ($_SESSION['review'])) {
-			header ("Location: modify.php?updated=testSettings");
-			exit;
-		} else {	
-			$_SESSION['step'] = "testContent";
-			header ("Location: test_content.php");
-			exit;
-		}
 	}
 	
-//Import a question from the bank into the test	
-	if (isset($_GET['type']) && $_GET['type'] == "import" && isset($_GET['questionID']) && isset($_GET['bankID'])) {
-		$bankID = $_GET['bankID'];
-		$questionID = $_GET['questionID'];
-		$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
-		$importQuestionsGrabber = mysql_query("SELECT * FROM questionbank WHERE `id` = '{$bankID}'", $connDBA);
+//Import selected questions from the question bank
+	if (isset($_GET['type']) && $_GET['type'] == "import" && isset($_POST['id'])) {		
+		$question = $_POST['import'];
+		$importQuestionsGrabber = mysql_query("SELECT * FROM questionbank WHERE `id` = '{$question}'", $connDBA);
 		$importQuestions = mysql_fetch_array($importQuestionsGrabber);
 		
+	//Import those questions into the test
+		$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+		$lastQuestionGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} ORDER BY position DESC", $connDBA);
+		$lastQuestionFetch = mysql_fetch_array($lastQuestionGrabber);
+		$lastQuestion = $lastQuestionFetch['position']+1;
+		
+		$id = $importQuestions['id'];
 		$type = $importQuestions['type'];
 		$points = $importQuestions['points'];
 		$extraCredit = $importQuestions['extraCredit'];
@@ -116,9 +94,7 @@
 		$link = $importQuestions['link'];
 		$randomize = $importQuestions['randomize'];
 		$totalFiles = $importQuestions['totalFiles'];
-		$choiceType = $importQuestions['choiceType'];
 		$case = $importQuestions['case'];
-		$tags = $importQuestions['tags'];
 		$question = $importQuestions['question'];
 		$questionValue = $importQuestions['questionValue'];
 		$answer = $importQuestions['answer'];
@@ -126,49 +102,45 @@
 		$fileURL = $importQuestions['fileURL'];
 		$correctFeedback = $importQuestions['correctFeedback'];
 		$incorrectFeedback = $importQuestions['incorrectFeedback'];
-		$partialFeedback = $importQuestions['partialFeedback'];
+		$partialFeedback = $importQuestions['partialCorrect'];
 		
-		$insertQuestionQuery = "UPDATE moduletest_{$currentTable} SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE id = '{$questionID}'";
+		$insertQuestionQuery = "INSERT INTO moduletest_{$currentTable} (
+							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialCorrect`
+							) VALUES (
+							NULL, '0', '', '{$lastQuestion}', '{$type}', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '{$randomize}', '{$totalFiles}', '{$case}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '{$fileURL}', '{$correctFeedback}', '{$incorrectFeedback}', '{$partialFeedback}'
+							)";
 							
 		mysql_query($insertQuestionQuery, $connDBA);
 		
-		if ($type == "File Response" && $fileURL !== "") {
-			$location = $currentTable;
-			
-			if (!file_exists("../../../modules/{$location}")) {
-				mkdir("../../../modules/{$location}");
+	//Move an uploaded file if it is a file response question	
+		if ($importQuestions['type'] == "File Response") {
+			$location = str_replace(" ", "", $_SESSION['currentModule']);
+	
+			if(!is_dir("../../../modules/{$location}")) {
+				mkdir("../../../modules/{$location}", 0777);
 			}
-			if (!file_exists("../../../../modules/{$location}/test")) {
+			
+			if(!is_dir("../../../modules/{$location}/test")) {
 				mkdir("../../../modules/{$location}/test", 0777);
 			}
-			if (!file_exists("../../../../modules/{$location}/test/fileresponse")) {
-				mkdir("../../../modules/{$location}/test/fileresponse", 0777);
-			}
-			if (!file_exists("../../../modules/{$location}/test/fileresponse/responses")) {
-				mkdir("../../../modules/{$location}/test/fileresponse/responses", 0777);
-			}
-			if (!file_exists("../../../modules/{$location}/test/fileresponse/answer")) {
-				mkdir("../../../modules/{$location}/test/fileresponse/answer", 0777);
-			}
 			
-			copy("../../../modules/questionBank/test/fileresponse/answer/" . $fileURL, "../../../modules/{$location}/test/fileresponse/answer/" . $fileURL);
+			copy("../../../questionBank/" . $importQuestions['fileURL'], "../../../modules/{$location}/test");
 		}
 		
-		switch ($type) {
-			case "Description" : $redirect = "questions/description.php"; break;
-			case "Essay" : $redirect = "questions/essay.php"; break;
-			case "File Response" : $redirect = "questions/file_response.php"; break;
-			case "Fill in the Blank" : $redirect = "questions/blank.php"; break;
-			case "Matching" : $redirect = "questions/matching.php"; break;
-			case "Multiple Choice" : $redirect = "questions/multiple_choice.php"; break;
-			case "Short Answer" : $redirect = "questions/short_answer.php"; break;
-			case "True False" : $redirect = "questions/true_false.php"; break;
-		}
-		
-		$questionInfoGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$questionID}'", $connDBA);
-		$questionInfo = mysql_fetch_array($questionInfoGrabber);
-		
-		header ("Location: " . $redirect . "?question=" . $questionInfo['position'] . "&id=" . $questionInfo['id']);
+		$category = urlencode($_GET['category']);
+		header ("Location: question_bank.php?category=" . $category);
 		exit;
+	}
+
+
+//Update the session to manage the content
+	$_SESSION['step'] = "testContent";	
+		
+	if (isset ($_SESSION['review'])) {
+		header ("Location: modify.php?updated=testSettings");
+		exit;
+	} else {
+		header ("Location: test_content.php");
+		exit;	
 	}
 ?>
