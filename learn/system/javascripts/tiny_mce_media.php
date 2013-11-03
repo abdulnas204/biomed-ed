@@ -12,11 +12,11 @@ Created by: Oliver Spryn
 Created on: November 16th, 2010
 Last updated: December 2nd, 2010
 
-This is the setup script for the TinyMCE Advanced widget.
+This is the setup script for the TinyMCE Media widget.
 */
 	
 //Header functions
-	require_once("../../core/index.php");
+	require_once("../../../system/core/index.php");
 
 //Select the API key for the spell checker
 	$apiGrabber = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
@@ -25,11 +25,12 @@ This is the setup script for the TinyMCE Advanced widget.
 	header("Content-type: text/javascript");
 ?>
 tinyMCE.init({
+    // General options
     mode : "textareas",
     theme : "advanced",
     skin : "o2k7",
     skin_variant : "silver",
-    plugins : " safari,pagebreak,style,layer,table,save,advhr,advimage,autosave,advlink,emotions,inlinepopups,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,wordcount,tabfocus,AtD",
+    plugins : "inlinepopups,tabfocus,AtD,advimage,media",
     
     atd_button_url : "<?php echo $root; ?>system/tiny_mce/plugins/AtD/atdbuttontr.gif",
     atd_rpc_url : "<?php echo $root; ?>system/tiny_mce/plugins/AtD/server/proxy.php?url=",
@@ -37,14 +38,13 @@ tinyMCE.init({
     atd_css_url : "<?php echo $root; ?>system/tiny_mce/plugins/AtD/css/content.css",
     atd_show_types : "Bias Language,Cliches,Complex Expression,Diacritical Marks,Double Negatives,Hidden Verbs,Jargon Language,Passive voice,Phrases to Avoid,Redundant Expression",
     atd_ignore_strings : "AtD,rsmudge",
-    theme_advanced_buttons4_add : "AtD",
+    theme_advanced_buttons1_add : "AtD",
     atd_ignore_enable : "true",
     tab_focus : ':prev,:next',
 
-    theme_advanced_buttons1 : "save,newdocument,|,bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,styleselect,formatselect,fontselect,fontsizeselect",
-    theme_advanced_buttons2 : "cut,copy,paste,pastetext,pasteword,|,search,replace,|,bullist,numlist,|,outdent,indent,blockquote,|,undo,redo,|,link,unlink,anchor,image,cleanup,help,code,|,insertdate,inserttime,preview,|,forecolor,backcolor",
-    theme_advanced_buttons3 : "tablecontrols,|,hr,removeformat,visualaid,|,sub,sup,|,charmap,emotions,media,advhr,|,print,|,ltr,rtl,|,fullscreen",
-    theme_advanced_buttons4 : "insertlayer,moveforward,movebackward,absolute,|,styleprops,|,cite,abbr,acronym,del,ins,attribs,|,visualchars,nonbreaking,template,pagebreak,restoredraft",
+    theme_advanced_buttons1 : "bold,italic,underline,strikethrough,forecolor,backcolor,|,image,media,|,justifyleft,justifycenter,justifyright, justifyfull,|,bullist,numlist,|,undo,redo,link,unlink",
+    theme_advanced_buttons2 : "",
+    theme_advanced_buttons3 : "",
     theme_advanced_toolbar_location : "top",
     theme_advanced_toolbar_align : "left",
     theme_advanced_statusbar_location : "bottom",
@@ -55,12 +55,10 @@ tinyMCE.init({
     convert_urls : false,
     content_css : "<?php echo $root; ?>system/styles/common/universal.css",
     file_browser_callback: "filebrowser",
-    width : "640",
-    height: "320",
 
     external_link_list_url : "<?php echo $root; ?>system/tiny_mce/plugins/advlink/data_base_links.php",
     autosave_ask_before_unload : false,
-    editor_deselector : "noEditorAdvanced",
+    editor_deselector : "noEditorMedia",
     gecko_spellcheck : false,
 });
 
@@ -80,4 +78,4 @@ function filebrowser(field_name, url, type, win) {
         window : win,
         input : field_name
     });
-}
+ }

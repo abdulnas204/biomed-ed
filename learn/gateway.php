@@ -1,13 +1,37 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 13th, 2010
+Last updated: December 3rd, 2010
+
+This is the gateway script, which will selectively allow 
+access to secured filed based on the user's credentials, 
+access to the subject, and other conditions.
+*/
+
 //Header functions
-	require_once('system/connections/connDBA.php');
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	
-//Script to selectively allow access to files
 //Create a function to open the file
 	function open() {
 		global $gatewayFile, $fileSize;
 		
-		$mimeType = getMimeType($gatewayFile);
+		if (isset($_GET['force']) && $_GET['force'] == "true") {
+			$mimeType = "application/octet-stream";
+		} else {
+			$mimeType = getMimeType($gatewayFile);
+		}
+		
 		header('Content-Description: File Transfer');
 		header("Content-type: " . $mimeType);
 		header('Content-Transfer-Encoding: binary');
@@ -23,8 +47,8 @@
 	
 //If a file extension was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {
-		$gatewayFilePrep = explode("?", urldecode($_SERVER['REQUEST_URI']));
-		$gatewayFile = urldecode(str_replace($strippedRoot . "gateway.php/", "", $gatewayFilePrep['0']));
+		$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+		$gatewayFile = urldecode(str_replace($pluginRoot . "gateway.php/", "", $gatewayFilePrep['0']));
 		
 	//Expose the directory path and file type
 		$directoryArray = explode("/", $gatewayFile);
@@ -45,10 +69,10 @@
 		}
 	
 	//Site administrators will have access to lesson and answer files from modules
-		if ($_SESSION['MM_UserGroup'] == "Site Administrator") {			
+		if ($_SESSION['role'] == "Site Administrator") {
 			for ($count = 0; $count <= $directoryDepth; $count++) {
-				if ($count == "2") {
-					if ($directoryArray['2'] == "lesson" || $directoryArray['2'] == "test") {
+				if ($count == "1") {
+					if ($directoryArray['1'] == "lesson" || $directoryArray['1'] == "test") {
 						open();
 					}
 				}

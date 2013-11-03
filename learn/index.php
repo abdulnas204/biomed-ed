@@ -35,7 +35,7 @@ system.
 	avaliability("learningunits", "index.php", "Edit Learning Unit");
 	
 //Delete a learning unit
-	delete("learningunits", "index.php", "Delete Learning Unit", true, false, $_GET['id'], "lesson_{$_GET['id']},test_{$_GET['id']}");
+	delete("learningunits", "index.php", "Delete Learning Unit", false, false, $_GET['id'], "lesson_{$_GET['id']},test_{$_GET['id']}");
 
 //Forward to editor
 	if (isset ($_GET['id']) && $_GET['edit'] == "true") {

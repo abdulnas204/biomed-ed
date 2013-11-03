@@ -12,13 +12,13 @@ open source, freeware, nor commercial/closed source.
 /* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: December 4th, 2010
 
 This script is used to construct the layout of a page.
 */
 
 //Include the start of a page
-	function headers($title, $functions = false, $toolTip = false, $additionalParameters = false, $publicNavigation = false, $meta = false, $description = false, $additionalKeywords = false, $hideHTML = false, $customScript = false) {
+	function headers($title, $functions = false, $toolTip = false, $bodyClass = false, $publicNavigation = false, $hideHTML = false, $customScript = false) {
 		global $root, $rootUserName;
 		
 	//Grab needed information
@@ -97,6 +97,14 @@ This script is used to construct the layout of a page.
 <script src=\"" . $root . "system/javascripts/common/tooltip.js\" type=\"text/javascript\"></script>";
 		} else {
 			$toolTipScript = "";
+		}
+		
+	//Include additional HTML
+		if ($customScript == true) {
+			$script = $customScript . "
+";
+		} else {
+			$script = "";
 		}
 		
 	//Test to see which item to highlight on the navigation bar
@@ -314,9 +322,9 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
 <!-- Include JavaScripts and StyleSheets //-->
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/common/universal.css\" />
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/themes/" . $siteInfo['style'] . "\" />
-" . $scripts . "
+" . $scripts . $script . "
 </head>
-<body" . $additionalHTML . ">" . $toolTipScript . $HTML;
+<body" . $bodyClass . ">" . $toolTipScript . $HTML;
 	}
 	
 //Include a footer
@@ -346,14 +354,17 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
 			echo "
       <br />
     </div>
-  </div>
-
+  </div>";
+		}
+		
+		echo "
   <!-- Branding //-->
   <div align=\"center\">
     " . URL("<img src=\"http://apexdevelopment.businesscatalyst.com/img/branding/apex_development_footer.png\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
     " . URL("<img src=\"http://apexdevelopment.businesscatalyst.com/img/branding/ensigma_pro.png\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
-  </div>
-
+  </div>";
+  		if ($hideHTML == false) {
+			echo "
   <div id=\"footer\">
     <div>&nbsp;</div>
     <!-- Footer navigation //-->
@@ -450,7 +461,7 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
 	  URL("Logout", $root . "logout.php");
 					break;
 			}
-		}
+		
 			
 			echo "
     </div>
@@ -461,8 +472,10 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
     </div>
   </div>
 </div>
-<br />
+<br />";
+		}
+			echo "
 </body>
 </html>";
-		}
+	}
 ?>

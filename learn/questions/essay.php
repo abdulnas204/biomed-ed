@@ -1,31 +1,47 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 13th, 2010
+Last updated: December 4th, 2010
+
+This is the essay management page for the test generator.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
-	require_once('functions.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	$monitor = monitor("Essay", "tinyMCEMedia,validate,autoSuggest");
 	$questionData = dataGrabber("Essay");
 	
 //Process the form
 	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points'])) {
-		$question = mysql_real_escape_string($_POST['question']);
+		$question = escape($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
 		$type = $_POST['type'];
-		$difficulty = $_POST['difficulty'];
 		$category = $_POST['category'];
 		$link = $_POST['link'];
-		$tags = mysql_real_escape_string($_POST['tags']);
-		$answer = mysql_real_escape_string($_POST['answer']);
-		$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-		$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
-		$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
+		$tags = escape($_POST['tags']);
+		$answer = escape($_POST['answer']);
+		$feedBackCorrect = escape($_POST['feedBackCorrect']);
+		$feedBackIncorrect = escape($_POST['feedBackIncorrect']);
+		$feedBackPartial = escape($_POST['feedBackPartial']);
 	
 		if (isset ($questionData)) {
-			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Essay', '{$points}', '{$extraCredit}', '0', '{$difficulty}', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -33,35 +49,31 @@
 	title($monitor['title'] . "Essay", "An essay question is a question that requires a long, written response. Essays must be scored manually.");
 	
 //Essay form
-	form("essay");
+	echo form("essay");
 	catDivider("Question", "one", true);
-	echo "<blockquote>";
 	question();
-	echo "</blockquote>";
 	
 	catDivider("Question Settings", "two");
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	points();
 	type();
-	difficulty();
 	category();
 	descriptionLink();
 	tags();
-	echo "</blockquote>";
+	echo "</blockquote>\n";
 	
 	catDivider("Answer", "three");
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	directions("Provide an example of a correct answer");
-	echo "<blockquote><p>";
-	textArea("answer", "answer", "small", false, false, false, "questionData", "answer");
-	echo "</p></blockquote></blockquote>";
+	indent(textArea("answer", "answer", "small", false, false, false, "questionData", "answer"));
+	echo "</blockquote>\n";
 	
 	catDivider("Feedback", "four");
 	feedback();
 	
 	catDivider("Finish", "five");
-	buttons();
-	closeForm(true, true);
+	formButtons();
+	closeForm(true);
 	
 //Include the footer
 	footer();

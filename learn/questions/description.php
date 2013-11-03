@@ -1,23 +1,41 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 13th, 2010
+Last updated: December 4th, 2010
+
+This is the description management page for the test 
+generator.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
-	require_once('functions.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	$monitor = monitor("Description", "tinyMCEAdvanced,validate,autoSuggest");
 	$questionData = dataGrabber("Description");
 	
 //Process the form
 	if (isset ($_POST['submit']) && !empty($_POST['question'])) {
-		$question = mysql_real_escape_string($_POST['question']);
+		$question = escape($_POST['question']);
 		$type = $_POST['type'];
 		$category = $_POST['category'];
-		$tags = mysql_real_escape_string($_POST['tags']);
+		$tags = escape($_POST['tags']);
 		
-		if (isset ($questionData)) {					
+		if (isset($questionData)) {					
 			updateQuery($type, "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'", "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($type, "NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''", "NULL, 'Description', '0', '', '0', '', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''");
+			insertQuery($type, "NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''", "NULL, 'Description', '0', '', '0', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''");
 		}
 	}
 	
@@ -25,24 +43,23 @@
 	title($monitor['title'] . "Description", "A description is not a question field, however, it allows test creators to insert text into the test without asking any questions or scoring the viewer on this content.");
 	
 //Description form
-	form("description");
+	echo form("description");
 	catDivider("Content", "one", true);
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	directions("Description content", true);
-	echo "<blockquote><p>";
-	textArea("question", "question", "large", true, false, false, "questionData", "question");
-	echo "</p></blockquote></blockquote>";
+	indent(textArea("question", "question", "large", true, false, false, "questionData", "question"));
+	echo "</blockquote>\n";
 	
 	catDivider("Settings", "two");
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	type();
 	category();
 	tags();
-	echo "</blockquote>";
+	echo "</blockquote>\n";
 	
 	catDivider("Submit", "three");
-	buttons();
-	closeForm(true, true);
+	formButtons();
+	echo closeForm();
 
 //Include the footer
 	footer();

@@ -52,6 +52,8 @@ infomation and definitions which will be used globally.
 			if (isset($process)) {
 				if (!strstr($directory, ".php")) {
 					$relativeAddress .= "../";
+				} else {
+					break;
 				}
 			}
 			

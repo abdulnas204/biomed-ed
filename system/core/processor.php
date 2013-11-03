@@ -28,23 +28,21 @@ or setting its availability.
 		if ($doAction == true && file_exists($path)) {
 			if (is_file($path)) {
 				unlink($path);
-				return true;
 			} else {
 				$directory = opendir($path);
 				
 				while($contents = readdir($directory)) {
 					if ($contents !== "." && $contents !== "..") {
-						if (is_file(rtrim($path . "/") . "/" . $contents)) {
-							unlink(rtrim($path . "/") . "/" . $contents);
-						} elseif (is_dir(rtrim($path . "/") . "/" . $contents)) {
-							return deleteAll(rtrim($path . "/") . "/" . $contents);
+						if (is_dir($path . "/" . $contents)) {
+							deleteAll($path . "/" . $contents);
+						} else {
+							unlink($path . "/" . $contents);
 						}
 					}
 				}
 				
-				rmdir(rtrim($path . "/"));
-				
-				return true;
+				closedir($directory);				
+				rmdir($path);
 			}
 		} else {
 			return false;
@@ -143,7 +141,7 @@ or setting its availability.
 				$tables = explode(",", $extraTables);
 				
 				foreach ($tables as $table) {
-					query("DROP TABLE `{$table}`");
+					query("DROP TABLE `{$table}`", false, false);
 				}
 			}
 			

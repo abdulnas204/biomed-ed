@@ -4,23 +4,23 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 **********************************************************************/
 
 //Developer Enhancement, to incorporate security
-	require_once('../../../Connections/connDBA.php');
+	require_once('../../../core/index.php');
 
 //Developer Enhancement, to disallow unwanted access	
-	if (isset($_SESSION['MM_Username']) && !empty($_SESSION['MM_Username']) && isset($_SESSION['MM_UserGroup']) && $_SESSION['MM_UserGroup'] === "Site Administrator") {
+	if (loggedIn()) {
 		//Do nothing, access is granted
 	} else {
 		die("You do not have access to this content");
 	}
 	
 //Developer Enhancement, to detirmine the folder root
-	if (isset($_SESSION['currentModule'])) {
-		$path = $strippedRoot . "modules/" . $_SESSION['currentModule'] . "/lesson/browser/";
+	if (isset($_SESSION['currentUnit'])) {
+		$path = $strippedRoot . "learn/" . $_SESSION['currentUnit'] . "/lesson/browser/";
 		$secure = true;
 	} elseif (isset($_SESSION['questionBank'])) {
-		$path = $strippedRoot . "modules/questionbank/test/questions/";
+		$path = $strippedRoot . "learn/questionbank/test/questions/";
 		$secure = true;
-	} elseif (!isset($_SESSION['questionBank']) && !isset($_SESSION['currentModule'])) {		
+	} elseif (!isset($_SESSION['questionBank']) && !isset($_SESSION['currentUnit'])) {		
 		$path = $strippedRoot . "system/files/";
 	} else {
 		die("This is a temporary error. Please contact Oliver for details.");
@@ -179,7 +179,7 @@ $defaultSkin="mountainview";
  * 
  * Which editor are we dealing with? PDW File Browser can be used with TinyMCE and CKEditor.
  */
-$editor = isset($_GET["editor"]) ? $_GET["editor"] : ''; // If you want to use the file browser for both editors and/or standalone
+//$editor = isset($_GET["editor"]) ? $_GET["editor"] : ''; // If you want to use the file browser for both editors and/or standalone
 $editor="tinymce";
 //$editor="ckeditor";
 //$editor="standalone";

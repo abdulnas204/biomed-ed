@@ -1,16 +1,34 @@
 <?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 13th, 2010
+Last updated: December 4th, 2010
+
+This is the test settings page for the test and learning 
+generators.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Test Settings", "tinyMCESimple,validate,liveError,showHide,enableDisable,navigationMenu");
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
+	$monitor = monitor("Test Settings", "tinyMCEmedia,validate,showHide,enableDisable,navigationMenu");
 
 //Grab the form data
-	$testDataGrabber = mysql_query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'", $connDBA);
-	$testData = mysql_fetch_array($testDataGrabber);
+	$testData = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentUnit']}'");
 	
 //Process the form
 	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll'])) {
-		$testName = mysql_real_escape_string($_POST['testName']);
-		$directions = mysql_real_escape_string($_POST['directions']);
+		$testName = escape($_POST['testName']);
+		$directions = escape($_POST['directions']);
 		$score = $_POST['score'];
 		$attempts = $_POST['attempts'];
 		$forceCompletion = $_POST['forceCompletion'];
@@ -38,10 +56,10 @@
 			$timer = "0";
 		}		
 					
-		mysql_query("UPDATE `{$monitor['parentTable']}` SET `testName` = '{$testName}', `directions` = '{$directions}', `score` = '{$score}', `attempts` = '{$attempts}', `forceCompletion` = '{$forceCompletion}', `completionMethod` = '{$completionMethod}', `reference` = '{$reference}', `delay` = '{$delay}', `gradingMethod` = '{$gradingMethod}', `penalties` = '{$penalties}', `time` = '{$time}', `timer` = '{$timer}', `randomizeAll` = '{$randomizeAll}', `questionBank` = '{$questionBank}', `display` = '{$display}' WHERE `id` = '{$monitor['currentModule']}'", $connDBA);
+		query("UPDATE `{$monitor['parentTable']}` SET `testName` = '{$testName}', `directions` = '{$directions}', `score` = '{$score}', `attempts` = '{$attempts}', `forceCompletion` = '{$forceCompletion}', `completionMethod` = '{$completionMethod}', `reference` = '{$reference}', `delay` = '{$delay}', `gradingMethod` = '{$gradingMethod}', `penalties` = '{$penalties}', `time` = '{$time}', `timer` = '{$timer}', `randomizeAll` = '{$randomizeAll}', `questionBank` = '{$questionBank}', `display` = '{$display}' WHERE `id` = '{$monitor['currentUnit']}'");
 			
 		if ($_POST['submit'] == "Finish") {
-			redirect("../index.php?updated=module");
+			redirect("../index.php?updated=unit");
 		} else {
 			redirect("question_merge.php");
 		}
@@ -51,28 +69,24 @@
 	navigation("Test Settings", "Setup the test's initial settings, such as the name, directions, and score.");
 	
 //Test settings form
-	form("testSettings");
+	echo form("testSettings");
 	catDivider("Test Information", "four", true);
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	directions("Test name", true, "The name of this test");
-	echo "<blockquote><p>";
 	
 	if (empty($testData['testName'])) {
-		textField("testName", "testName", false, false, false, true, false, false, "testData", "name");
+		indent(textField("testName", "testName", false, false, false, true, false, false, "testData", "name"));
 	} else {
-		textField("testName", "testName", false, false, false, true, false, false, "testData", "testName");
+		indent(textField("testName", "testName", false, false, false, true, false, false, "testData", "testName"));
 	}
 	
-	echo "</p></blockquote>";
 	directions("Directions", true, "The directions of this test");
-	echo "<blockquote><p>";
-	textArea("directions", "directions", "small", true, false, false, "testData", "directions");
-	echo "</p></blockquote></blockquote>";
+	indent(textArea("directions", "directions", "small", true, false, false, "testData", "directions"));
+	echo "</blockquote>\n";
 	
 	catDivider("Test Settings", "five");
-	echo "<blockquote>";
-	directions("Passing score", false, "The minimum score a user must obtain to pass");
-	echo "<blockquote><p>";
+	echo "<blockquote>\n";
+	directions("Passing score", false, "The minimum score a user must obtain to pass");	
 	
 	$valuesGenerate = "";
 	
@@ -82,77 +96,67 @@
 	
 	$values = rtrim($valuesGenerate, ",");
 	
-	dropDown("score", "score", $values, $values, false, false, false, false, "testData", "score");
-	echo "</p></blockquote>";
+	indent(dropDown("score", "score", $values, $values, false, false, false, false, "testData", "score"));
 	directions("Number of attempts", false, "The number of times a user may take this test");
-	echo "<blockquote><p>";
-	dropDown("attempts", "attempts", "Unlimited,1,2,3,4,5,6,7,8,9,10", "999,1,2,3,4,5,6,7,8,9,10", false, false, false, false, "testData", "attempts", " onchange=\"toggleTestOptions(this.value);\"");
-	echo "</p></blockquote><div id=\"contentHide\"";
+	indent(dropDown("attempts", "attempts", "Unlimited,1,2,3,4,5,6,7,8,9,10", "999,1,2,3,4,5,6,7,8,9,10", false, false, false, false, "testData", "attempts", " onchange=\"toggleTestOptions(this.value);\""));
+	echo "<div id=\"contentHide\"";
 	
 	if ($testData['attempts'] == "1") {
-		echo " class=\"contentHide\">";
+		echo " class=\"contentHide\">\n";
 	} else {
-		echo " class=\"contentShow\">";
+		echo " class=\"contentShow\">\n";
 	}
 	
 	directions("Delay between attempts", false, "Set the amount of time a user must wait between attempts before retaking the test");
-	echo "<blockquote><p>";
-	dropDown("delay", "delay", "None,30 minutes,60 minutes,2 hours,3 hours,4 hours,5 hours,6 hours,7 hours,8 hours,9 hours,10 hours,11 hours,12 hours,13 hours,14 hours,15 hours,16 hours,17 hours,18 hours,19 hours,20 hours,21 hours,22 hours,23 hours,24 hours,2 days,3 days,4 days,5 days,6 days,7 days", "0,1800,3600,7200,10800,14400,18000,21600,25200,28800,32400,36000,39600,43200,46800,50400,54000,57600,61200,64800,68400,72000,75600,79200,82800,86400,172800,259200,345600,432000,518400,604800", false, false, false, false, "testData", "delay");
-	echo "</p></blockquote>";
+	indent(dropDown("delay", "delay", "None,30 minutes,60 minutes,2 hours,3 hours,4 hours,5 hours,6 hours,7 hours,8 hours,9 hours,10 hours,11 hours,12 hours,13 hours,14 hours,15 hours,16 hours,17 hours,18 hours,19 hours,20 hours,21 hours,22 hours,23 hours,24 hours,2 days,3 days,4 days,5 days,6 days,7 days", "0,1800,3600,7200,10800,14400,18000,21600,25200,28800,32400,36000,39600,43200,46800,50400,54000,57600,61200,64800,68400,72000,75600,79200,82800,86400,172800,259200,345600,432000,518400,604800", false, false, false, false, "testData", "delay"));
 	directions("Grading method", false, "Set how the test will be scored");
-	echo "<blockquote><p>";
-	radioButton("gradingMethod", "gradingMethod", "Highest Grade,Average Grade,First Attempt,Last Attempt", "Highest Grade,Average Grade,First Attempt,Last Attempt", false, false, false, false, "testData", "gradingMethod");
-	echo "</p></blockquote>";
+	indent(radioButton("gradingMethod", "gradingMethod", "Highest Grade,Average Grade,First Attempt,Last Attempt", "Highest Grade,Average Grade,First Attempt,Last Attempt", false, false, false, false, "testData", "gradingMethod"));
 	directions("Show penalties", false, "Set whether or not all attempts will show in the <br />gradebook, regardless of past scores");
-	echo "<blockquote><p>";
-	radioButton("penalties", "penalties", "Yes,No", "1,0", true, false, false, false, "testData", "penalties");
-	echo "</p></blockquote></div>";
+	indent(radioButton("penalties", "penalties", "Yes,No", "1,0", true, false, false, false, "testData", "penalties"));
+	echo "</div>\n";
 	directions("Timer", false, "Sets a timer, which will only allow the test to be open for a set duration");
+	echo "<blockquote><p>\nHours: ";
+	
 	$time = unserialize($testData['time']);
 	$testH = $time['0'];
 	$testM = $time['1'];
-	echo "<blockquote><p>Hours: ";
 	
 	if (empty($testData['timer'])) {
-		dropDown("timeHours", "timeHours", "0,1,2,3,4,5", "0,1,2,3,4,5", false, false, false, false, "time", "0", " disabled=\"disabled\"");
+		echo dropDown("timeHours", "timeHours", "0,1,2,3,4,5", "0,1,2,3,4,5", false, false, false, false, "time", "0", " disabled=\"disabled\"");
 		echo " Minutes: ";
-		dropDown("timeMinutes", "timeMinutes", "00,05,10,15,20,25,30,35,40,45,50,55", "00,05,10,15,20,25,30,35,40,45,50,55", false, false, false, false, "time", "1", " disabled=\"disabled\"");
+		echo dropDown("timeMinutes", "timeMinutes", "00,05,10,15,20,25,30,35,40,45,50,55", "00,05,10,15,20,25,30,35,40,45,50,55", false, false, false, false, "time", "1", " disabled=\"disabled\"");
 	} else {
-		dropDown("timeHours", "timeHours", "0,1,2,3,4,5", "0,1,2,3,4,5", false, false, false, false, "time", "0");
+		echo dropDown("timeHours", "timeHours", "0,1,2,3,4,5", "0,1,2,3,4,5", false, false, false, false, "time", "0");
 		echo " Minutes: ";
-		dropDown("timeMinutes", "timeMinutes", "00,05,10,15,20,25,30,35,40,45,50,55", "00,05,10,15,20,25,30,35,40,45,50,55", false, false, false, false, "time", "1");
+		echo dropDown("timeMinutes", "timeMinutes", "00,05,10,15,20,25,30,35,40,45,50,55", "00,05,10,15,20,25,30,35,40,45,50,55", false, false, false, false, "time", "1");
 	}
 	
 	echo " ";
-	checkbox("timer", "timer", "Enable", false, false, false, false, "testData", "timer", "on", " onclick=\"flvFTFO1('testSettings','timeHours,t','timeMinutes,t')\"");
-	echo "</p></blockquote>";
-	directions("Force completion", false, "Set if this test must be completed the first time it is opened, <br />and what penalties will be applied");
-	echo "<blockquote><p>";
+	echo checkbox("timer", "timer", "Enable", false, false, false, false, "testData", "timer", "on", " onclick=\"flvFTFO1('testSettings','timeHours,t','timeMinutes,t')\"");
+	echo "</p></blockquote>\n";
+	directions("Force completion", false, "Set whether or not this test must be completed the first time <br />it is opened, and what penalties will be applied if this cirteria isn\'t met");
+	echo "<blockquote><p>\n";
 	echo "Penalties: ";
 	
 	if (empty($testData['forceCompletion'])) {
-		dropDown("completionMethod", "completionMethod", "The test will close,All answers will reset,Grade decreases 10%,Grade decreases 20%,Grade decreases 30%,Grade decreases 40%", "0,1,10,20,30,40", false, false, false, false, "testData", "completionMethod", " disabled=\"disabled\"");
+		echo dropDown("completionMethod", "completionMethod", "The test will close,All answers will reset,Grade decreases 10%,Grade decreases 20%,Grade decreases 30%,Grade decreases 40%", "0,1,10,20,30,40", false, false, false, false, "testData", "completionMethod", " disabled=\"disabled\"");
 	} else {
-		dropDown("completionMethod", "completionMethod", "The test will close,All answers will reset,Grade decreases 10%,Grade decreases 20%,Grade decreases 30%,Grade decreases 40%", "0,1,10,20,30,40", false, false, false, false, "testData", "completionMethod");
+		echo dropDown("completionMethod", "completionMethod", "The test will close,All answers will reset,Grade decreases 10%,Grade decreases 20%,Grade decreases 30%,Grade decreases 40%", "0,1,10,20,30,40", false, false, false, false, "testData", "completionMethod");
 	}
 	
 	echo " ";
-	checkbox("forceCompletion", "forceCompletion", "Enable", false, false, false, false, "testData", "forceCompletion", "on", " onclick=\"flvFTFO1('testSettings','completionMethod,t')\"");
-	echo "</p></blockquote>";
+	echo checkbox("forceCompletion", "forceCompletion", "Enable", false, false, false, false, "testData", "forceCompletion", "on", " onclick=\"flvFTFO1('testSettings','completionMethod,t')\"");
+	echo "</p></blockquote>\n";
 	directions("Allow lesson reference", false, "Allow users to reference the lesson during the test");
-	echo "<blockquote><p>";
-	radioButton("reference", "reference", "Yes,No", "1,0", true, false, false, false, "testData", "reference");
-	echo "</p></blockquote>";
+	indent(radioButton("reference", "reference", "Yes,No", "1,0", true, false, false, false, "testData", "reference"));
 	directions("Randomize questions", false, "Allow users to reference the lesson during the test");
-	echo "<blockquote><p>";
-	radioButton("randomizeAll", "randomizeAll", "Sequential Order,Randomize", "Sequential Order,Randomize", false, false, false, false, "testData", "randomizeAll");
-	echo "</p></blockquote>";
+	indent(radioButton("randomizeAll", "randomizeAll", "Sequential Order,Randomize", "Sequential Order,Randomize", false, false, false, false, "testData", "randomizeAll"));
 	
-	if (access("modifyAllModules")) {
+	if (access("Edit Unowned Learning Units")) {
 		directions("Automatically pull questions from bank", false, "Set whether questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added");
-		echo "<blockquote><p>";
+		echo "<blockquote><p>\n";
 		radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
-		echo "<br /><br />";
+		echo "<br /><br />\n";
 		
 		if (exist("questionbank", "category", $testData['category']) == true) {
 			echo "The question bank has test questions for this category.";
@@ -160,19 +164,19 @@
 			echo "The question bank does not have any test questions for this category.";
 		}
 		
-		echo "</p></blockquote>";
+		echo "</p></blockquote>\n";
 	}
 	
 	directions("After the test is taken display", false, "Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Display a breakdown of points that the user recieved on each quesiton<br/><strong>Selected Answers:</strong> The answer(s) the user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>");
-	echo "<blockquote><p>";
-	$values = unserialize($testData['display']);
+	
+	$checks = unserialize($testData['display']);
 	$firstValue = false;
 	$secondValue = false;
 	$thirdValue = false;
 	$fourthValue = false;
 	
-	if (is_array($values)) {
-		foreach($values as $checkbox) {
+	if (is_array($checks)) {
+		foreach($checks as $checkbox) {
 			switch ($checkbox) {
 				case "1" : $firstValue = true; break;
 				case "2" : $secondValue = true; break;
@@ -182,27 +186,27 @@
 		}
 	}
 	
-	checkbox("display[]", "display[]", "Score", "1", false, false, $firstValue);
-	echo "<br />";
-	checkbox("display[]", "display[]", "Selected Answers", "2", false, false, $secondValue);
-	echo "<br />";
-	checkbox("display[]", "display[]", "Correct Answers", "3", false, false, $thirdValue);
-	echo "<br />";
-	checkbox("display[]", "display[]", "Feedback", "4", false, false, $fourthValue);
-	echo "</p></blockquote></blockquote>";
+	indent(checkbox("display[]", "display[]", "Score", "1", false, false, $firstValue) . 
+	"<br />\n" . 
+	checkbox("display[]", "display[]", "Selected Answers", "2", false, false, $secondValue)  . 
+	"<br />\n" . 
+	checkbox("display[]", "display[]", "Correct Answers", "3", false, false, $thirdValue) . 
+	"<br />\n" . 
+	checkbox("display[]", "display[]", "Feedback", "4", false, false, $fourthValue));
+	echo "</blockquote>\n";
 	
 	catDivider("Submit", "six");
-	echo "<blockquote><p>";
+	echo "<blockquote><p>\n";
 	
-	button("back", "back", "&lt;&lt; Previous Step", "button", "lesson_verify.php");
-	button("submit", "submit", "Next Step &gt;&gt;", "submit");
+	echo button("back", "back", "&lt;&lt; Previous Step", "button", "lesson_verify.php");
+	echo button("submit", "submit", "Next Step &gt;&gt;", "submit");
 	
 	if (isset ($_SESSION['review'])) {
-		button("submit", "submit", "Finish", "submit");
+		echo button("submit", "submit", "Finish", "submit");
 	}
 	
-	echo "</p></blockquote>";
-	closeForm(true, true);
+	echo "</p></blockquote>\n";
+	echo closeForm();
 	
 //Include the footer
 	footer();

@@ -1,84 +1,82 @@
 <?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 13th, 2010
+Last updated: December 4th, 2010
+
+This is purly a backend script used to merge questions 
+from the question bank into the test.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	$monitor = monitor("Question Merge", false, true);
 
-//Check to see if questions from the question bank need to be merged
+//Check to see if questions from the question bank need to be mass merged
 	if (!isset($_GET['type'])) {
-		$importCheck = exist($monitor['parentTable'], "id", $monitor['currentModule']);
+		$importCheck = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentUnit']}'");
 		
 		if ($importCheck['questionBank'] == "1") {
-			if (exist("{$monitor['testTable']}_{$monitor['currentTable']}", "questionbank", "1") == true) {
-				//Do nothing
-			} else {
-			//Select all of the questions from the bank
-				$category = $importCheck['category'];
-				$importQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}'", $connDBA);	
-				
-			//Import the questions into the test
-				$lastQuestionGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}_{$monitor['currentTable']}` ORDER BY `position` DESC", $connDBA);
-				$lastQuestionFetch = mysql_fetch_array($lastQuestionGrabber);
-				$lastQuestion = $lastQuestionFetch['position'] + 1;
-				
-				while ($importQuestions = mysql_fetch_array($importQuestionsGrabber)) {			
-					$position = $lastQuestion++;
-					$id = $importQuestions['id'];
-										
-					mysql_query("INSERT INTO `{$monitor['testTable']}_{$monitor['currentTable']}` (
-								`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
-								) VALUES (
-								NULL, '1', '{$id}', '{$position}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '','','','','',''
-								)", $connDBA);
-				}
+		//Select all of the questions from the bank, with the same category as the test
+			$importQuestions = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `category` = '{$importCheck['category']}' ORDER BY `id` ASC", "raw");	
+			
+		//Import the questions into the test
+			$lastQuestion = lastItem($monitor['testTable']);
+			
+			while ($importQuestions = fetch($importQuestionsGrabber)) {			
+				$position = $lastQuestion++;
+				$id = $importQuestions['id'];
+									
+				query("INSERT INTO `{$monitor['testTable']}` (
+					  `id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+					  ) VALUES (
+					  NULL, '1', '{$id}', '{$position}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					  )");
 			}
 		}
 		
-		if (isset ($_SESSION['review'])) {
-			$testCheckGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}_{$monitor['currentTable']}`", $connDBA);
-			$testCheck = mysql_num_rows($testCheckGrabber);
-			
-			if ($testCheckGrabber && $testCheck >= 1) {
-				redirect("modify.php?updated=testSettings");
-			} else {
-				$_SESSION['step'] = "testContent";
-				redirect("test_content.php");
-			}
-		} else {	
-			$_SESSION['step'] = "testContent";
-			redirect("test_content.php");
-		}
+		redirect("test_content.php");
 	}
 	
-//Import a question from the bank into the test	
+//Import an individual question from the bank completely into the test
 	if (isset($_GET['type']) && $_GET['type'] == "import" && isset($_GET['questionID']) && isset($_GET['bankID'])) {
 		$bankID = $_GET['bankID'];
 		$questionID = $_GET['questionID'];
-		$importQuestions = query("SELECT * FROM `questionbank` WHERE `id` = '{$bankID}'");
+		$importQuestions = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `id` = '{$bankID}'");
 		
 		$type = $importQuestions['type'];
 		$points = $importQuestions['points'];
 		$extraCredit = $importQuestions['extraCredit'];
 		$partialCredit = $importQuestions['partialCredit'];
-		$difficulty = $importQuestions['difficulty'];
 		$link = $importQuestions['link'];
 		$randomize = $importQuestions['randomize'];
 		$totalFiles = $importQuestions['totalFiles'];
 		$choiceType = $importQuestions['choiceType'];
 		$case = $importQuestions['case'];
 		$tags = $importQuestions['tags'];
-		$question = mysql_real_escape_string(stripslashes($importQuestions['question']));
-		$questionValue = mysql_real_escape_string(stripslashes($importQuestions['questionValue']));
-		$answer = mysql_real_escape_string(stripslashes($importQuestions['answer']));
-		$answerValue = mysql_real_escape_string(stripslashes($importQuestions['answerValue']));
+		$question = escape(stripslashes($importQuestions['question']));
+		$questionValue = escape(stripslashes($importQuestions['questionValue']));
+		$answer = escape(stripslashes($importQuestions['answer']));
+		$answerValue = escape(stripslashes($importQuestions['answerValue']));
 		$fileURL = $importQuestions['fileURL'];
-		$correctFeedback = mysql_real_escape_string(stripslashes($importQuestions['correctFeedback']));
-		$incorrectFeedback = mysql_real_escape_string(stripslashes($importQuestions['incorrectFeedback']));
-		$partialFeedback = mysql_real_escape_string(stripslashes($importQuestions['partialFeedback']));
+		$correctFeedback = escape(stripslashes($importQuestions['correctFeedback']));
+		$incorrectFeedback = escape(stripslashes($importQuestions['incorrectFeedback']));
+		$partialFeedback = escape(stripslashes($importQuestions['partialFeedback']));
 							
-		mysql_query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'", $connDBA);
+		query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'");
 		
 		if ($type == "File Response") {
-			copy("../QuestionBank/test/answers/" . $fileURL, $monitor['directory'] . "test/answers/" . $fileURL);
+			copy("../questionbank_" . $userData['organization'] . "/test/answers/" . $fileURL, $monitor['directory'] . "test/answers/" . $fileURL);
 		}
 		
 		$redirect = "../questions/";

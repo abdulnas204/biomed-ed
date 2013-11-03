@@ -61,3 +61,4 @@ acrobat.ver6=(acrobat.installed && parseInt(acrobat.version) >= 6) ? true:false;
 acrobat.ver7=(acrobat.installed && parseInt(acrobat.version) >= 7) ? true:false;
 acrobat.ver8=(acrobat.installed && parseInt(acrobat.version) >= 8) ? true:false;
 acrobat.ver9=(acrobat.installed && parseInt(acrobat.version) >= 9) ? true:false; 
+acrobat.ver9=(acrobat.installed && parseInt(acrobat.version) >= 10) ? true:false; 

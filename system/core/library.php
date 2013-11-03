@@ -62,6 +62,43 @@ String-related functions
 	   return $shortenedValue;
 	}
 	
+//Strip characters out of a string
+	function strip($string, $type) {
+		switch($type) {
+			case "lettersOnly" : 
+				return preg_replace("/[^a-zA-Z]/", "", $string);
+				break;
+				
+			case "lettersSpace" : 
+				return preg_replace("/[^a-zA-Z\s]/", "", $string);
+				break;
+				
+			case "numbersOnly" : 
+				return preg_replace("/[^0-9]/", "", $string);
+				break;
+				
+			case "numbersSpace" : 
+				return preg_replace("/[^0-9\s]/", "", $string);
+				break;
+				
+			case "lettersNumbers" : 
+				return preg_replace("/[^a-zA-Z0-9]/", "", $string);
+				break;
+				
+			case "lettersNumbersSpace" : 
+				return preg_replace("/[^a-zA-Z0-9\s]/", "", $string);
+				break;
+				
+			default : 
+				if (preg_replace($type, "", $string)) {
+					return preg_replace($type, "", $string);
+				} else {
+					$error = debug_backtrace();
+					die(errorMessage("The regular expression was invalid on line " . $error['0']['line']));
+				}
+		}
+	}
+	
 /*
 Array-related functions
 ---------------------------------------------------------
@@ -383,10 +420,10 @@ File-related functions
 			"ppsm" => "application/vnd.ms-powerpoint.slideshow.macroEnabled.12"
 		);
 		
-		$entension = strtolower(end(explode(".", $filename)));
+		$extension = strtolower(end(explode(".", $filename)));
 		
-		if (in_array($extension, $mimeTypes)) {
-			return $mimeTypes[$entension];
+		if (array_key_exists($extension, $mimeTypes)) {
+			return $mimeTypes[$extension];
 		} else {
 			return "application/octet-stream";
 		}

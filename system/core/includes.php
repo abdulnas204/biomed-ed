@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: December 4th, 2010
 
 This script contains functions which will construct the 
 JavaScript and CSS callers for client-side modules.
@@ -39,22 +39,6 @@ Widgets
 <script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>
 ";
-	}
-	
-//TinyMCE small media
-	function tinyMCEMedia () {
-		global $root;
-		
-		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_media.php\"></script>";
-	}
-	
-//TinyMCE question, purposefully excludes the tiny_mce.js and editor_plugin.js scripts
-	function tinyMCEQuestion () {
-		global $root;
-		
-		return "<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_question.php\"></script>";
 	}
 	
 //Auto-suggest
@@ -200,5 +184,12 @@ Pre-processor scripts
 		global $root;
 		
 		return "<script src=\"" . $root . "system/javascripts/uploader/uploaderCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/uploader/swfobject.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/uploader/runUploader.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/uploader.css\" type=\"text/css\">";
+	}
+	
+	//Include a plug-in check script
+	function plugins() {
+		global $root;
+		
+		return "<script src=\"" . $root . "system/javascripts/systemCheck/detectPlugins.js\" type=\"text/javascript\"></script>";
 	}
 ?>

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 1st, 2010
+Last updated: December 3rd, 2010
 
 This script contains functions used to create common HTML 
 elements, and add a touch of dynamic content, while abiding
@@ -237,8 +237,14 @@ Form input elements
 		
 		$return .= "\"";
 		
+		if ($validateAddition == true) {
+			$validateAddition = "," . $validateAddition;
+		}
+		
 		if ($validate == true) {
 			$return .= " class=\"validate[required" . $validateAddition . "]\"";
+		} elseif ($validate == false && $validateAddition == true) {
+			$return .= " class=\"validate[optional" . $validateAddition . "]\"";
 		}
 		
 		$return .= ">\n";
@@ -544,7 +550,7 @@ Non-form input elements
 			echo $text . "\n";
 		}
 		
-		if ($break == true) {
+		if ((is_bool($break) === true && $break === true) || ($break == true && !isset($_GET[$break]))) {
 			echo "<p>&nbsp;</p>\n";
 		}
 	}
@@ -631,6 +637,8 @@ Non-form input elements
 			if ($doAction + 4 === sizeof($values)) {
 				return URL($text, $URL, $class, false, false, $delete) . "\n";
 			}
+		} else {
+			return URL($text, $URL, $class, false, false, $delete) . "\n";
 		}
 	}
 	
@@ -751,11 +759,11 @@ Elements used in data table loops
 		if ($width == false) {
 			$headerWidth = "";
 		} else {
-			$headerWidth = " width =\"" . $width . "\"";
+			$headerWidth = " width=\"" . $width . "\"";
 		}
 		
 		if ($doAction == true) {
-			return "<th class=\"tableHeader\" " . $headerWidth . ">" . $content . "</td>\n";
+			return "<th class=\"tableHeader\"" . $headerWidth . ">" . $content . "</th>\n";
 		}
 	}
 
@@ -812,7 +820,7 @@ Elements used in data table loops
 	}
 	
 //Reorder items
-	function reorderMenu($table, $id, $width = "75", $requiredPrivilege = false) {
+	function reorderMenu($table, $id, $width = "75", $requiredPrivilege = false, $additionalContent = false) {
 		$itemCount = query("SELECT * FROM `{$table}`", "num");
 		$state = query("SELECT * FROM `{$table}` WHERE `id` = '{$id}'");
 		$values = "";
@@ -837,14 +845,24 @@ Elements used in data table loops
 			$cellWidth = $width;
 		}
 		
+		if ($additionalContent == true) {
+			$wrap = explode("{content}", $additionalContent);
+		} else {
+			$wrap = array();
+		}
+		
+		
+		
 		if ($doAction == true) {
-			$return = "<td width=\"" . $width . "\">\n";
+			$return = "<td width=\"" . $cellWidth . "\">\n";
+			$return .= $wrap['0'] . "\n";
 			$return .= form("reorder");
 			$return .= hidden("id", "id", $id);
-			$return .= hidden("currentPosition", "currentPosition", $state);
+			$return .= hidden("currentPosition", "currentPosition", $state['position']);
 			$return .= hidden("action", "action", "modifyPosition");
 			$return .= dropDown("position", "position", $values, $values, false, false, false, $state['position'], false, false, " onchange=\"this.form.submit();\"");
 			$return .= closeForm(false);
+			$return .= $wrap['1'] . "\n";
 			$return .= "</td>\n";
 			
 			return $return;
@@ -852,7 +870,7 @@ Elements used in data table loops
 	}
 	
 //Ppreview link
-	function preview($name, $URL, $itemType = false, $width = false, $requiredPrivilege = false) {
+	function preview($name, $URL, $itemType = false, $width = false, $newWindow = false, $requiredPrivilege = false) {
 		if ($requiredPrivilege == true) {
 			$doAction = access($requiredPrivilege);
 		} else {
@@ -865,13 +883,17 @@ Elements used in data table loops
 			$cellWidth = " width =\"" . $width . "\"";
 		}
 		
-		if ($type == false) {
+		if ($itemType == false) {
 			$type = "";
 		} else {
-			$type = " " . $type ;
+			$type = " " . $itemType ;
 		}
 		
-		echo "<td" . $cellWidth . ">" . URL($name, $URL, false, false, "Launch the <strong>" . $name . "</strong>" . $type) . "</td>\n";
+		if ($newWindow == false) {
+			echo "<td" . $cellWidth . ">" . URL($name, $URL, false, false, "Launch the <strong>" . $name . "</strong>" . $type) . "</td>\n";
+		} else {
+			echo "<td" . $cellWidth . ">" . URL($name, $URL, false, false, "Launch the <strong>" . $name . "</strong>" . $type, false, true, "640", "480") . "</td>\n";
+		}
 	}
 	
 //Create a regular table cell

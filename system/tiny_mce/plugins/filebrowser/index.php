@@ -70,7 +70,7 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 		<?php
 		//Detirmine where the gateway script should lie in the address
 			$gatewayRoot = sizeof(explode("/", trim($root, "/")));
-			echo "var gatewayRoot = " . sprintf($gatewayRoot - 1) . ";";
+			echo "var gatewayRoot = " . $gatewayRoot . ";";
 		?>
 		
 		var URL = content.value;

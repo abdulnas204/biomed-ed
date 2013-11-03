@@ -7,12 +7,10 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: July 30th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: December 3rd, 2010
 
 This is the home page of the site, which contains content 
 from the CMS portion of the site, as well as a customizeable 
@@ -62,7 +60,7 @@ sidebar.
 
 //Use the layout control if the page is displaying a sidebar		
 	if (isset($sideBarResult)) {
-		echo "<div class=\"layoutControl\"><div class=\"";
+		echo "<div class=\"layoutControl\">\n<div class=\"";
 		
 		if ($sideBarLocation['sideBar'] == "Left") {
 			echo "contentRight";
@@ -70,7 +68,7 @@ sidebar.
 			echo "contentLeft";
 		}
 		
-		echo "\">";
+		echo "\">\n";
 	}
 
 //Admin toolbar
