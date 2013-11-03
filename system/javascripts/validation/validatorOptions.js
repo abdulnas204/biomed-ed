@@ -2,7 +2,8 @@
 	$.fn.validationEngineLanguage = function() {};
 	$.validationEngineLanguage = {
 		newLang: function() {
-			$.validationEngineLanguage.allRules = 	{"required":{    			// Add your regex rules here, you can take telephone as an example
+			$.validationEngineLanguage.allRules = 	{
+					"required":{    			// Add your regex rules here, you can take telephone as an example
 						"regex":"none",
 						"alertText":"* Required (Click to hide)",
 						"alertTextCheckboxMultiple":"* Required (Click to hide)",
@@ -59,7 +60,10 @@
     					"alertText":"You must have a firstname and a lastname"},
 					"uploadCheck":{
 						"nname":"uploadCheck",
-						"alertText":"* Invalid file type"}
+						"alertText":"* Invalid file type"},
+					"URL":{
+						"regex":"/^http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$/",
+						"alertText":"* Invalid address"}
 					}	
 					
 		}

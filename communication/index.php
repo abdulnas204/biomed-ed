@@ -2,15 +2,19 @@
 //Header functions
 	require_once('../system/connections/connDBA.php');
 	headers("Communication", "Organization Administrator,Site Administrator", "liveSubmit,customVisible", true); 
-
+	
+//Define the table name
+	$userInfo = userData();
+	$table = "announcements_" . $userInfo['organization'];
+	
 //Reorder announcements	
-	reorder("announcements", "index.php");
+	reorder($table, "index.php");
 
 //Set announcement avaliability
-	avaliability("announcements", "index.php");
+	avaliability($table, "index.php");
 	
 //Delete an announcement
-	delete("announcements", "index.php");
+	delete($table, "index.php");
 	
 //Title
 	title("Communication", "Communication can be established to registered users and organizations via announcements and mass emails.");
@@ -27,8 +31,8 @@
 	message("email", "success", "success", "The email was successfully sent");
 
 //Announcements table
-	if (exist("announcements") == true) {
-		$announcementGrabber = mysql_query("SELECT * FROM `announcements` ORDER BY `position` ASC", $connDBA);
+	if (exist($table, "position", "1")) {
+		$announcementGrabber = mysql_query("SELECT * FROM `{$table}` ORDER BY `position` ASC", $connDBA);
 		$currentDate = strtotime(date("m/d/y g:i a"));
 		
 		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Display To</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
@@ -74,7 +78,7 @@
 				echo "<td width=\"25\">"; option($announcementData['id'], $announcementData['visible'], "announcementData", "visible"); echo "</td>";
 			}
 			
-			echo "<td width=\"75\">"; reorderMenu($announcementData['id'], $announcementData['position'], "announcementData", "announcements"); echo "</td>";
+			echo "<td width=\"75\">"; reorderMenu($announcementData['id'], $announcementData['position'], "announcementData", $table); echo "</td>";
 			
 			echo "<td width=\"200\">" . $announcementData['display'] . "</td>";
 			echo "<td width=\"200\">" . commentTrim(30,$announcementData['title']) . "</td>";

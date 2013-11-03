@@ -816,14 +816,18 @@ ob_start();
 	}
 	
 	function catDivider($content, $class, $first = false, $last = false) {
-		if ($first == false) {
+		if ($last == true) {
 			echo "</div>";
-		}
-		
-		echo "<div class=\"catDivider " . $class . "\">" . $content . "</div>";
-		
-		if ($last == false) {
-			echo "<div class=\"stepContent\">";
+		} else {
+			if ($first == false) {
+				echo "</div>";
+			}
+			
+			echo "<div class=\"catDivider " . $class . "\">" . $content . "</div>";
+			
+			if ($last == false) {
+				echo "<div class=\"stepContent\">";
+			}
 		}
 	}
 	
@@ -1321,7 +1325,7 @@ ob_start();
 			
 			if (exist($table, "position", $nextPage) == false && $moduleData['test'] == "1") {
 				if ($moduleData['reference'] == "0" && $accessArray[$id]['testStatus'] != "F") {
-					$alert = "return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')";
+					$alert = " onclick=\"return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')\"";
 				} else {
 					$alert = false;
 				}
@@ -2923,7 +2927,7 @@ ob_start();
 		if (isset($_SESSION['MM_UserGroup'])) {
 			switch ($_SESSION['MM_UserGroup']) {
 				case "Organization Administrator" :
-					$allowedArray = array("modifyModule", "moduleStatistics", "moduleAvailability", "moduleDetails", "manageThisUser");
+					$allowedArray = array("modifyModule", "moduleStatistics", "moduleAvailability", "moduleDetails", "manageThisUser", "manageThisOrganization", "manageAllOrganizationCommunication");
 					
 					if (in_array($access, $allowedArray)) {
 						if ($access == "manageThisUser") {
@@ -2931,6 +2935,19 @@ ob_start();
 							$userDataGrabber = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'", "raw");
 							
 							if ($userData = mysql_fetch_array($userDataGrabber) && $userData['organization'] == $currentUser['organization']) {
+								return true;
+							} else {
+								return false;
+							}
+						} else {
+							return true;
+						}
+						
+						if ($access == "manageThisOrganization") {
+							$userData = userData();
+							$organizationDataGrabber = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'", "raw");
+							
+							if ($organizationData = mysql_fetch_array($organizationDataGrabber) && $userData['organization'] == $organizationData['id']) {
 								return true;
 							} else {
 								return false;
@@ -2946,7 +2963,7 @@ ob_start();
 					break;
 				
 				case "Site Administrator" :
-					$allowedArray = array("assignOrganization","modifyModule", "moduleStatistics", "manageAllUsers", "manageThisUser", "manageAllOrganizations");
+					$allowedArray = array("assignOrganization","modifyModule", "moduleStatistics", "manageAllUsers", "manageThisUser", "manageAllOrganizations", "manageAllCommunication");
 					
 					if (in_array($access, $allowedArray)) {
 						return true;

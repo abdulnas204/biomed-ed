@@ -48,6 +48,20 @@
 	
 //Delete a user
 	if ($userData['id'] != $_GET['id']) {
+		$currentUser = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
+		
+		if ($currentUser['role'] == "Organization Administrator") {
+			$organizationData = query("SELECT * FROM `users` WHERE `organization` = '{$currentUser['organization']}' AND `role` = 'Organization Administrator'", "num");
+			
+			if ($organizationData > 1) {
+				$adminStripGrabber = query("SELECT * FROM `organizations` WHERE `id` = '{$currentUser['organization']}'");
+				$adminStrip = str_replace($currentUser['id'] . ",", "", $adminStripGrabber['admin']);
+				query("UPDATE `organizations` SET `admin` = '{$adminStrip}' WHERE `id` = '{$currentUser['organization']}'");
+			} else {
+				redirect($_SERVER['PHP_SELF'] . "?error=noAdmin");
+			}
+		}
+		
 		delete("users", "index.php");
 	}
 	
@@ -70,6 +84,7 @@
 //Display message updates
 	message("inserted", "user", "success", "The user was created");
 	message("updated", "user", "success", "The user was modified");
+	message("error", "noAdmin", "error", "This user could not be deleted, since it would have their organization without an administrator.");
 	
 //Users table
 	if (!access("manageAllUsers")) {
@@ -90,7 +105,7 @@
 		echo "<div spry:state=\"loadingData\" class=\"noResults\">Loading Users...</div>";
 		
 	//Users table
-		echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tbody><tr><th width=\"200\" class=\"tableHeader\">" . URL("Name", "javascript:void", "descending", false, false, false, false, false, false, " id=\"name\" spry:sort=\"name\" onclick=\"toggleClass(this.id);\"") . "</th><th width=\"150\" spry:sort=\"emailAddress\" class=\"tableHeader\">Email Address</th><th width=\"175\" spry:sort=\"phone\" class=\"tableHeader\">Role</th><th width=\"200\" spry:sort=\"administrators\" class=\"tableHeader\">Organization</th><th width=\"50\" class=\"tableHeader\">Statistics</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+		echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tr><th width=\"200\" class=\"tableHeader\">" . URL("Name", "javascript:void", "descending", false, false, false, false, false, false, " id=\"name\" spry:sort=\"name\" onclick=\"toggleClass(this.id);\"") . "</th><th width=\"150\" spry:sort=\"emailAddress\" class=\"tableHeader\">Email Address</th><th width=\"175\" spry:sort=\"phone\" class=\"tableHeader\">Role</th><th width=\"200\" spry:sort=\"administrators\" class=\"tableHeader\">Organization</th><th width=\"50\" class=\"tableHeader\">Statistics</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
 		echo "<tr spry:repeat=\"pvUsers\" spry:odd=\"odd\" spry:even=\"even\">";
 		echo "<td width=\"200\">" . URL("{pvUsers::name}", "profile.php?id={pvUsers::id}") . "</td>";
 		echo "<td width=\"150\">" . URL("{pvUsers::email}", "../communication/send_email.php?type=user&id={pvUsers::id}") . "</td>";

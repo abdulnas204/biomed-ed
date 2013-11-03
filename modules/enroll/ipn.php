@@ -97,20 +97,21 @@
 						$currentModules[$item] = $module;
 					}
 					
-					$modules = serialize($currentModules);
-					$purchasedModules = serialize($userModules); 					
 					$userID = $userData['id'];
+					$modules = serialize($currentModules);
+					$purchasedModules = serialize($userModules);
+					$date = strtotime("now");
 					
 					mysql_query("UPDATE `users` SET `modules` = '{$modules}' WHERE `id` = '{$userID}'", $connDBA);
 					mysql_query("INSERT INTO `billing` (
-								`id`, `ownerUser`, `ownerOrganization`, `items`, `price`, `transactionID`
+									`id`, `ownerUser`, `ownerOrganization`, `items`, `price`, `date`, `transactionID`
 								) VALUES (
-								NULL, '{$userID}', '', '{$purchasedModules}', '{$total}', '{$txn_id}'
+									NULL, '{$userID}', '', '{$purchasedModules}', '{$total}', '{$date}', '{$txn_id}'
 								)", $connDBA);
 								
 					redirect("../index.php");
 				} else {
-					error("The payment gateway credentials from the gateway do not match the payment credentials from the system." . $payment_status . "Completed" . exist("billing", "transactionID", $txn_id) . $payment_amount . $total . $payment_currency . "USD" . $paymentData['business'] . $receiver_email . $payer_email . $userData['emailAddress1']);
+					error("The payment gateway credentials from the gateway do not match the payment credentials from the system.");
 				}
 				
 			} else if (strcmp ($res, "INVALID") == 0) {

@@ -69,7 +69,7 @@
 			echo "<div spry:state=\"loadingData\" class=\"noResults\">Loading Organizations...</div>";
 			
 		//Organizations table
-			echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tbody><tr><th width=\"200\" spry:sort=\"name\" class=\"tableHeader\">Name</th><th width=\"150\" spry:sort=\"emailAddress\" class=\"tableHeader\">Email Address</th><th width=\"175\" spry:sort=\"phone\" class=\"tableHeader\">Phone Number</th><th width=\"200\" spry:sort=\"administrators\" class=\"tableHeader\">Administrators</th><th width=\"50\" class=\"tableHeader\">Statistics</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+			echo "<table spry:state=\"loaded\" spry:if=\"{ds_UnfilteredRowCount} > 0\" class=\"dataTable\"><tr><th width=\"200\" spry:sort=\"name\" class=\"tableHeader\">Name</th><th width=\"150\" spry:sort=\"emailAddress\" class=\"tableHeader\">Email Address</th><th width=\"175\" spry:sort=\"phone\" class=\"tableHeader\">Phone Number</th><th width=\"200\" spry:sort=\"administrators\" class=\"tableHeader\">Administrators</th><th width=\"50\" class=\"tableHeader\">Statistics</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
 			echo "<tr spry:repeat=\"pvOrganizations\" spry:odd=\"odd\" spry:even=\"even\">";
 			echo "<td width=\"200\">{pvOrganizations::name}</td>";
 			echo "<td width=\"150\">" . URL("{pvOrganizations::email}", "../communication/send_email.php?type=organization&id={pvOrganizations::id}") . "</td>";
@@ -150,6 +150,7 @@
 				case "America/Chicago" : echo "Central Time Zone"; break;
 				case "America/Denver" : echo "Mountain Time Zone"; break;
 				case "America/Los_Angeles" : echo "Pacific Time Zone"; break;
+				case "America/Juneau" : echo "Alaskan Time Zone"; break;
 				case "Pacific/Honolulu" : echo "Hawaii-Aleutian Time Zone"; break;
 			}
 			
@@ -157,6 +158,7 @@
 		
 		echo "</blockquote>";
 		
+	//Organization contact information
 		catDivider("Contact Information", "two");
 		echo "<blockquote>";
 		directions("Phone Number");
@@ -182,8 +184,79 @@
 		$text = $organizationInfo['mailingAddress1'] . $moreAddress . "<br />" . $organizationInfo['mailingCity'] . ", " . $organizationInfo['mailingState'] . " " . $organizationInfo['mailingZIP'];
 		
 		echo URL($text, $URL, false, "_blank");
-		
 		echo "</p></blockquote>";
+		directions("Billing Phone Number");
+		echo "<blockquote><p>";
+		echo $organizationInfo['billingPhone'];
+		echo "</p></blockquote>";
+		directions("Billing Fax Number");
+		echo "<blockquote><p>";
+		echo $organizationInfo['billingFax'];
+		echo "</p></blockquote>";
+		directions("Billing Address");
+		echo "<blockquote><p>";
+		
+		if ($organizationInfo['billingAddress2'] != "") {
+			$link = $organizationInfo['billingAddress2'] . " ";
+			$moreAddress = "<br />" . $organizationInfo['billingAddress2'];
+		}	else {
+			$link = "";
+			$moreAddress = "";
+		}
+		
+		$URL = "http://maps.google.com/maps?q=" . urlencode($organizationInfo['billingAddress1'] . " " . $link . $organizationInfo['billingCity'] . ", " . $organizationInfo['billingState'] . " " . $organizationInfo['billingZIP']);
+		$text = $organizationInfo['billingAddress1'] . $moreAddress . "<br />" . $organizationInfo['billingCity'] . ", " . $organizationInfo['billingState'] . " " . $organizationInfo['billingZIP'];
+		
+		echo URL($text, $URL, false, "_blank");
+		echo "</p></blockquote>";
+		directions("Billing Email Address");
+		echo "<blockquote><p>";
+		echo URL($organizationInfo['billingEmail'], "../communication/send_email.php?type=organization&id=" . $organizationInfo['id'] . "&limit=billing");
+		echo "</p></blockquote></blockquote>";
+		
+	//Organization billing history
+		catDivider("Billing History", "three");
+		
+		if ($historyGrabber = query("SELECT * FROM `billing` WHERE `ownerOrganization` = '{$organizationInfo['id']}' ORDER BY `id` DESC LIMIT 5", "raw")) {
+			$historyCount = query("SELECT * FROM `billing` WHERE `ownerOrganization` = '{$organizationInfo['id']}' ORDER BY `id` DESC LIMIT 5", "num");
+			$count = 1;
+			
+			if ($historyCount == 1) {
+				$word = " payment";
+			} else {
+				$word = " payments";
+			}
+			
+			echo "<blockquote>";
+			echo "<p>Showing information from the last " . $historyCount . $word . ".</p>";
+			echo "<table class=\"dataTable\"><tbody><tr><th class=\"tableHeader\">Product</th><th width=\"200\" class=\"tableHeader\">Date</th><th width=\"200\" class=\"tableHeader\">Transaction ID</th><th width=\"100\" class=\"tableHeader\">Amount</th><th width=\"50\" class=\"tableHeader\">Details</th></tr>";
+			
+			while ($history = mysql_fetch_array($historyGrabber)) {
+				echo "<tr";
+				if ($count & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+				echo "<td>" . unserialize($history['items']) . "</td>";
+				echo "<td width=\"200\">" . date("F j, Y", $history['date']) . "</td>";
+				echo "<td width=\"200\">" . $history['transactionID'] . "</td>";
+				echo "<td width=\"100\">\$" . $history['price'] . "</td>";
+				echo "<td width=\"50\">" . URL("", "manage_billing.php?detail=" . $history['id'], "action discover") . "</td>";
+				echo "</tr>";
+				
+				$count++;
+			}
+			
+			echo "</table>";
+			
+			if ($historyCount > 5) {
+				echo "<br />";
+				echo URL("View More Transactions", "manage_organization.php");
+			}
+			
+			echo "</blockquote>";
+		} else {
+			echo "<div class=\"noResults\">This organization does not have any billing history.</div>";
+		}
+		
+		catDivider(false, false, false, true);
 	}
 
 //Include the footer

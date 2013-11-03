@@ -1,223 +1,140 @@
-<?php require_once('../system/connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
 <?php
-//Grant access to this page an it is defined and the organizations exists
-	if (isset ($_GET['id'])) {
-		$id = $_GET['id'];
-		$organizationGrabber = mysql_query("SELECT * FROM organizations WHERE id = '{$id}'", $connDBA);
-		if ($organizationCheck = mysql_fetch_array($organizationGrabber)) {
-			$organization = $organizationCheck;
-		} else {
-			$organization = false;
-			header("Location: index.php");
-			exit;
-		}
+//Header functions
+	require_once('../system/connections/connDBA.php');
+	
+//Grant access to this page if aa organization is defined and the organization exists
+	if (exist("organizations", "id", $_GET['id'])) {
+		$organization = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'");
 	} else {
-		header("Location: index.php");
-		exit;
+		redirect("../portal/index.php");
 	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title($organization['organization']); ?>
-<?php headers(); ?>
-<script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
-<script src="../../javascripts/common/warningDelete.js" type="text/javascript"></script>
-</head>
-
-<body>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2><?php echo $organization['organization']; ?></h2>
-<p>&nbsp;</p>
-<?php 
-	echo "<div class=\"toolBar\"><a class=\"toolBarItem editTool\" href=\"manage_user.php?id=" . $organization['id'] . "\">Edit this Organization</a><a class=\"toolBarItem deleteTool\" a href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&id=" . $organization['id'] . "', 'organization')\">Delete this Organization</a></div>";
-?>
-<br />
-<div class="catDivider one">Organization Information</div>
-<div class="stepContent">
-<table width="100%">
-  <tr>
-    <td width="200"><div align="right">Organization:</div></td>
-    <td><?php echo $organization['organization']; ?></td>
-  </tr>
-  <?php
-  //If an ID is configured
-	  if ($organization['organizationID'] != "") {
-		  echo "<tr>
-			  <td><div align=\"right\">Organization ID:</div></td>
-			  <td>" . $organization['organizationID'] . "</td>
-		  </tr>";
-	  }
-  ?>  
-  <tr>
-    <td width="200"><div align="right">Administrator<?php if (sizeof(explode(",", $organization['admin'])) > 1) {echo "s";} ?>:</div></td>
-    <td>
-	<?php
-		$administrators = "";
+	
+	headers($organization['organization'], "Site Administrator");
+	
+//Title
+	title($organization['organization'], false);
+	
+//Admin toolbar
+	echo "<div class=\"toolBar\">";
+	echo URL("Edit this Organization", "manage_organization.php?id=" . $organization['id'], "toolBarItem editTool");
+	echo URL("Delete this Organization", "index.php?action=delete&id=" . $organization['id'], "toolBarItem deleteTool", false, false, true);
+	echo "</div><br />";
+	
+//Organization Information
+	catDivider("Organization Information", "one", true);
+	echo "<blockquote>";
+	directions("Administrators");
+	echo "<blockquote>";
+	
+	$administrators = "<p>";
+	
+	foreach (explode(",", $organizationInfo['admin']) as $administratorID) {
+		$administratorData = query("SELECT * FROM `users` WHERE `id` = '{$administratorID}'");
+		$administrators .= URL($administratorData['firstName'] . " " . $administratorData['lastName'], "../users/profile.php?id=" . $administratorData['id']) . ", ";
+	}
+	
+	echo rtrim($administrators, ", ") . "</p>";
+	echo "</blockquote>";
+	directions("Contract Start");
+	echo "<blockquote><p>";
+	echo date("F j, Y", $organizationInfo['contractStart']);
+	echo "</p></blockquote>";
+	directions("Contract End");
+	echo "<blockquote><p>";
+	echo date("F j, Y", $organizationInfo['contractEnd']);
+	echo "<br />";
+	echo dateDifference($organizationInfo['contractEnd'], strtotime("now"), "days") . " Until Expires";
+	echo "</p></blockquote>";
+	directions("Specialty");
+	echo "<blockquote><p>";
+	echo URL($organizationInfo['specialty'], "http://www.google.com/search?q=" . urlencode($organizationInfo['specialty']), false, "_blank");
+	echo "</p></blockquote>";
+	
+	if (!empty($organizationInfo['webSite'])) {
+		directions("Website");
+		echo "<blockquote><p>";
+		echo URL($organizationInfo['webSite'], $organizationInfo['webSite'], false, "_blank");
+		echo "</p></blockquote>";
+	}
+	
+	directions("Time Zone");
+	echo "<blockquote><p>";
 		
-		foreach (explode(",", $organization['admin']) as $administratorID) {
-			$administratorDataGrabber = mysql_query("SELECT * FROM `users` WHERE `id` = '{$administratorID}'", $connDBA);
-			$administratorData = mysql_fetch_array($administratorDataGrabber);
-			
-			$administrators .= "<a href=\"../users/profile.php?id=" . $administratorData['id'] . "\">" . $administratorData['firstName'] . " " . $administratorData['lastName'] . "</a>, ";
+		switch($organizationInfo['timeZone']) {
+			case "America/New_York" : echo "Eastern Time Zone"; break;
+			case "America/Chicago" : echo "Central Time Zone"; break;
+			case "America/Denver" : echo "Mountain Time Zone"; break;
+			case "America/Los_Angeles" : echo "Pacific Time Zone"; break;
+			case "America/Juneau" : echo "Alaskan Time Zone"; break;
+			case "Pacific/Honolulu" : echo "Hawaii-Aleutian Time Zone"; break;
 		}
 		
-		echo rtrim($administrators, ", ");
-	?>
-    </td>
-  </tr>
-  <?php
-  //If a type is configured
-	  if ($organization['type'] != "") {
-		  echo "<tr>
-			  <td><div align=\"right\">Type:</div></td>
-			  <td>" . $organization['type'] . "</td>
-		  </tr>";
-	  }
-  ?>
-  <?php
-  //If a website is configured
-	  if ($organization['webSite'] != "") {
-		  echo "<tr>
-			  <td><div align=\"right\">Website:</div></td>
-			  <td><a href=\"" . $organization['webSite'] . "\" target=\"_blank\">" . $organization['webSite'] . "</a></td>
-		  </tr>";
-	  }
-  ?>
-</table>
-</div>
-<div class="catDivider two">Contact Information</div>
-<div class="stepContent">
-<?php
-//Display contact info only if avaliable
-	if ($organization['phone'] == "" || $organization['mailingAddress1'] == "" || $organization['mailingCity'] == "" || $organization['mailingState'] == "" || $organization['mailingZIP'] == "" || $organization['billingAddress1'] == "" || $organization['billingCity'] == "" || $organization['billingState'] == "" || $organization['billingZIP'] == "" || $organization['billingPhone'] == "" || $organization['billingFax'] == "" || $organization['billingEmail'] == "") {
-		echo "<p><div class=\"noResults\">Awaiting information</div></p></div>
-				<div class=\"catDivider three\">Finish</div>
-				<div class=\"stepContent\">
-				  <blockquote>
-					<p><input name=\"finish\" id=\"finish\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Finish\" type=\"button\"></p>
-				  </blockquote>
-				</div>";
-	} else {
-?>
-    <table width="100%">
-    <tr>
-      <td width="200"><div align="right">Phone Number:</div></td>
-      <td><?php echo $organization['phone']; ?></td>
-    </tr>
-    <tr>
-      <td width="200"><div align="right">Billing Phone Number:</div></td>
-      <td><?php echo $organization['billingPhone']; ?></td>
-    </tr>
-    <tr>
-      <td width="200"><div align="right">Billing Fax Number:</div></td>
-      <td><?php echo $organization['billingFax']; ?></td>
-    </tr>
-<?php
-	//Do not repeat the mailing and billing addresses if they are the same
-		if ($organization['mailingAddress1'] == $organization['billingAddress1'] && $organization['mailingAddress2'] == $organization['billingAddress2'] && $organization['mailingCity'] == $organization['billingCity'] && $organization['mailingState'] == $organization['billingState'] && $organization['mailingZIP'] == $organization['billingZIP']) {
-?>
-	<tr>
-      <td width="200"><div align="right">Address:</div></td>
-      <td>
-	  <?php
-		  if ($organization['mailingAddress2'] != "") {
-			  $link = $organization['mailingAddress2'] . " ";
-		  }	else {
-			  $link = "";
-		  }
-		  
-		 echo "<a href=\"http://maps.google.com/maps?q=" . urlencode($organization['mailingAddress1'] . " " . $link . $organization['mailingCity'] . ", " . $organization['mailingState'] . " " . $organization['mailingZIP']) . "\" target=\"_blank\">" . $organization['mailingAddress1'];
-		  
-		  if ($organization['mailingAddress2'] != "") {
-			  echo "<br />" .$organization['mailingAddress2'];
-		  }
-		  
-		  echo "<br />" . $organization['mailingCity'] . ", " . $organization['mailingState'] . " " . $organization['mailingZIP'];
-	  ?></td>
-    </tr>
-<?php
-		} else {
-?>
-
-	<tr>
-      <td width="200"><div align="right">Mailing Address:</div></td>
-      <td>
-	  <?php
-		  if ($organization['mailingAddress2'] != "") {
-			  $link = $organization['mailingAddress2'] . " ";
-		  }	else {
-			  $link = "";
-		  }
-		  
-		 echo "<a href=\"http://maps.google.com/maps?q=" . urlencode($organization['mailingAddress1'] . " " . $link . $organization['mailingCity'] . ", " . $organization['mailingState'] . " " . $organization['mailingZIP']) . "\" target=\"_blank\">" . $organization['mailingAddress1'];
-		  
-		  if ($organization['mailingAddress2'] != "") {
-			  echo "<br />" .$organization['mailingAddress2'];
-		  }
-		  
-		  echo "<br />" . $organization['mailingCity'] . ", " . $organization['mailingState'] . " " . $organization['mailingZIP'];
-	  ?></td>
-    </tr>
-    <tr>
-      <td width="200"><div align="right">Billing Address:</div></td>
-      <td>
-	  <?php
-		  if ($organization['billingAddress2'] != "") {
-			  $link = $organization['billingAddress2'] . " ";
-		  }	else {
-			  $link = "";
-		  }
-		    
-		  echo "<a href=\"http://maps.google.com/maps?q=" . urlencode($organization['billingAddress1'] . " " . $link . $organization['billingCity'] . ", " . $organization['billingState'] . " " . $organization['billingZIP']) . "\" target=\"_blank\">" . $organization['billingAddress1'];
-		  
-		  if ($organization['billingAddress2'] != "") {
-			  echo "<br />" .$organization['billingAddress2'];
-		  }
-		  
-		  echo "<br />" . $organization['billingCity'] . ", " . $organization['billingState'] . " " . $organization['billingZIP'] . "</a>";
-	  ?></td>
-    </tr>
-<?php
-		}
-?>
-  </table>
-</div>
-<div class="catDivider three">Contract Information</div>
-<div class="stepContent">
-  <table width="100%">
-  	<tr>
-      <td width="200"><div align="right">Contract Start:</div></td>
-      <td><?php echo $organization['contractStart']; ?></td>
-    </tr>
-    <tr>
-      <td width="200"><div align="right">Contract End (next bill due):</div></td>
-      <td><?php echo $organization['contractEnd']; ?></td>
-    </tr>
-    <tr>
-      <td width="200"><div align="right">Active:</div></td>
-      <td>
-	  <?php
-		  if ($organization['active'] == "1") {
-			  echo "Yes";
-		  } else {
-			  echo "No";
-		  }
-	  ?>
-      </td>
-    </tr>
-  </table>
-</div>
-<div class="catDivider four">Finish</div>
-<div class="stepContent">
-  <blockquote>
-    <p><input name="finish" id="finish" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Finish" type="button"></p>
-  </blockquote>
-</div>
-<?php			
+	echo "</p></blockquote>";
+	
+	echo "</blockquote>";
+	
+//Organization contact information
+	catDivider("Contact Information", "two");
+	echo "<blockquote>";
+	directions("Phone Number");
+	echo "<blockquote><p>";
+	echo $organizationInfo['phone'];
+	echo "</p></blockquote>";
+	directions("Fax Number");
+	echo "<blockquote><p>";
+	echo $organizationInfo['fax'];
+	echo "</p></blockquote>";
+	directions("Address");
+	echo "<blockquote><p>";
+	
+	if ($organizationInfo['mailingAddress2'] != "") {
+		$link = $organizationInfo['mailingAddress2'] . " ";
+		$moreAddress = "<br />" . $organizationInfo['mailingAddress2'];
+	}	else {
+		$link = "";
+		$moreAddress = "";
 	}
+	
+	$URL = "http://maps.google.com/maps?q=" . urlencode($organizationInfo['mailingAddress1'] . " " . $link . $organizationInfo['mailingCity'] . ", " . $organizationInfo['mailingState'] . " " . $organizationInfo['mailingZIP']);
+	$text = $organizationInfo['mailingAddress1'] . $moreAddress . "<br />" . $organizationInfo['mailingCity'] . ", " . $organizationInfo['mailingState'] . " " . $organizationInfo['mailingZIP'];
+	
+	echo URL($text, $URL, false, "_blank");
+	echo "</p></blockquote>";
+	directions("Billing Phone Number");
+	echo "<blockquote><p>";
+	echo $organizationInfo['billingPhone'];
+	echo "</p></blockquote>";
+	directions("Billing Fax Number");
+	echo "<blockquote><p>";
+	echo $organizationInfo['billingFax'];
+	echo "</p></blockquote>";
+	directions("Billing Address");
+	echo "<blockquote><p>";
+	
+	if ($organizationInfo['billingAddress2'] != "") {
+		$link = $organizationInfo['billingAddress2'] . " ";
+		$moreAddress = "<br />" . $organizationInfo['billingAddress2'];
+	}	else {
+		$link = "";
+		$moreAddress = "";
+	}
+	
+	$URL = "http://maps.google.com/maps?q=" . urlencode($organizationInfo['billingAddress1'] . " " . $link . $organizationInfo['billingCity'] . ", " . $organizationInfo['billingState'] . " " . $organizationInfo['billingZIP']);
+	$text = $organizationInfo['billingAddress1'] . $moreAddress . "<br />" . $organizationInfo['billingCity'] . ", " . $organizationInfo['billingState'] . " " . $organizationInfo['billingZIP'];
+	
+	echo URL($text, $URL, false, "_blank");
+	echo "</p></blockquote>";
+	directions("Billing Email Address");
+	echo "<blockquote><p>";
+	echo URL($organizationInfo['billingEmail'], "../communication/send_email.php?type=organization&id=" . $organizationInfo['id'] . "&limit=billing");
+	echo "</p></blockquote></blockquote>";
+	
+	catDivider("Submit", "five");
+	echo "<blockquote><p>";
+	button("cancel", "cancel", "Cancel", "cancel", "index.php");
+	echo "</p></blockquote>";
+	catDivider(false, false, false, true);
+	
+//Include the footer
+	footer();
 ?>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>

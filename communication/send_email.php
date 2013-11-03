@@ -1,10 +1,18 @@
 <?php
 //Header functions
 	require_once('../system/connections/connDBA.php');
-	headers("Send an Email", "Site Administrator", "tinyMCEAdvanced,validate,optionTransfer", true, " onload=\"opt.init(document.forms[0])\"");
+	headers("Send an Email", "Organization Administrator,Site Administrator", "tinyMCEAdvanced,validate,optionTransfer", true, " onload=\"opt.init(document.forms[0])\"");
 	
 //Grab the required values for the selection fields
 	if (isset($_GET['type'])) {
+		$userInfo = userData();
+		
+		if (!access("manageAllCommunication")) {
+			$usersSQL = " WHERE `organization` = '{$userInfo['organization']}' OR '0'";
+		} else {
+			$usersSQL = "";
+		}
+		
 		$potentialValuesPrep = "";
 		$potentialIDsPrep = "";
 		
@@ -14,8 +22,16 @@
 				$toUsersGrabber = query("SELECT * FROM `users` ORDER BY `lastName` ASC", "raw");
 				
 				while($users = mysql_fetch_array($notToUsersGrabber)) {
-					$potentialValuesPrep .= $users['firstName'] . " " . $users['lastName'] . ",";
-					$potentialIDsPrep .= $users['firstName'] . " " . $users['lastName'] . " <" . $users['emailAddress1'] . ">,";
+					if (($users['organization'] == "0" && ($users['role'] == "Site Administrator" || $users['role'] == "Site Manager")) || ($users['organization'] != "0")) {
+						if (!access("manageAllCommunication") && ($users['role'] == "Site Administrator" || $users['role'] == "Site Manager")) {
+							$role = " (" . $users['role'] . ")";
+						} else {
+							$role = "";
+						}
+						
+						$potentialValuesPrep .= $users['firstName'] . " " . $users['lastName'] . $role . ",";
+						$potentialIDsPrep .= $users['firstName'] . " " . $users['lastName'] . " <" . $users['emailAddress1'] . ">,";
+					}
 				}
 				
 				break;
@@ -35,6 +51,16 @@
 				$potentialValuesPrep = "Administrative Assistants,Instructorial Assisstants,Instructors,Organization Administrators,Site Administrators,Site Managers,Students,";
 				$potentialIDsPrep = "Administrative Assistant,Instructorial Assisstant,Instructor,Organization Administrator,Site Administrator,Site Manager,Student,";
 				
+				break;
+			
+			case "all" :
+				break;
+				
+			case "allOrganizations" && access("manageAllCommunication") :
+				break;
+				
+			default :
+				redirect("send_email.php");
 				break;
 		}
 		
@@ -189,7 +215,7 @@
 			}
 			
 			if ($userData['emailAddress2'] == "" && $userData['emailAddress3'] == "") {
-				hidden("toList", "toList", $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">");
+				hidden("from", "from", $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">");
 				hidden("userData", "userData", $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">");
 				echo "<strong>" . $userData['firstName'] . " " . $userData['lastName'] . " &lt;" . $userData['emailAddress1'] . "&gt;</strong>";
 			} else {
@@ -299,7 +325,7 @@
 		button("submit", "submit", "Submit", "submit");
 		button("reset", "reset", "Reset", "reset");
 		button("cancel", "cancel", "Cancel", "cancel", "index.php");
-		echo "</p>";
+		echo "</p></blockquote>";
 		closeForm(true, true);
 //Redirect if the requested type doesn't exist
 	} else {

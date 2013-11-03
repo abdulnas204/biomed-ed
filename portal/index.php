@@ -97,9 +97,11 @@
 	}
 	
 //Display annoumcements
-	$announcementsCheck = mysql_query("SELECT * FROM `announcements`", $connDBA);
+	$userData = userData();
+	$table = "announcements_" . $userData['organization'];
+	$announcementsCheck = mysql_query("(SELECT * FROM `announcements_0`) UNION (SELECT * FROM `{$table}`)", $connDBA);
 	
-	if (mysql_fetch_array($announcementsCheck)) {
+	if (mysql_fetch_array($announcementsCheck)) {		
 		$limit = 1;
 		$time = getdate();
 		
@@ -115,7 +117,7 @@
 		$role = $_SESSION['MM_UserGroup'];
 		$userDataGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$userName}'", $connDBA);
 		$userData = mysql_fetch_array($userDataGrabber);
-		$announcementsGrabber = mysql_query("SELECT * FROM `announcements` ORDER BY `position` ASC", $connDBA);
+		$announcementsGrabber = mysql_query("(SELECT * FROM `announcements_0` ORDER BY `position` ASC) UNION (SELECT * FROM `{$table}` ORDER BY `position` ASC)", $connDBA);
 		
 		function announcements() {
 			global $limit;
@@ -161,7 +163,7 @@
 					} break;
 					
 				case "All Organizations" : 
-					if ($userData['organization'] != "1") {
+					if ($userData['organization'] != "0") {
 						if ($limit++ == 1) {
 							echo "<p class=\"homeDivider\">Announcements</p>";
 						}
@@ -234,7 +236,7 @@
 			chart("line", "overall");
 		
 		//Site layout
-		   echo"</div><div class=\"dataRight\">";
+		   echo "</div><div class=\"dataRight\">";
 		   
 		//Select all users from the site
 			users();

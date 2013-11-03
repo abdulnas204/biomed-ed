@@ -3,17 +3,20 @@
 	require_once('../system/connections/connDBA.php');
 	
 //Check to see if the announcement is being edited
+	$userInfo = userData();
+	$table = "announcements_" . $userInfo['organization'];
+	
 	if (isset ($_GET['id']) && isset($_GET['type'])) {
 		$announcement = $_GET['id'];
 		
-		if ($announcementCheck = query("SELECT * FROM `announcements` WHERE `id` = '{$announcement}'")) {
+		if ($announcementCheck = query("SELECT * FROM `{$table}` WHERE `id` = '{$announcement}'")) {
 			if ($announcementCheck['display'] == "Selected Users" && $_GET['type'] == "users") {
 				$announcement = $announcementCheck;
 			} elseif ($announcementCheck['display'] == "All Users" && $_GET['type'] == "all") {
 				$announcement = $announcementCheck;
-			} elseif ($announcementCheck['display'] == "Selected Organizations" && $_GET['type'] == "organizations") {
+			} elseif ($announcementCheck['display'] == "Selected Organizations" && $_GET['type'] == "organizations" && access("manageAllCommunication")) {
 				$announcement = $announcementCheck;
-			} elseif ($announcementCheck['display'] == "All Organizations" && $_GET['type'] == "allOrganizations") {
+			} elseif ($announcementCheck['display'] == "All Organizations" && $_GET['type'] == "allOrganizations" && access("manageAllCommunication")) {
 				$announcement = $announcementCheck;
 			} elseif ($announcementCheck['display'] == "Selected Roles" && $_GET['type'] == "roles") {
 				$announcement = $announcementCheck;
@@ -31,10 +34,16 @@
 		$title =  "Create a New Announcement";
 	}
 	
-	headers($title, "Site Administrator", "tinyMCEAdvanced,validate,optionTransfer,enableDisable,calendar", true, " onload=\"opt.init(document.forms[0])\"");
+	headers($title, "Organization Administrator,Site Administrator", "tinyMCEAdvanced,validate,optionTransfer,enableDisable,calendar", true, " onload=\"opt.init(document.forms[0])\"");
 	
 //Grab the required values for the selection fields
 	if (isset($_GET['type'])) {
+		if (!access("manageAllCommunication")) {
+			$usersSQL = " WHERE `organization` = '{$userInfo['organization']}' AND `role` != 'Site Administrator' OR 'Site Manager'";
+		} else {
+			$usersSQL = "";
+		}
+		
 		$potentialValuesPrep = "";
 		$potentialIDsPrep = "";
 		$selectedValuesPrep = "";
@@ -42,8 +51,8 @@
 		
 		switch ($_GET['type']) {
 			case "users" :                       
-				$notToUsersGrabber = query("SELECT * FROM `users` ORDER BY `lastName` ASC", "raw");
-				$toUsersGrabber = query("SELECT * FROM `users` ORDER BY `lastName` ASC", "raw");
+				$notToUsersGrabber = query("SELECT * FROM `users`{$usersSQL} ORDER BY `lastName` ASC", "raw");
+				$toUsersGrabber = query("SELECT * FROM `users`{$usersSQL} ORDER BY `lastName` ASC", "raw");
 				
 				while($users = mysql_fetch_array($notToUsersGrabber)) {
 					if (isset($announcement)) {
@@ -75,7 +84,7 @@
 				
 				break;
 			
-			case "organizations" :                       
+			case "organizations" && access("manageAllCommunication") :                       
 				$notToOrganizationsGrabber = query("SELECT * FROM `organizations` ORDER BY `organization` ASC", "raw");
 				$toOrganizationsGrabber = query("SELECT * FROM `organizations` ORDER BY `organization` ASC", "raw");
 				
@@ -133,12 +142,22 @@
 					createOption("Instructorial Assistant", true);
 					createOption("Instructor", true);
 					createOption("Organization Administrator", true);
+					
+				if (!access("manageAllCommunication")) {
 					createOption("Site Administrator", true);
 					createOption("Site Manager", true);
+				}
+				
 					createOption("Student", true);
 				} else {
-					$potentialValuesPrep = "Administrative Assistants,Instructorial Assisstants,Instructors,Organization Administrators,Site Administrators,Site Managers,Students,";
-					$potentialIDsPrep = "Administrative Assistant,Instructorial Assisstant,Instructor,Organization Administrator,Site Administrator,Site Manager,Student,";
+					if (access("manageAllCommunication")) {
+						$additionalRoles = "Site Administrators,Site Managers,";
+					} else {
+						$additionalRoles = "";
+					}
+					
+					$potentialValuesPrep = "Administrative Assistants,Instructorial Assisstants,Instructors,Organization Administrators,{$additionalRoles}Students,";
+					$potentialIDsPrep = "Administrative Assistant,Instructorial Assisstant,Instructor,Organization Administrator,{$additionalRoles}Student,";
 				}
 				
 				if (isset($announcement)) {	
@@ -146,11 +165,24 @@
 					createOption("Instructorial Assistant", false);
 					createOption("Instructor", false);
 					createOption("Organization Administrator", false);
-					createOption("Site Administrator", false);
-					createOption("Site Manager", false);
+				
+				if (!access("manageAllCommunication")) {
+					createOption("Site Administrator", true);
+					createOption("Site Manager", true);
+				}
 					createOption("Student", false);
 				}
 				
+				break;
+				
+			case "all" :
+				break;
+				
+			case "allOrganizations" && access("manageAllCommunication") :
+				break;
+				
+			default :
+				redirect("manage_announcement.php");
 				break;
 		}
 		
@@ -224,10 +256,10 @@
 		}
 		
 		if (!isset ($announcement)) {			
-			$positionArray = query("SELECT * FROM `announcements` ORDER BY position DESC");
+			$positionArray = query("SELECT * FROM `{$table}` ORDER BY position DESC");
 			$position = $positionArray['position'] + 1;
 			
-			query("INSERT INTO `announcements` (
+			query("INSERT INTO `{$table}` (
 					  `id`, `position`, `visible`, `display`, `to`, `fromDate`, `fromTime`, `toDate`, `toTime`, `title`, `content`
 				  ) VALUES (
 					  NULL, '{$position}', 'on', '{$toDetirmine}', '{$toImport}', '{$fromDate}', '{$fromTime}', '{$toDate}', '{$toTime}', '{$title}', '{$content}'
@@ -235,7 +267,7 @@
 						
 			redirect("index.php?inserted=announcement");
 		} else {			
-			query("UPDATE announcements SET `display` = '{$toDetirmine}', `to` = '{$toImport}', `fromDate` = '{$fromDate}', `fromTime` = '{$fromTime}', `toDate` = '{$toDate}', `toTime` = '{$toTime}', `title` = '{$title}', `content` = '{$content}' WHERE `id` = '{$_GET['id']}'");
+			query("UPDATE `{$table}` SET `display` = '{$toDetirmine}', `to` = '{$toImport}', `fromDate` = '{$fromDate}', `fromTime` = '{$fromTime}', `toDate` = '{$toDate}', `toTime` = '{$toTime}', `title` = '{$title}', `content` = '{$content}' WHERE `id` = '{$_GET['id']}'");
 			
 			redirect("index.php?updated=announcement");
 		}
@@ -250,8 +282,12 @@
 		echo "<blockquote><p>";
 		echo URL("Selected Users", "manage_announcement.php?type=users") . " - Only selected users will recieve this announcement<br />";
 		echo URL("All Users", "manage_announcement.php?type=all") . " - All registered users will recieve this announcement<br />";
-		echo URL("Selected Organizations", "manage_announcement.php?type=organizations") . " - All users within selected organizations will recieve this announcement<br />";
-		echo URL("All Organizations", "manage_announcement.php?type=allOrganizations") . " - All registered organizations will recieve this announcement<br />";
+		
+		if (access("manageAllCommunication")) {
+			echo URL("Selected Organizations", "manage_announcement.php?type=organizations") . " - All users within selected organizations will recieve this announcement<br />";
+			echo URL("All Organizations", "manage_announcement.php?type=allOrganizations") . " - All registered organizations will recieve this announcement<br />";
+		}
+		
 		echo URL("Selected Roles", "manage_announcement.php?type=roles") . " - All users with a selected role will recieve this announcement<br />";
 		echo "</p></blockquote>";
 //Show if the type of announcement is selected
@@ -288,7 +324,7 @@
 		echo "</p></blockquote>";
 		
 		if ($_GET['type'] == "users" || $_GET['type'] == "organizations" || $_GET['type'] == "roles") {
-			hidden("toDetirmine", "toDetirmine", "Selected " . ucfirst($_GET['type']));
+			hidden("toDetirmine", "toDetirmine", $_GET['type']);
 			directions("To", true);
 			echo "<blockquote><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential options:</h3><div class=\"collapseElement\">";
 			textField("placeHolder", "placeHolder", false, false, false, false);
@@ -299,7 +335,7 @@
 			echo " ";
 			button("right", "right", "&gt;&gt;", "button", false, " onclick=\"opt.transferRight()\"");
 			echo "</div></div><div class=\"halfRight\"><h3>Selected options:</h3><div class=\"collapseElement\">";
-			textField("toImport", "toImport", false, false, false, true, false, false, "announcement", "to", " readonly=\"readonly\"");
+			textField("toImport", "toImport", false, false, false, true, false, false, false, false, " readonly=\"readonly\"");
 			echo "</div><div align=\"center\">";
 			dropDown("toList", "toList", $selectedValues, $selectedIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferLeft()\"");
 			echo "<br /><br />";
@@ -362,7 +398,7 @@
 		button("submit", "submit", "Submit", "submit");
 		button("reset", "reset", "Reset", "reset");
 		button("cancel", "cancel", "Cancel", "cancel", "index.php");
-		echo "</p>";
+		echo "</p></blockquote>";
 		closeForm(true, true);
 //Redirect if the requested type doesn't exist
 	} else {

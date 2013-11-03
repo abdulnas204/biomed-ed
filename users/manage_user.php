@@ -50,7 +50,7 @@
 				$sql = "";
 			}
 			
-			if (query("SELECT * FROM `users` WHERE `role` = '{$_SESSION['MM_UserGroup']}'{$sql}") && $userData['id'] == $_GET['id'] && ($_SESSION['MM_UserGroup'] == "Organization Administrator" || $_SESSION['MM_UserGroup'] == "Site Administrator") && $role != $_SESSION['MM_UserGroup']) {
+			if ($administrators = query("SELECT * FROM `users` WHERE `role` = '{$_SESSION['MM_UserGroup']}'{$sql}", "num") && $administrators == "1" && $userData['id'] == $_GET['id'] && ($_SESSION['MM_UserGroup'] == "Organization Administrator" || $_SESSION['MM_UserGroup'] == "Site Administrator") && $role != $_SESSION['MM_UserGroup']) {
 				redirect($_SERVER['REQUEST_URI'] . "&error=noAdmin");
 			}
 		}
@@ -90,9 +90,13 @@
 			$userData = userData();
 			$organization = $userData['organization'];
 		} else {
-			$organizationPrep = mysql_real_escape_string($_POST['organization']);
-			$organizationData = query("SELECT * FROM `organizations` WHERE `organization` = {$organizationPrep}");
-			$organization = $organizationData['id'];
+			if (!empty($_POST['organization']) && $role != "Site Administrator" && $role != "Site Manager") {
+				$organizationPrep = mysql_real_escape_string($_POST['organization']);
+				$organizationData = query("SELECT * FROM `organizations` WHERE `organization` = {$organizationPrep}");
+				$organization = $organizationData['id'];
+			} else {
+				$organization = "0";
+			}
 		}
 		
 		if (!access("manageAllUsers")) {
@@ -110,19 +114,36 @@
 				redirect($_SERVER['REQUEST_URI']);
 			}
 		} else {
-			$staffID = $currentUser['staffID'];
-			$phoneWork = $currentUser['phoneWork'];
-			$phoneHome = $currentUser['phoneHome'];
-			$phoneMobile = $currentUser['phoneMobile'];
-			$phoneFax = $currentUser['phoneFax'];
-			$workLocation = $currentUser['workLocation'];
-			$jobTitle = $currentUser['jobTitle'];
-			$department = $currentUser['department'];
-			$departmentID = $currentUser['departmentID'];
+			if (isset ($user)) {
+				$staffID = $currentUser['staffID'];
+				$phoneWork = $currentUser['phoneWork'];
+				$phoneHome = $currentUser['phoneHome'];
+				$phoneMobile = $currentUser['phoneMobile'];
+				$phoneFax = $currentUser['phoneFax'];
+				$workLocation = $currentUser['workLocation'];
+				$jobTitle = $currentUser['jobTitle'];
+				$department = $currentUser['department'];
+				$departmentID = $currentUser['departmentID'];
+			} else {
+				$staffID = "";
+				$phoneWork = "";
+				$phoneHome = "";
+				$phoneMobile = "";
+				$phoneFax = "";
+				$workLocation = "";
+				$jobTitle = "";
+				$department = "";
+				$departmentID = "";
+			}
 		}
 		
 		if (isset ($user)) {			
-			query("UPDATE `users` SET `staffID` = '{$staffID}', `firstName` = '{$firstName}', `lastName` = '{$lastName}', `userName` = '{$userName}', `password` = '{$password}', `changePassword` = '{$changePassword}', `emailAddress1` = '{$primaryEmail}', `emailAddress2` = '{$secondaryEmail}', `emailAddress3` = '{$tertiaryEmail}', `phoneWork` = '{$phoneWork}', `phoneHome` = '{$phoneHome}', `phoneMobile` = '{$phoneMobile}', `phoneFax` = '{$phoneFax}', `workLocation` = '{$workLocation}', `jobTitle` = '{$jobTitle}', `department` = '{$department}', `departmentID` = '{$departmentID}', `role` = '{$role}' WHERE `id` = '{$_GET['id']}'");
+			query("UPDATE `users` SET `staffID` = '{$staffID}', `firstName` = '{$firstName}', `lastName` = '{$lastName}', `userName` = '{$userName}', `password` = '{$password}', `changePassword` = '{$changePassword}', `emailAddress1` = '{$primaryEmail}', `emailAddress2` = '{$secondaryEmail}', `emailAddress3` = '{$tertiaryEmail}', `phoneWork` = '{$phoneWork}', `phoneHome` = '{$phoneHome}', `phoneMobile` = '{$phoneMobile}', `phoneFax` = '{$phoneFax}', `workLocation` = '{$workLocation}', `jobTitle` = '{$jobTitle}', `department` = '{$department}', `departmentID` = '{$departmentID}', `role` = '{$role}', `organization` = '{$organization}' WHERE `id` = '{$_GET['id']}'");
+			
+			if ($userData['id'] == $_GET['id'] && $role != $_SESSION['MM_UserGroup']) {
+				$_SESSION['MM_UserGroup'] = $role;
+				redirect("../portal/index.php");
+			}
 			
 			redirect("index.php?updated=user");
 		} else {
@@ -271,7 +292,7 @@
 	
 	if (access("manageAllUsers")) {
 		$organizationGrabber = query("SELECT * FROM `organizations`", "raw");
-		$organizationValuesPrep = "- Select -,";
+		$organizationValuesPrep = "- None -,";
 		$organizationIDsPrep = ",";
 		
 		while ($organization = mysql_fetch_array($organizationGrabber)) {
@@ -286,7 +307,7 @@
 		echo "<blockquote>";
 		directions("Assign this user to an organization", true);
 		echo "<blockquote><p>";
-		dropDown("organization", "organization", $organizationValues, $organizationIDs, false, true, false, false, "user", "organization");
+		dropDown("organization", "organization", $organizationValues, $organizationIDs, false, false, false, false, "user", "organization");
 		echo "</p></blockquote></blockquote>";
 	}
 	
