@@ -1,131 +1,68 @@
-<?php require_once('../../system/connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
 <?php
+//Header functions
+	require_once('../../system/connections/connDBA.php');
+	questionAccess();
+	
 //Select all categories
-	$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` ORDER BY position ASC", $connDBA);
-	if (mysql_fetch_array($categoryGrabber)) {
+	if (exist("modulecategories")) {
 	//Use the URL to narrow the categories down on request
 		if (isset ($_GET['id'])) {
 			$id = $_GET['id'];
 			
 		//Display any questions from categories whose questions may have been deleted
 			if ($_GET['id'] == "0") {
-				$currentCategoriesGrabber = mysql_query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", $connDBA);
-				$currentCategories = mysql_fetch_array($currentCategoriesGrabber);
-				$otherQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` ORDER BY `id` ASC", $connDBA);
+				$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
+				$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
 				$count = 0;
 				$sql = "";
 				
 				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (!in_array($otherQuestions['category'], $currentCategories)) {
+					if (inArray($otherQuestions['category'], $currentCategories)) {
 						if ($count == 0) {
-							$sql .= "`category` != '" . $otherQuestions['id'] . "'";
+							$sql .= "`category` != '" . $otherQuestions['category'] . "'";
 						} else {
-							$sql .= " OR `category` != '" . $otherQuestions['id'] . "'";
+							$sql .= " AND `category` != '" . $otherQuestions['category'] . "'";
 						}
 						
 						$count ++;
 					}
 				}
 				
-				$testCheck = mysql_query("SELECT * FROM `questionbank` WHERE {$sql} ORDER BY id ASC", $connDBA);
+				$testImport = query("SELECT * FROM `questionbank` WHERE {$sql} ORDER BY id ASC", "raw");
 					
-				if (!$testCheck) {
-					header("Location: index.php");
-					exit;
+				if (!$testImport) {
+					redirect("index.php");
 				}
-				
-				$testImport = mysql_query("SELECT * FROM `questionbank` WHERE {$sql} ORDER BY id ASC", $connDBA);
 			} else {
-				$testCheck = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", $connDBA);
-				$categoryCheck = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'", $connDBA);
-				$testImport = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", $connDBA);
+				$testImport = query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", "raw");
 				
-				if (!mysql_fetch_array($categoryCheck)) {
-					header ("Location: index.php");
-					unset($_SESSION['bankCategory']);
-					exit;
+				if (!exist("modulecategories", "id", $id)) {
+					redirect("index.php");
 				} else {
-					$bankTitleGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'", $connDBA);
-					$bankTitle = mysql_fetch_array($bankTitleGrabber);
+					$bankTitle = query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'");
 				}
 			}
-			
-			$_SESSION['bankCategory'] = $id;
 		}
 	
 		$categoryResult = 1;
 	} else {
 		$categoryResult = 0;
-		unset($_SESSION['bankCategory']);
 	}
-?>
-<?php
+	
 //Delete a test question
-	if (isset ($_GET['questionID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
-		$getQuestionID = $_GET['questionID'];
-		$questionCheckGrabber = mysql_query("SELECT * FROM questionbank WHERE id = {$getQuestionID}", $connDBA);
-		$questionCheckArray = mysql_fetch_array($questionCheckGrabber);
-		$questionCheckResult = $questionCheckArray['id'];
+	if (isset ($_GET['id']) && isset ($_GET['questionID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
+		$delete = query("SELECT * FROM `questionbank` WHERE `id` = '{$_GET['questionID']}'");
 		
-		if (isset ($questionCheckResult)) {
-			$deleteQuestion = $_GET['questionID'];
-		//Delete from the question bank
-			$deleteQuestionQuery = "DELETE FROM questionbank WHERE id = '{$deleteQuestion}'";
-			$deleteQuestionQueryResult = mysql_query($deleteQuestionQuery, $connDBA);
-			
-		//If this is a file response, delete the answer, if any
-			if ($questionCheckArray['type'] == "File Response" && $questionCheckArray['fileURL'] !== "") {
-				$file = $questionCheckArray['fileURL'];
-				unlink ("../../../modules/questionbank/test/fileresponse/answer/" . $file);
-			}
-
-		//Delete from tests in which this appears
-			$questionBankDeleteGrabber = mysql_query("SELECT * FROM moduledata", $connDBA);
-			
-			while ($questionBankDelete = mysql_fetch_array($questionBankDeleteGrabber)) {
-				$currentTable = strtolower(str_replace(" ", "", $questionBankDelete['name']));
-				$questionGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE `linkID` = '{$deleteQuestion}'");
-				
-				if ($questionArray = mysql_fetch_array($questionGrabber)) {
-					$questionID = $questionArray['id'];
-					$questionPosition = $questionArray['position'];
-					
-					$deleteUpdateQuery = "UPDATE moduletest_{$currentTable} SET position = position-1 WHERE position > '{$questionPosition}'";
-					$deleteBankQuery = "DELETE FROM moduletest_{$currentTable} WHERE id = '{$questionID}'";
-							
-					$deleteBank = mysql_query($deleteBankQuery, $connDBA);
-					$deleteUpdate = mysql_query($deleteUpdateQuery, $connDBA);
-				}
-			}
-			
-		//Detirmine the type of question being deleted			
-			switch ($questionCheckArray['type']) {
-				case "Description" : $typeOutput = "description"; break;
-				case "Essay" : $typeOutput = "essay"; break;
-				case "File Response" : $typeOutput = "file"; break;
-				case "Fill in the Blank" : $typeOutput = "blank"; break;
-				case "Matching" : $typeOutput = "matching"; break;
-				case "Multiple Choice" : $typeOutput = "choice"; break;
-				case "Short Answer" : $typeOutput = "answer"; break;
-				case "True False" : $typeOutput = "truefalse"; break;
-			}	
-			
-			if (isset($_SESSION['bankCategory'])) {
-				header ("Location: index.php?id=" . $_SESSION['bankCategory'] . "&deleted=" . $typeOutput);
-				exit;
+		if ($delete) {
+			if ($delete['type'] == "File Response") {
+				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['questionID'], true, "../questionbank/test/answers/" . $delete['fileURL']);
 			} else {
-				header ("Location: index.php?deleted=" . $typeOutput);
-				exit;
+				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['questionID'], true);
 			}
-		} else {
-			header ("Location: index.php?id=" . $_SESSION['bankCategory']);
-			exit;
 		}
 	}
-?>
-<?php
-//Assign the page title
+	
+//Top Content
 	if (isset ($_GET['id'])) {
 		if ($_GET['id'] == 0) {
 			$title = "Uncategorized Bank";
@@ -135,115 +72,66 @@
 	} else {
 		$title = "Question Bank";
 	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title($title); ?>
-<?php headers(); ?>
-<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
-<script src="../../../javascripts/common/openWindow.js" type="text/javascript"></script>
-</head>
-<body onunload="window.opener.location.reload()"<?php bodyClass(); ?>>
-<?php toolTip(); ?>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-      <h2><?php echo $title; ?></h2>
-      <p>Questions may be created here and be imported into tests when a module is being created. The questions are broken up by their category.</p>
-<p>&nbsp;</p>
-<?php
-//If no categories are present
+	
+	headers($title, "Site Administrator", false, true);
+	
+//Title
+	title($title, "Questions may be created here and be imported into tests when a module is being created. The questions are broken up by their category.");
+
+//Admin toolbar
 	if (isset ($_GET['id'])) {
-		echo "<div class=\"toolBar noPadding\"><form name=\"jump\" onsubmit=\"return errorsOnSubmit(this);\">
-		<span class=\"toolBarItem noLink\">
-		  Add: 
-		  <select name=\"menu\" id=\"menu\">
-			<option value=\"\">- Select Question Type -</option>
-			<option value=\"questions/description.php\">Description</option>
-			<option value=\"questions/essay.php\">Essay</option>
-			<option value=\"questions/file_response.php\">File Response</option>
-			<option value=\"questions/blank.php\">Fill in the Blank</option>
-			<option value=\"questions/matching.php\">Matching</option>
-			<option value=\"questions/multiple_choice.php\">Multiple Choice</option>
-			<option value=\"questions/short_answer.php\">Short Answer</option>
-			<option value=\"questions/true_false.php\">True or False</option>
-		  </select><input type=\"button\" onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\" value=\"Go\" />
-		  </span>";
-		  
-		  echo "<a class=\"toolBarItem back\" href=\"index.php\">Back to Categories</a>";
+		if ($_GET['id'] != "0") {
+			echo "<div class=\"toolBar noPadding\">";
+			form("jump");
+			echo "<span class=\"toolBarItem noLink\">Add: ";
+			dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False, Import from Question Bank", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php,../questions/question_bank.php");
+			button("submit", "submit", "Go", "button", false, " onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\"");
+			echo "</span>";
+			echo URL("Back to Categories", "index.php", "toolBarItem back");
+			
+			if ($testImport) {
+				echo URL("Search", "search.php", "toolBarItem search");
+			}
+			
+			closeForm(false, false); 
+			echo "</div>";
+		} else {
+			echo "<div class=\"toolBar\">";
+			echo URL("Back to Categories", "index.php", "toolBarItem back");
+			
+			if ($testImport) {
+				echo URL("Search", "search.php", "toolBarItem search");
+			}
+			
+			echo "</div>";
+		}
 	 } else {
 		 echo "<div class=\"toolBar\">";
+		 echo URL("Back to Modules", "../index.php", "toolBarItem home");
+		 echo URL("Manage Categories", "../settings.php?type=category", "toolBarItem settings");
+		 
+		 if ($categoryResult != "0") {
+		 	echo URL("Search", "search.php", "toolBarItem search");
+		 }
+		 
+		 echo "</div>";
 	 }
-?><a class="toolBarItem home" href="../index.php">Back to Modules</a><a class="toolBarItem settings" href="../settings.php?type=category">Manage Categories</a><a class="toolBarItem search" href="search.php">Search</a><a class="toolBarItem help" href="help.php" target="_blank">Help</a></form>
-</div>
-<?php
-//If an inserted alert is shown
-  if (isset ($_GET['inserted'])) {
-	  $message = "The <strong>";
-	  //Detirmine what kind of alert this will be
-	  switch ($_GET['inserted']) {
-		  case "description" : $message .= "description"; break;
-		  case "essay" : $message .= "essay"; break;
-		  case "file" : $message .= "file response"; break;
-		  case "blank" : $message .= "fill in the blank"; break;
-		  case "matching" : $message .= "matching"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "truefalse" : $message .= "true false"; break;
-	  }
-	  $message .= "</strong> question was successfully inserted";
-	  
-	  successMessage($message);
-//If an updated alert is shown
-  } elseif (isset ($_GET['updated'])) {
-	  $message = "The <strong>";
-	  //Detirmine what kind of alert this will be
-	  switch ($_GET['updated']) {
-		  case "description" : $message .= "description"; break;
-		  case "essay" : $message .= "essay"; break;
-		  case "file" : $message .= "file response"; break;
-		  case "blank" : $message .= "fill in the blank"; break;
-		  case "matching" : $message .= "matching"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "truefalse" : $message .= "true false"; break;
-	  }
-	  $message .= "</strong> question was successfully updated";
-	  
-	  successMessage($message);
-//If an deleted alert is shown  
-  } elseif (isset ($_GET['deleted'])) {
-	  $message = "The <strong>";
-	  //Detirmine what kind of alert this will be
-	  switch ($_GET['deleted']) {
-		  case "description" : $message .= "description"; break;
-		  case "essay" : $message .= "essay"; break;
-		  case "file" : $message .= "file response"; break;
-		  case "blank" : $message .= "fill in the blank"; break;
-		  case "matching" : $message .= "matching"; break;
-		  case "choice" : $message .= "multiple choice"; break;
-		  case "answer" : $message .= "short answer"; break;
-		  case "truefalse" : $message .= "true false"; break;
-	  }
-	  $message .= "</strong> question was successfully deleted";
-	  
-	  successMessage($message);
-  } else {
-	  echo "<br />";
-  }
-?>
-<?php
-	if ($categoryResult !== 0) {
+	 
+//Display message updates
+	message("inserted", "question", "success", "The question was successfully inserted");
+	message("updated", "question", "success", "The question was successfully updated");
+	
+	if ($categoryResult != "0") {
 		if (!isset ($_GET['id'])) {
 			echo "<p>Please select a category from the list below.</p><blockquote>";
-			
-			$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` ORDER BY position ASC", $connDBA);
+			$categoryGrabber = query("SELECT * FROM `modulecategories` ORDER BY position ASC", "raw");
 			
 			while ($category = mysql_fetch_array($categoryGrabber)) {
 				$currentCategory = $category['id'];
-				$questionGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$currentCategory}'", $connDBA);
-				$questionValue = mysql_num_rows($questionGrabber);
+				$questionValue = query("SELECT * FROM `questionBank` WHERE `category` = '{$currentCategory}'", "num");
 				
-				echo "<a href=\"index.php?id=" . $category['id'] . "\">" . stripslashes($category['category']) . "</a> : ";
+				echo URL($category['category'], "index.php?id=" . $category['id']) . " : ";
+				
 				if ($questionValue == 1) {
 					echo $questionValue . " Question<br /><br />";
 				} else {
@@ -252,23 +140,18 @@
 			}
 			
 		//Display any questions from categories whose questions may have been deleted
-			$currentCategoriesGrabber = mysql_query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", $connDBA);
-			$currentCategories = mysql_fetch_array($currentCategoriesGrabber);
-			$otherQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` ORDER BY `id` ASC", $connDBA);
+			$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
+			$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
 			$count = 0;
 			
 			while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-				if (!in_array($otherQuestions['category'], $currentCategories)) {
-					if ($count = 0) {
-						$count++;
-					}
-					
+				if (!inArray($otherQuestions['category'], $currentCategories)) {
 					$count++;
 				}
 			}
 			
 			if ($count > 0) {
-				echo "<a href=\"index.php?id=0\">Uncategorized</a> : ";
+				echo URL ("Uncategorized", "index.php?id=0") . " : ";
 				
 				if ($count == 1) {
 					echo $count . " Question<br /><br />";
@@ -281,41 +164,56 @@
 		}
 		
 		if (isset ($_GET['id'])) {								
-			if (mysql_fetch_array($testCheck)) {
+			if ($testImport) {
 				echo "<table class=\"dataTable\"><tbody><tr><th width=\"150\" class=\"tableHeader\">Type</th><th width=\"100\" class=\"tableHeader\">Point Value</th><th class=\"tableHeader\">Question</th><th width=\"50\" class=\"tableHeader\">Discover</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
-				
-			//Loop through the items
 				$count = 1;	
+				
 				while ($testData = mysql_fetch_array($testImport)) {
 					echo "<tr";
 					if ($count++ & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-					echo "<td width=\"150\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $testData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $testData['type'] . "</a></td><td width=\"100\"><div";
+					echo "<td width=\"150\">" . URL($testData['type'], "preview.php?id=" . $testData['id'], false, false, "Preview this <strong>" . $testData['type'] . "</strong> question", false, true, "640", "480") . "</td>";
+					echo "<td width=\"100\"><div";
+					
 					if ($testData['extraCredit'] == "on") {
 						echo " class=\"extraCredit\"";
 					}
+					
 					echo ">" . $testData['points'];
+					
 					if ($testData['points'] == "1") {
 						echo " Point";
 					} else {
 						echo " Points";
 					}
 					
-					echo "</div></td><td>" . commentTrim(85, $testData['question']) . "</td><td width=\"50\"><a class=\"action discover\"href=\"discover.php?linkID=" . $testData['id'] . "\" onmouseover=\"Tip('Discover in which tests this <strong>" . $testData['type'] . "</strong> question is used')\" onmouseout=\"UnTip()\"></a></td><td width=\"50\"><a class=\"action edit\" href=\"";
+					echo "</div></td>";
+					echo "<td>" . commentTrim(85, $testData['question']) . "</td>";
+					echo "<td width=\"50\">" . URL ("", "discover.php?linkID=" . $testData['id'], "action discover", false, "Discover in which tests this <strong>" . $testData['type'] . "</strong> question is used") . "</td>";
+					echo "<td width=\"50\">";
 					
+					$URL = "../questions/";
+				
 					switch ($testData['type']) {
-						case "Description" : echo "questions/description.php"; break;
-						case "Essay" : echo "questions/essay.php"; break;
-						case "File Response" : echo "questions/file_response.php"; break;
-						case "Fill in the Blank" : echo "questions/blank.php"; break;
-						case "Matching" : echo "questions/matching.php"; break;
-						case "Multiple Choice" : echo "questions/multiple_choice.php"; break;
-						case "Short Answer" : echo "questions/short_answer.php"; break;
-						case "True False" : echo "questions/true_false.php"; break;
+						case "Description" : $URL .= "description.php"; break;
+						case "Essay" : $URL .= "essay.php"; break;
+						case "File Response" : $URL .= "file_response.php"; break;
+						case "Fill in the Blank" : $URL .= "blank.php"; break;
+						case "Matching" : $URL .= "matching.php"; break;
+						case "Multiple Choice" : $URL .= "multiple_choice.php"; break;
+						case "Short Answer" : $URL .= "short_answer.php"; break;
+						case "True False" : $URL .= "true_false.php"; break;
 					}
 					
-					echo "?id=" .  $testData['id'] . "\" onmouseover=\"Tip('Edit this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\"></a></td><td width=\"50\"><a class=\"action delete\" href=\"index.php?questionID=" .  $testData['id'] . "&action=delete\" onclick=\"return confirm ('This action will delete this question from the question bank, and from any of the tests it is currently linked. Continue?');\" onmouseover=\"Tip('Delete this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\"></a></td></tr>";
+					$URL .= "?id=" . $testData['id'];
+					
+					echo URL(false, $URL, "action edit", false, "Edit this <strong>" . $testData['type'] . "</strong> question");
+					
+					echo "</td>";
+					echo "<td width=\"50\">" . URL(false, "index.php?id=" . $_GET['id'] . "&questionID=" . $testData['id'] . "&action=delete", "action delete", false, "Delete this <strong>" . $testData['type'] . "</strong> question", true) . "</td>";
+					echo "</tr>";
 				}
-				echo "</tbody></table></div><br /><br />";
+				
+				echo "</tbody></table>";
 			} else {
 				echo "<div class=\"noResults\">There are no questions in this bank. Questions can be created by selecting a question type from the drop down menu above, and pressing &quot;Go&quot;.</div>";
 			}
@@ -323,7 +221,7 @@
 	} else {
 		echo "<div class=\"noResults\">Please <a href=\"../settings.php?type=category\">add at least one category</a> prior to entering questions.</div>";
 	}
+	
+//Include the footer
+	footer();
 ?>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>

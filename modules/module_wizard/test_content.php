@@ -6,7 +6,7 @@
 //Reorder questions
 	reorder("{$monitor['testTable']}", "test_content.php");
 	
-//Delete a page
+//Delete a test question
 	if (isset ($_GET['id']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
 		$id = $_GET['id'];
 		$deleteGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$id}'", $connDBA);
@@ -104,16 +104,13 @@
 				
 				echo URL(false, $URL, "action edit", false, "Edit this <strong>" . $type . "</strong> question");
 			}
-				
+			
+			echo "</td>";
 			echo "<td width=\"50\">" . URL(false, "test_content.php?id=" .  $testData['id'] . "&action=delete", "action delete", false, "Delete this <strong>" . $type . "</strong> question", true) . "</td>";
 			echo "</tr>";
 			
-		//Unset the $importedQuestion, $type, $points, $extraCredit, and $question variables
-			unset($importedQuestion);
-			unset($type);
-			unset($points);
-			unset($extraCredit);
-			unset($question);
+		//Unset variables used in this loop
+			unset($importedQuestion, $type, $points, $extraCredit, $question);
 		}
 		
 		echo "</tbody></table>";

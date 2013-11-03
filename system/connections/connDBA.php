@@ -84,8 +84,14 @@ ob_start();
 			  exit;
 			}
 		}
-	
-		if ($hideHTML == false || $hideHTML != "XML") {
+		
+		if ($hideHTML == true && $hideHTML != "XML") {
+			$additionalHTML = " class=\"overrideBackground\"" . $additionalParameters;
+		} else {
+			$additionalHTML = $additionalParameters;
+		}
+		
+		if ($hideHTML !== "XML") {
 		//Grab all site info	
 			$siteInfo = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 			
@@ -148,7 +154,7 @@ ob_start();
 			}
 			
 		//Close the header
-			echo "</head><body" . $additionalParameters . ">";
+			echo "</head><body" . $additionalHTML . ">";
 			
 		//Include a tooltip
 			if ($toolTip == true) {
@@ -201,14 +207,18 @@ ob_start();
 			echo "<div id=\"navbar_bg\"><div class=\"navbar clearfix\"><div class=\"breadcrumb\"><div class=\"menu\"><ul>";
 			
 			if ($publicNavigation == false) {
-				switch($_SESSION['MM_UserGroup']) {
-					case "Student" : $URL = "Student"; break;
-					case "Instructorial Assisstant" : $URL = "Instructorial Assisstant"; break;
-					case "Instructor" :$URL = "Instructor"; break;
-					case "Administrative Assisstant" : $URL = "Administrative Assisstant"; break;
-					case "Organization Administrator" :  $URL = "Organization Administrator"; break;
-					case "Site Manager" : $URL = "Site Manager"; break;
-					case "Site Administrator" : $URL = "Site Administrator"; break;
+				if (isset($_SESSION['MM_UserGroup'])) {
+					switch($_SESSION['MM_UserGroup']) {
+						case "Student" : $URL = "Student"; break;
+						case "Instructorial Assisstant" : $URL = "Instructorial Assisstant"; break;
+						case "Instructor" :$URL = "Instructor"; break;
+						case "Administrative Assisstant" : $URL = "Administrative Assisstant"; break;
+						case "Organization Administrator" :  $URL = "Organization Administrator"; break;
+						case "Site Manager" : $URL = "Site Manager"; break;
+						case "Site Administrator" : $URL = "Site Administrator"; break;
+					}
+				} else {
+					$URL = "Public";
 				}
 			} else {
 				$URL = "Public";
@@ -350,14 +360,18 @@ ob_start();
 				echo "<br /></div></div><div id=\"footer\"><div>&nbsp;</div><div class=\"breadcrumb\">";
 				
 				if ($publicNavigation == false) {
-					switch($_SESSION['MM_UserGroup']) {
-						case "Student" : $URL = "Student"; break;
-						case "Instructorial Assisstant" : $URL = "Instructorial Assisstant"; break;
-						case "Instructor" :$URL = "Instructor"; break;
-						case "Administrative Assisstant" : $URL = "Administrative Assisstant"; break;
-						case "Organization Administrator" :  $URL = "Organization Administrator"; break;
-						case "Site Manager" : $URL = "Site Manager"; break;
-						case "Site Administrator" : $URL = "Site Administrator"; break;
+					if (isset($_SESSION['MM_UserGroup'])) {
+						switch($_SESSION['MM_UserGroup']) {
+							case "Student" : $URL = "Student"; break;
+							case "Instructorial Assisstant" : $URL = "Instructorial Assisstant"; break;
+							case "Instructor" :$URL = "Instructor"; break;
+							case "Administrative Assisstant" : $URL = "Administrative Assisstant"; break;
+							case "Organization Administrator" :  $URL = "Organization Administrator"; break;
+							case "Site Manager" : $URL = "Site Manager"; break;
+							case "Site Administrator" : $URL = "Site Administrator"; break;
+						}
+					} else {
+						$URL = "Public";
 					}
 				} else {
 					$URL = "Public";
@@ -755,6 +769,14 @@ ob_start();
 				}
 				
 				echo "\">"; break;
+			case "image" :
+				echo "<input type=\"image\" name=\"" . $name . "\" id=\"" . $id . "\" src=\"" . $URL . "\"";
+				
+				if ($additionalParameters == true) {
+					echo " onclick=\"" . $additionalParameters . "\"";
+				}
+				
+				echo ">"; break;
 		}
 	}
 	
@@ -1096,7 +1118,7 @@ ob_start();
 		hidden("id", "id", $id);
 		echo URL("", "#option" . $id, $type . $class);
 		echo "<div class=\"contentHide\">";
-		checkbox("option", "option" . $id, false, false, false, $checkboxTrigger, $checkboxTrigger, "visible", "on", " onclick=\"Spry.Utils.submitForm(this.form);\"");
+		checkbox("option", "option" . $id, false, false, false, false, $checkboxTrigger, $checkboxTrigger, "visible", "on", " onclick=\"Spry.Utils.submitForm(this.form);\"");
 		echo "</div>";
 		closeForm(false, false);
 		echo "</div>";
@@ -1130,33 +1152,74 @@ ob_start();
 	function lesson($id, $table, $preview = false) {
 		global $monitor, $connDBA, $root;
 		
-	//Grab all of the lesson data
+		if ($preview == false) {
+			$URL = $_SERVER['PHP_SELF'] . "?id=" . $id . "&";
+		} else {
+			$URL = $_SERVER['PHP_SELF'] . "?";
+		}
+		
+	//Grab all of the lesson and module data
+		$moduleData = query("SELECT * FROM `moduledata` WHERE `id` = '{$id}'");
+	
 		if (isset($_GET['page'])) {
 			if (exist($table) == true) {
 				$page = $_GET['page'];
 				$lesson = exist($table, "position", $page);
 				
 				if ($lesson = exist($table, "position", $page)) {
-					$lastPageGrabber = mysql_query("SELECT * FROM `{$table}` ORDER BY `position` DESC LIMIT 1", $connDBA);
-					$lastPageCheck = mysql_fetch_array($lastPageGrabber);
-					$lastPage = $lastPageCheck['position'];
+					//Do nothing
 				} else {
-					redirect($_SERVER['REQUEST_URI'] . "&page=1");
+					redirect($URL . "page=1");
 				}
 			} else {
 				redirect($_SERVER['PHP_SHELF']);
 			}
 		} else {
-			redirect($_SERVER['REQUEST_URI'] . "&page=1");
+			redirect($URL . "page=1");
 		}
 		
 		echo "<div class=\"layoutControl\">";
 		
 	//Display the title and navigation
+		if ($preview !== "miniPreview") {
+			$previousPage = intval($_GET['page']) - 1;
+			$nextPage = intval($_GET['page']) + 1;
+			
+			echo "<div class=\"toolBar noPadding\">";
+			title($lesson['title'], false, false, "lessonTitle");
+			
+			$navigation = "<div align=\"center\">";
+			
+			if (exist($table, "position", $previousPage) == true) {
+				if ($preview == true && lastItem($table) - 1 == $_GET['page']) {
+					$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage");
+				} else {
+					$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage") . " | ";
+				}
+			}
+			
+			if (exist($table, "position", $nextPage) == true) {
+				$navigation .= URL("Next Page", $URL . "page=" . $nextPage , "nextPage");
+			}
+		}
+		
 		if ($preview == false) {
-			title($lesson['title'], false, true);
+			if (exist($table, "position", $nextPage) == false && $moduleData['test'] == "1") {
+				$navigation .= URL("Proceed to Test", "test.php?id=" . $id , "nextPage", false, false, false, false, false, false, "return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')");
+			} elseif (exist($table, "position", $nextPage) == false && $moduleData['test'] == "0") {
+				$navigation .= URL("Finish", $URL . "action=finish", "nextPage");
+			}
+		}
+		
+		if ($preview !== "miniPreview") {
+			$navigation .= "</div>";
+			
+			echo $navigation . "</div><p>&nbsp;</p>";
+		}
+		
+		if ($preview == false) {
 			echo "<div class=\"dataLeft\">";
-			$pagesGrabber = mysql_query("SELECT * FROM `{$table}`", $connDBA);
+			$pagesGrabber = mysql_query("SELECT * FROM `{$table}` ORDER BY `position` ASC", $connDBA);
 			$text = "";
 			
 			while($pages = mysql_fetch_array($pagesGrabber)) {
@@ -1184,6 +1247,7 @@ ob_start();
 			$location = str_replace(" ", "", $id);
 			$file = $root . "gateway.php/modules/" . $location . "/lesson/" . $lesson['attachment'];
 			$fileType = extension($file);
+			echo "<div align=\"center\">";
 			
 			switch ($fileType) {
 			//If it is a PDF
@@ -1219,7 +1283,13 @@ ob_start();
 <param name=\"src\" value=\"" . $file . "\" /></object>"; break;
 			}
 			
-			echo "</div></div>";
+			echo "</div>";
+		}
+		
+		echo "</div></div>";
+		
+		if ($preview !== "miniPreview") {
+			echo "<p>&nbsp;</p>" . $navigation;
 		}
 	}
 	
@@ -1239,7 +1309,7 @@ ob_start();
 		$count = 1;
 	
 	  	while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
-		  if ($testDataLoop['questionBank'] == "1") {
+		  if ($table != "questionbank" && $testDataLoop['questionBank'] == "1") {
 			  $importID = $testDataLoop['linkID'];
 			  $importQuestion = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
 			  $testData = mysql_fetch_array($importQuestion);
@@ -1491,9 +1561,13 @@ ob_start();
 		global $connDBA;
 		
 		if (isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
-			$deleteItem = $_GET['id'];
+			if (isset ($_GET['questionID'])) {
+				$deleteItem = $_GET['questionID'];
+			} else {
+				$deleteItem = $_GET['id'];
+			}
 		
-			$itemCheck = mysql_query("SELECT * FROM {$table} WHERE position = {$deleteItem}", $connDBA);
+			$itemCheck = mysql_query("SELECT * FROM {$table} WHERE id = {$deleteItem}", $connDBA);
 			
 			if (!$itemCheck) {
 				header ("Location: " . $redirect);
@@ -1752,6 +1826,29 @@ ob_start();
 		}
 		
 		return $returnArray;
+	}
+	
+	//A function to check to see if a value is present in an array
+	function inArray($needle, $haystack) {
+		if (is_array($haystack)) {
+			foreach($haystack as $value) {
+				if (is_array($value)) {
+					if (inArray($needle, $value)) {
+						return true;
+						exit;
+					}
+				} else {
+					if ($value == $needle) {
+						return true;
+						exit;
+					}
+				}
+			}
+			
+			return false;
+		} else {
+			return false;
+		}
 	}
 	
 	//A function to delete a folder and all of its contents
@@ -2057,32 +2154,6 @@ ob_start();
 		
 		$titlePrefix = "Module Setup Wizard : ";
 		
-		if ($_SERVER['PHP_SELF'] != $strippedRoot . "modules/module_wizard/index.php") {
-			if (isset ($_SESSION['step'])) {
-				switch ($_SESSION['step']) {
-					case "lessonSettings" : $redirect = "lesson_settings.php"; break;
-					case "lessonContent" : $redirect = "lesson_content.php"; break;
-					case "lessonVerify" : $redirect = "lesson_verify.php"; break;
-					case "testCheck" : $redirect = "test_check.php"; break;
-					case "testSettings" : $redirect = "test_settings.php"; break;
-					case "testContent" : $redirect = "test_content.php"; break;
-					case "testVerify" : $redirect = "test_verify.php"; break;
-				}
-			} elseif (isset ($_SESSION['review'])) {
-				$id = $_SESSION['currentModule'];
-				$testCheckGrabber = mysql_query("SELECT * FROM `moduledata` WHERE `id` = '{$id}'", $connDBA);
-				$testCheckArray = mysql_fetch_array($testCheckGrabber);
-				
-				if ($testCheckArray['test'] == "0") {
-					header ("Location: " . $root . "modules/module_wizard/test_check.php");
-					exit;
-				}
-			} else {
-				//header ("Location: " . $root . "modules/module_wizard/index.php");
-				//exit;
-			}
-		}
-		
 		if ($hideHTML == true) {
 			$class = " class=\"overrideBackground\"";
 		} else {
@@ -2110,15 +2181,76 @@ ob_start();
 			}
 			
 			$monitor = array("parentTable" => $parentTable, "lessonTable" => $lessonTable, "testTable" => $testTable, "prefix" => $prefix, "directory" => $directory, "gatewayPath" => $gatewayPath, "currentModule" => $currentModule, "currentTable" => $currentTable, "title" => $titlePrefix, "redirect" => $redirect, "type" => $type);
-		
-			return $monitor;
 		} else {
-			$directory = "../../../modules/";
+			$id = lastItem($parentTable);
+			$directory = "../" . $id . "/";
 			
 			$monitor = array("parentTable" => $parentTable, "title" => $titlePrefix, "prefix" => $prefix, "directory" => $directory);
-			
-			return $monitor;
 		}
+		
+		$pageFile = end(explode("/", $_SERVER['SCRIPT_NAME']));
+		
+		if (isset($_SESSION['currentModule'])) {
+			$id = $_SESSION['currentModule'];
+			$moduleDataTestGrabber = mysql_query("SELECT * FROM `{$monitor['parentTable']}` WHERE id = '{$id}'", $connDBA);
+			$moduleDataTest = mysql_fetch_array($moduleDataTestGrabber);
+			
+			if ($moduleDataTestGrabber && empty($moduleDataTest['name'])) {
+				$allowedArray = array("index.php", "lesson_settings.php");
+				
+				if (!in_array($pageFile, $allowedArray)) {
+					redirect("lesson_settings.php");
+				}
+			}
+				
+			if (!exist($monitor['lessonTable'], "position", "1")) {
+				$allowedArray = array("lesson_settings.php", "lesson_content.php", "manage_content.php");
+				
+				if (!in_array($pageFile, $allowedArray)) {
+					redirect("lesson_content.php");
+				}
+			}
+			
+			if ($moduleDataTestGrabber && exist($monitor['lessonTable'], "position", "1") && $moduleDataTest['test'] == "0") {
+				$allowedArray = array("lesson_settings.php", "lesson_content.php", "preview_page.php", "manage_content.php", "lesson_verify.php", "test_check.php", "complete.php");
+				
+				if (!in_array($pageFile, $allowedArray)) {
+					redirect("test_check.php");
+				}
+			} elseif ($moduleDataTestGrabber && exist($monitor['lessonTable'], "position", "1") && $moduleDataTest['test'] == "1") {
+				if (empty($moduleDataTest['testName'])) {
+					$allowedArray = array("lesson_settings.php", "lesson_content.php", "preview_page.php", "manage_content.php", "lesson_verify.php", "test_check.php", "test_settings.php");
+					
+					if (!in_array($pageFile, $allowedArray)) {
+						redirect("test_settings.php");
+					}
+				}
+				
+				if (!empty($moduleDataTest['testName']) && ! exist($monitor['testTable'], "position", "1")) {
+					$allowedArray = array("lesson_settings.php", "lesson_content.php", "preview_page.php", "manage_content.php", "lesson_verify.php", "test_check.php", "test_settings.php", "question_merge.php", "test_content.php", "preview_question.php", "description.php", "essay.php", "file_response.php", "blank.php", "matching.php", "multiple_choice.php", "short_answer.php", "true_false.php", "question_bank.php", "preview.php");
+					
+					if (!in_array($pageFile, $allowedArray)) {
+						redirect("test_content.php");
+					}
+				}
+				
+				if (!empty($moduleDataTest['testName']) && exist($monitor['testTable'], "position", "1")) {
+					$allowedArray = array("lesson_settings.php", "lesson_content.php", "preview_page.php", "manage_content.php", "lesson_verify.php", "test_check.php", "test_settings.php", "question_merge.php", "test_content.php", "preview_question.php", "description.php", "essay.php", "file_response.php", "blank.php", "matching.php", "multiple_choice.php", "short_answer.php", "true_false.php", "question_bank.php", "preview.php", "test_verify.php", "complete.php");
+					
+					if (!in_array($pageFile, $allowedArray)) {
+						redirect("test_verify.php");
+					}
+				}
+			}
+		} elseif (!isset($_SESSION['currentModule']) && !strstr($_SERVER['REQUEST_URI'], "lesson_settings.php")) {
+			$allowedArray = array("index.php", "lesson_settings.php");
+			
+			if (!in_array($pageFile, $allowedArray)) {
+				redirect("lesson_settings.php");
+			}
+		}
+		
+		return $monitor;
 	}
 	
 	//A function to keep track of steps in a module
@@ -2135,44 +2267,50 @@ ob_start();
 			$moduleDataTest = mysql_fetch_array($moduleDataTestGrabber);
 		}
 		
-		echo "<ul id=\"navigationmenu\"><li class=\"toplast\"><a href=\"#\"><span>Navigation</span></a><ul><li>";
+		echo "<ul id=\"navigationmenu\"><li class=\"toplast\"><a name=\"navigation\"><span>Navigation</span></a><ul><li>";
 		
 		if ($moduleDataTestGrabber && !empty($moduleDataTest['name'])) {
-			echo "<li>" . URL("Lesson Settings", "lesson_settings.php", "complete") . "</li>";
+			echo "<li>" . URL("Lesson Settings", "lesson_settings.php") . "</li>";
 		} else {
-			echo "<li>" . URL("Lesson Settings", "lesson_settings.php", "incomplete") . "</li>";
+			echo "<li>" . URL("Lesson Settings", "lesson_settings.php") . "</li>";
 		}
 		
 		if ($moduleDataTestGrabber && !empty($moduleDataTest['name'])) {
-			echo "<li>" . URL("Lesson Content", "lesson_content.php", "complete") . "</li>";
+			echo "<li>" . URL("Lesson Content", "lesson_content.php") . "</li>";
 		}
 				
-		if (exist($monitor['lessonTable']) == true) {
-			echo "<li>" . URL("Verify Lesson", "lesson_verify.php", "complete") . "</li>";
+		if (exist($monitor['lessonTable'], "position", "1")) {
+			echo "<li>" . URL("Verify Lesson", "lesson_verify.php") . "</li>";
 		}
 		
-		if ($moduleDataTestGrabber && exist($monitor['lessonTable']) == true && $moduleDataTest['test'] == "0") {
+		if ($moduleDataTestGrabber && exist($monitor['lessonTable'], "position", "1") && $moduleDataTest['test'] == "0") {
 			echo "<li>" . URL("Add Test", "test_check.php", "incomplete") . "</li>";
+			echo "<li>" . URL("Complete", "complete.php", "complete") . "</li>";
 		} elseif ($moduleDataTestGrabber && exist($monitor['lessonTable']) == true && $moduleDataTest['test'] == "1") {
 			if ($moduleDataTestGrabber && $moduleDataTest['test'] == "1") {
-				echo "<li>" . URL("Test Settings", "test_settings.php", "complete") . "</li>";
+				echo "<li>" . URL("Test Settings", "test_settings.php") . "</li>";
 			}
 			
-			if ($moduleDataTestGrabber && !empty($moduleDataTest['testName'])) {
-				echo "<li>" . URL("Test Content", "test_content.php", "complete") . "</li>";
+			if (!empty($moduleDataTest['testName'])) {
+				echo "<li>" . URL("Test Content", "test_content.php") . "</li>";
 			}
 			
-			if (exist($monitor['testTable']) == true) {
-				echo "<li>" . URL("Verify Test", "test_verify.php", "complete") . "</li>";
+			if (exist($monitor['testTable'], "position", "1")) {
+				echo "<li>" . URL("Verify Test", "test_verify.php") . "</li>";
 			}
 			
-			if ($moduleDataTestGrabber && !empty($moduleDataTest['name']) && exist($monitor['lessonTable']) == true && $moduleDataTest['test'] == "1" && !empty($moduleDataTest['testName']) && exist($monitor['testTable']) == true) {
+			if (!empty($moduleDataTest['testName']) && exist($monitor['testTable'], "position", "1")) {
 				echo "<li>" . URL("Complete", "complete.php", "complete") . "</li>";
 			}
 		}
 		
 		echo "</ul></li></ul></div></div>";
 
+	}
+	
+	//A function to prevent access to question question types if certain sessions are set
+	function questionAccess() {
+		
 	}
 	
 	//A function to regulate the how questions are inserted and updated
@@ -2238,14 +2376,89 @@ ob_start();
 		//modifyModule
 		//moduleStatistics
 		
-		switch ($_SESSION['MM_UserGroup']) {
-			case "Site Administrator" :
-				return true;
-				break;
-			
-			case "Student" :
+		if (isset($_SESSION['MM_UserGroup'])) {
+			switch ($_SESSION['MM_UserGroup']) {
+				case "Site Administrator" :
+					return true;
+					break;
+				
+				case "Student" :
+					return false;
+					break;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	//Check to see if a user is logged in 
+	function loggedIn() {
+		if (isset($_SESSION['MM_Username'])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	//Run a mysql_query
+	function query($query, $returnType = false, $showError = true) {
+		global $connDBA;
+		
+		$action = mysql_query($query, $connDBA);
+		
+		if (!$action) {
+			if ($showError == true) {
+				die(errorMessage("There is an error with your query: " . $query . "<br /><br />" . mysql_error() . "<br />" . print_r(debug_backtrace())));
+			} else {
 				return false;
-				break;
+			}
+		} else {
+			if ($returnType == false || $returnType == "array") {
+				$result = mysql_fetch_array($action);
+				
+				if (is_array($result) && !empty($result)) {
+					array_merge_recursive($result);
+					$return = array();
+					
+					foreach ($result as $key => $value) {
+						$return[$key] = prepare($value, false, true);
+					}
+					
+					return $result;
+				} else {
+					return false;
+				}
+				
+				unset($query, $action, $result);
+				exit;
+			} elseif ($returnType == "raw") {
+				$actionTest = mysql_query($query, $connDBA);
+				$result = mysql_fetch_array($actionTest);
+				
+				if ($result) {
+					return $action;
+				} else {
+					return false;
+				}
+				
+				unset($query, $action, $result);
+				exit;
+			} elseif ($returnType == "num") {
+				return mysql_num_rows($action);
+				
+				unset($query, $action, $result);
+				exit;
+			} elseif ($returnType == "selected") {
+				$return = array();
+				
+				while ($result = mysql_fetch_array($action)) {
+					array_push($return, $result);
+				} 
+				
+				return $return;
+				unset($query, $action, $result);
+				exit;
+			}
 		}
 	}
 	

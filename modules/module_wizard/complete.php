@@ -8,6 +8,7 @@
 		mysql_query("UPDATE `{$monitor['parentTable']}` SET `visible` = 'on' WHERE `id` = '{$monitor['currentModule']}'", $connDBA);
 		
 		if ($_POST['submit'] != "Finish") {
+			unset($_SESSION['currentModule'], $_SESSION['review']);
 			redirect("index.php");
 		} else {
 			redirect("../index.php");

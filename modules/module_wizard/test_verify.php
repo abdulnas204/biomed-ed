@@ -4,9 +4,8 @@
 	$monitor = monitor("Verify Test Content", "navigationMenu,newObject,tinyMCESimple");
 	
 //Display a randomizing alert if any part of this test randomizes
-	$randomizeTestGrabber = mysql_query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'", $connDBA);
-	$randomizeTest = mysql_fetch_array($randomizeTestGrabber);
-	$randomizeQuestion = mysql_query("SELECT * FROM `{$monitor['testTable']}` WHERE `randomize` = '1'", $connDBA);
+	$randomizeTest = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'");
+	$randomizeQuestion = query("SELECT * FROM `{$monitor['testTable']}` WHERE `randomize` = '1'");
 	
 	if ($randomizeQuestion) {
 		$randomize = "true";

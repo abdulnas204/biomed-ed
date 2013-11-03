@@ -1,4 +1,4 @@
-<?php 
+<?php
 //Header functions
 	require_once('../system/connections/connDBA.php');
 	
@@ -8,7 +8,7 @@
 		$functions = "";
 	}
 	
-	headers("Modules", "Student,Site Administrator", $functions, true);
+	headers("Modules", false, $functions, true);
 	
 	if (access("modifyModule")) {
 	//Reorder modules	
@@ -42,27 +42,34 @@
 		}
 	
 	//Unset old sessions
-		unset($_SESSION['currentModule']);
-		unset($_SESSION['review']);
-		unset($_SESSION['bankCategory']);
-		unset($_SESSION['categoryName']);
+		unset($_SESSION['currentModule'], $_SESSION['review'], $_SESSION['bankCategory'], $_SESSION['categoryName'], $_SESSION['cart']);
 	}
 	
 //Title
 	$access = array("Site Administrator", "Site Manager");
   
-    if (!in_array($_SESSION['MM_UserGroup'], $access)) {
-	    $additionalSQL = " WHERE `visible` = 'on'";
-    } else {
-		 $additionalSQL = "";
-    }
+	if (loggedIn()) {
+		if (!in_array($_SESSION['MM_UserGroup'], $access)) {
+			$additionalSQL = " WHERE `visible` = 'on'";
+		} else {
+			 $additionalSQL = "";
+		}
+	} else {
+		$additionalSQL = " WHERE `visible` = 'on'";
+	}
 	
 	$moduleDataGrabber = mysql_query("SELECT * FROM `moduledata`{$additionalSQL} ORDER BY `position` ASC", $connDBA);
 	$moduleNumberGrabber = mysql_query("SELECT * FROM `moduledata`{$additionalSQL} ORDER BY `position` ASC", $connDBA);
 	$moduleNumber = mysql_num_rows($moduleNumberGrabber);
-	$userData = userData();
 	
-	if (access("modifyModule") == false && (sizeof($userData['modules']) < $moduleNumber || !is_array($userData['modules']))) {
+	if (loggedIn()) {
+		$userData = userData();
+		$modules = unserialize($userData['modules']);
+	} else {
+		$modules = array();
+	}
+	
+	if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 		$content = "Below is a list of all modules. Click the checkbox beside each module you would like the purchase, then click &quot;Add to Cart&quot;.";
 	} else {
 		$content = "Below is a list of all modules.";
@@ -71,18 +78,20 @@
 	title("Modules", $content);
 	
 //Admin toolbar
-	echo "<div class=\"toolBar\">";
-	
-	if (access("modifyModule")) {
-		echo URL("Add New Module", "module_wizard/index.php", "toolBarItem new");
-		echo URL("Question Bank", "question_bank/index.php", "toolBarItem bank");
-		echo URL("Customize Settings", "settings.php", "toolBarItem settings");
-		echo URL("Feedback", "feedback/index.php", "toolBarItem feedback");
-	} else {
-		echo URL("Grades", "gradebook/index.php", "toolBarItem bank");
+	if (loggedIn()) {
+		echo "<div class=\"toolBar\">";
+		
+		if (access("modifyModule")) {
+			echo URL("Add New Module", "module_wizard/index.php", "toolBarItem new");
+			echo URL("Question Bank", "question_bank/index.php", "toolBarItem bank");
+			echo URL("Customize Settings", "settings.php", "toolBarItem settings");
+			echo URL("Feedback", "feedback/index.php", "toolBarItem feedback");
+		} else {
+			echo URL("Grades", "gradebook/index.php", "toolBarItem bank");
+		}
+		
+		echo "</div><br />";
 	}
-	
-	echo "</div>";
 	
 //Modules table
 	if (exist("moduledata") == true) {	
@@ -90,7 +99,7 @@
 			 form("purchaseModules", "post", true, false, "enroll/cart.php");
 		 }
 		 
-		 echo "<br /><table class=\"dataTable\"><tbody><tr>";
+		 echo "<table class=\"dataTable\"><tbody><tr>";
 		 
 		 if (access("modifyModule")) {
 			 echo "<th width=\"25\" class=\"tableHeader\"></th>";
@@ -116,7 +125,7 @@
 			 echo "<th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th>";
 		 }
 		 
-		 if (access("modifyModule") == false && (sizeof($userData['modules']) < $moduleNumber || !is_array($userData['modules']))) {
+		 if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 			 echo "<th width=\"100\" class=\"tableHeader\">Buy</th>";
 		 }
 		
@@ -160,16 +169,18 @@
 				  echo "<td width=\"50\">" . URL(false, "index.php?action=delete&id=" . $moduleData['id'], "action delete", false, "Delete the <strong>" . $moduleData['name'] . "</strong> module", true) . "</td>";
 			  }
 			  
-			  if (access("modifyModule") == false && (sizeof($userData['modules']) < $moduleNumber || !is_array($userData['modules']))) {
+			  if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 				 echo "<td width=\"100\">";
 				 $price = str_replace(".", "", $moduleData['price']);
 				 
 				 if (!empty($moduleData['enablePrice']) && !empty($moduleData['price']) && $price > 0) {
-					 echo "$" . $moduleData['price'] . " ";
-					 checkbox("cart[]", "option" . $moduleData['id'], false, $moduleData['id'], true, "1"); echo "</td>";
+					 if (!is_array($modules) || !in_array($moduleData['id'], $modules)) {
+						 checkbox("cart[]", "option" . $moduleData['id'], " $" . $moduleData['price'] , $moduleData['id'], true, "1"); echo "</td>";
+					 }
 				 } else {
-					 echo "No Charge ";
-					 checkbox("cart[]", "option" . $moduleData['id'], false, $moduleData['id'], true, "1"); echo "</td>";
+					 if (!is_array($modules) || !in_array($moduleData['id'], $modules)) {
+						 checkbox("cart[]", "option" . $moduleData['id'], " No Charge", $moduleData['id'], true, "1"); echo "</td>";
+					 }
 				 }
 			  }
 			echo "</tr>";
@@ -177,7 +188,7 @@
 		 
 		 echo "</tbody></table>";
 		 
-		 if (access("modifyModule") == false && (sizeof($userData['modules']) < $moduleNumber || !is_array($userData['modules']))) {
+		 if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 			 echo "<div align=\"right\"><p>"; button("submit", "submit", "Add Selected Modules to Cart", "submit"); echo "</p></div>";
 		 }
 		 

@@ -3,24 +3,24 @@
 	require_once('../../system/connections/connDBA.php');
 	
 //Prevent non-system access
-	if (!isset($_POST) || !empty($_POST)) {
+	if (empty($_POST) || empty($_GET)) {
 		redirect("../index.php");
 	}
 	
+//Provide a userData string for global use
+	$userDataName = gzinflate(base64_decode($_GET['user']));
+	$userDataGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$userDataName}'", $connDBA);
+	$userData = mysql_fetch_array($userDataGrabber);
+	
 //Create a function to fire when an error is present
 	function error($type) {
-		$userData = userData();
-		mail("wot200@gmail.com", "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at:" . $root . "modules/enroll/ipn.php. " . $type . " Below is all of the known information.
+		global $root, $userData, $values, $item_name, $item_number, $payment_status, $payment_amount, $payment_currency, $txn_id , $receiver_email, $payer_email;
+		
+		mail("wot200@gmail.com", "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at: " . $root . "modules/enroll/ipn.php. " . $type . " Below is all of the known information.
+		
 		---------------------------------------------------------
 		HTTP POST-DATA:
 		" . $values . "
-		---------------------------------------------------------
-		---------------------------------------------------------
-		ITEM NAME:
-		" . $item_name . "
-		
-		ITEM NUMBER:
-		" . $item_number . "
 		
 		PAYMENT STATUS:
 		" . $payment_status . "
@@ -40,7 +40,7 @@
 		PAYER EMAIL:
 		" . $payer_email . "
 		---------------------------------------------------------
-		" . date('l jS \of F Y h:i:s A'));
+		Processed at: " . date('l, F jS, Y at h:i:s A'));
 	}
 	
 //Begin assembly of post-data
@@ -55,11 +55,9 @@
 	$header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
 	$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 	$header .= "Content-Length: " . strlen($values) . "\r\n\r\n";
-	$postSend = fsockopen ('ssl://www.paypal.com', 443, $errno, $errstr, 30);
+	$postSend = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
 
 //Assign response variables to local variables
-	$item_name = $_POST['item_name'];
-	$item_number = $_POST['item_number'];
 	$payment_status = $_POST['payment_status'];
 	$payment_amount = $_POST['mc_gross'];
 	$payment_currency = $_POST['mc_currency'];
@@ -82,48 +80,39 @@
 			$res = fgets ($postSend, 1024);
 			$paymentDataGrabber = mysql_query("SELECT * FROM `payment` WHERE `id` = '1'", $connDBA);
 			$paymentData = mysql_fetch_array($paymentDataGrabber);
-			$userData = userData();
 			$paymentArray = array();
-			$total = 0.00;
-			
-			foreach ($_SESSION['cart'] as $item) {
-				$moduleDataGrabber = mysql_query("SELECT * FROM `moduledata` WHERE `id` = '{$item}'", $connDBA);
-				$moduleData = mysql_fetch_array($moduleDataGrabber);				
-				array_push($paymentArray, $moduleData['price']);
-				unset($moduleDataGrabber, $moduleData, $price);
-			}
-			
-			foreach ($paymentArray as $paymentDue) {
-				$total = $total + sprintf("%01.2f", $paymentDue);
-			}
+			$total = gzinflate(base64_decode($_GET['value']));
 			
 			if (strcmp ($res, "VERIFIED") == 0) {
-				if ($payment_status === "Completed" && exist("billing", "transactionID", $txn_id) == true && $payment_amount === $total && $payment_currency === "USD" && $paymentData['business'] === $receiver_email && $payer_email === $userData['emailAddress1']) {
-					$userModules = unserialize($userData['modules']);
+				if ($payment_status === "Completed" && exist("billing", "transactionID", $txn_id) == false && $payment_amount === $total && $payment_currency === "USD" && $paymentData['business'] === $receiver_email && $payer_email === $userData['emailAddress1']) {
+					$currentModules = unserialize($userData['modules']);
+					$userModules = unserialize(gzinflate(base64_decode($_GET['product'])));
 					
-					foreach ($_SESSION['cart'] as $item) {
-						if (is_array($userModules)) {
-							array_push($userModules, $item);
-						} else {
-							$userModules = array();
-							array_push($userModules, $item);
+					if (is_array($currentModules)) {
+						foreach ($userModules as $item) {
+							array_push($currentModules, $item);
 						}
+						
+						$modules = serialize($currentModules);
+					} else {
+						$modules = serialize($userModules);
 					}
 					
-					$modules = serialize($userModules);
+					$purchasedModules = serialize($userModules); 					
 					$userID = $userData['id'];
 					
 					mysql_query("UPDATE `users` SET `modules` = '{$modules}' WHERE `id` = '{$userID}'", $connDBA);
 					mysql_query("INSERT INTO `billing` (
 								`id`, `ownerUser`, `ownerOrganization`, `items`, `price`, `transactionID`
 								) VALUES (
-								NULL, '{$userID}', '', '{$modules}', '{$total}', '{$txn_id}'
+								NULL, '{$userID}', '', '{$purchasedModules}', '{$total}', '{$txn_id}'
 								)", $connDBA);
 								
 					redirect("../index.php");
 				} else {
-					error("The payment gateway credentials from the gateway do not match the payment credentials from the system.");
+					error("The payment gateway credentials from the gateway do not match the payment credentials from the system." . $payment_status . "Completed" . exist("billing", "transactionID", $txn_id) . $payment_amount . $total . $payment_currency . "USD" . $paymentData['business'] . $receiver_email . $payer_email . $userData['emailAddress1']);
 				}
+				
 			} else if (strcmp ($res, "INVALID") == 0) {
 				error("The payment gateway returned invalid.");
 			}

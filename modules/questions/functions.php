@@ -21,11 +21,15 @@
 	}
 	
 //Display all levels of difficulty
-	function difficulty() {		
+	function difficulty() {
+		global $monitor;
+		
 		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
+			$difficulty = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
+			
 			directions("Difficulty", false);
 			echo "<blockquote><p>";
-			dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, $_SESSION['difficulty'], "questionData", "difficulty");
+			dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, $difficulty['difficulty'], "questionData", "difficulty");
 			echo "</p></blockquote>";
 		} else {
 			directions("Difficulty", false, "The overall difficulty of this module");
@@ -212,7 +216,7 @@
 		echo "</p></blockquote>";
 	}
 	
-//Ensure the page is handleing the correct question type
+//Ensure the page is handling the correct question type
 	function dataGrabber($type) {
 		global $connDBA, $monitor;
 		

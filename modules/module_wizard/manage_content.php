@@ -47,9 +47,7 @@
 	//Process the custom content
 		if ($_POST['type'] == "Custom Content") {
 			if (!isset($_GET['id'])) {
-				$lastPageGrabber = mysql_query("SELECT * FROM `{$monitor['lessonTable']}` ORDER BY `position` ASC LIMIT 1", $connDBA);
-				$lastPageArray = mysql_fetch_array($lastPageGrabber);
-				$lastPage = $lastPageArray['position']+1;
+				$lastPage = lastItem($monitor['lessonTable']);
 				
 				mysql_query("INSERT INTO `{$monitor['lessonTable']}` (
 							`id`, `position`, `type`, `title`, `content`, `attachment`
@@ -94,9 +92,7 @@
 				if (in_array(extension($targetFile), $allowedFiles)) {
 					if (move_uploaded_file($tempFile, $uploadDir . "/" . $targetFile)) {
 						if (!isset($_GET['id'])) {					
-							$lastPageGrabber = mysql_query("SELECT * FROM `{$monitor['lessonTable']}` ORDER BY `position` ASC LIMIT 1", $connDBA);
-							$lastPageArray = mysql_fetch_array($lastPageGrabber);
-							$lastPage = $lastPageArray['position']+1;
+							$lastPage = lastItem($monitor['lessonTable']);
 							
 							mysql_query("INSERT INTO `{$monitor['lessonTable']}` (
 										`id`, `position`, `type`, `title`, `content`, `attachment`
@@ -177,7 +173,11 @@
 	//Embedded content
 		} elseif ($_GET['type'] == "embedded") {
 		//Title
-			title($monitor['title'] . "Module Content", "An embedded content page will contain something, such as a video or PDF, as the main content.");
+			if (!isset($_GET['error'])) {
+				title($monitor['title'] . "Module Content", "An embedded content page will contain something, such as a video or PDF, as the main content.");
+			} else {
+				title($monitor['title'] . "Module Content", "An embedded content page will contain something, such as a video or PDF, as the main content.", false);
+			}
 			
 		//Display message updates
 			message("error", "empty", "error", "Please upload a file");
@@ -210,9 +210,9 @@
 			echo "<blockquote><p>";
 			
 			if (!isset($_GET['id'])) {
-				fileUpload("file", "file", false, true, false, "pageData", "attachment", $monitor['gatewayPath'] . "/lesson", true);
+				fileUpload("file", "file", false, true, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			} else {
-				fileUpload("file", "file", false, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "/lesson", true);
+				fileUpload("file", "file", false, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			}
 			
 			echo "</p></blockquote></blockquote>";

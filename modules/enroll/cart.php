@@ -1,4 +1,4 @@
-<?php 
+<?php
 //Header functions
 	require_once('../../system/connections/connDBA.php');
 	headers("Shopping Cart", "Student");
@@ -34,8 +34,7 @@
 		hidden("currency_code", "currency_code", "USD");
 		hidden("for_auction", "for_auction", "false");
 		hidden("no_shipping", "no_shipping", "1");
-		hidden("notify_url", "notify_url", $root . "modules/enroll/ipn.php");
-		hidden("return", "return", $root . "modules/enroll/index.php");
+		hidden("return", "return", $root . "modules/index.php");
 		hidden("cancel_return", "cancel_return", $root . "modules/index.php");
 		echo "<table class=\"dataTable\" id=\"items\"><tr><th class=\"tableHeader\">Module Name</th><th class=\"tableHeader\" width=\"100\">Price</th><th class=\"tableHeader\" width=\"75\">Quantity</th><th class=\"tableHeader\" width=\"25\"></th></tr>";
 		
@@ -90,6 +89,8 @@
 			$total = $moduleData['price'];
 		}
 		
+		hidden("notify_url", "notify_url", $root . "modules/enroll/ipn.php?value=" . base64_encode(gzdeflate($total)) . "&user=" . base64_encode(gzdeflate($_SESSION['MM_Username'])) . "&product=" . base64_encode(gzdeflate(serialize($_SESSION['cart']))));
+		
 		if ($count != 1) {	
 			$quantity = $count - 1;
 		} else {
@@ -101,7 +102,7 @@
 		echo "</p></div>";
 		closeForm(false, false);
 	} else {
-		echo "<div class=\"noResults\">Your shopping cart is empty, please " . URL("go back to the modules page", "index.php") . " and select which ones you would like the purchase.</div>";
+		echo "<div class=\"noResults\">Your shopping cart is empty, please " . URL("go back to the modules page", "../index.php") . " and select which ones you would like the purchase.</div>";
 	}
 	
 //Include the footer

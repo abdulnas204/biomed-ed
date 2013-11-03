@@ -1,4 +1,4 @@
-/***
+F/***
  *** Core
  ***/
 
@@ -1065,6 +1065,10 @@ a.skip:focus, a.skip:active {
 	a.discover {
 		background:url(../../images/admin_icons/search.png) no-repeat center;
 	}
+	
+	a.grade {
+		background:url(../../images/common/grade.png) no-repeat center;
+	}
 /* End data table and table contents */
 
 /* Begin announcements styles */
@@ -1078,13 +1082,19 @@ a.skip:focus, a.skip:active {
 	}
 /* Begin announcements styles */
 
-/* Begin module styles */
+/* Begin module styles */	
 	span.currentPage {
 		font-weight:bolder;
 	}
 	
 	a.previousPage {
-		background:url(../../images/common/next.png) no-repeat center;
+		background:url(../../images/common/back.png) no-repeat left;
+		padding-left:18px;
+	}
+	
+	a.nextPage {
+		background:url(../../images/common/next.png) no-repeat right;
+		padding-right:18px;
 	}
 	
 	span.questionNumber {
@@ -1095,6 +1105,18 @@ a.skip:focus, a.skip:active {
 	span.questionPoints {
 		font-size:9px;
 		font-weight:bolder;
+	}
+	
+	li.notStarted {
+		list-style-image:url(../../images/common/x.png);
+	}
+	
+	li.completed {
+		list-style-image:url(../../images/common/checkmark.png);
+	}
+	
+	li.inProgress {
+		list-style-image:url(../../images/common/percent.png);
 	}
 /* End module styles */
 

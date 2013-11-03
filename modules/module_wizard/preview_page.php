@@ -13,10 +13,10 @@
 	}
 	
 //Title
-	title("Preview Page", false, true, "preview");
+	title("Preview Page", false, false, "preview");
 	
 //Display the page
-	lesson($monitor['currentModule'], $monitor['lessonTable'], true);
+	lesson($monitor['currentModule'], $monitor['lessonTable'], "miniPreview");
 	
 //Include the footer
 	footer(false, true);

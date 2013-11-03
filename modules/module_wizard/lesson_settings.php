@@ -34,14 +34,14 @@
 								
 			mysql_query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `employee` = '{$employee}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `skip` = '{$skip}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE `id` = '{$id}'", $connDBA);
 		} else {
-			$lastModule = lastItem($monitor['parentTable']);
+			$position = lastItem($monitor['parentTable']);
 			$id = lastItem($monitor['parentTable']);
 			
-			mkdir($monitor['directory'] . $id, 0777);
-			mkdir($monitor['directory'] . $id . "/lesson", 0777);
-			mkdir($monitor['directory'] . $id . "/test", 0777);
-			mkdir($monitor['directory'] . $id . "/test/answers", 0777);
-			mkdir($monitor['directory'] . $id . "/test/responses", 0777);
+			mkdir($monitor['directory'], 0777);
+			mkdir($monitor['directory'] . "lesson", 0777);
+			mkdir($monitor['directory'] . "test", 0777);
+			mkdir($monitor['directory'] . "test/answers", 0777);
+			mkdir($monitor['directory'] . "test/responses", 0777);
 			
 			mysql_query("INSERT INTO `{$monitor['parentTable']}` (
 						`id`, `position`, `locked`, `visible`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`
@@ -118,9 +118,9 @@
 	echo "<blockquote><p>$ ";
 	
 	if (empty($moduleData['price'])) {
-		textField("price", "price", "7", false, false, true, false, false, "moduleData", "price", " disabled=\"disabled\"");
+		textField("price", "price", "7", false, false, false, false, false, "moduleData", "price", " disabled=\"disabled\"");
 	} else {
-		textField("price", "price", "7", false, false, true, false, false, "moduleData", "price");
+		textField("price", "price", "7", false, false, false, false, false, "moduleData", "price");
 	}
 	
 	echo " ";
@@ -156,7 +156,7 @@
 	button("submit", "submit", "Next Step &gt;&gt;", "submit");
 	
 	if (!isset($_SESSION['currentModule'])) {
-		button("cancel", "cancel", "Cancel", "cancel", "modify.php");
+		button("cancel", "cancel", "Cancel", "cancel", "../index.php");
 	}
 
 	if (isset ($_SESSION['review'])) {

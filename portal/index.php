@@ -196,10 +196,32 @@
 		//Category divider
 			echo "<p>&nbsp;</p><p class=\"homeDivider\">Account Data</p>";
 			
-		if (!empty($userInfo['modules'])) {
+		if (!empty($userInfo['modules']) && is_array(unserialize($userInfo['modules']))) {
 		//Render the chart
-			chart("line", "account");
-			break;
+			chart("bar2D", "account", false, "200");
+			
+		//Display module statistics
+			echo "<p>Information on modules you are currently enrolled:</p><ul>";
+			
+			foreach (unserialize($userInfo['modules']) as $moduleCompletion) {
+				$moduleData = query("SELECT * FROM `moduledata` WHERE `id` = '{$moduleCompletion}'");
+				
+				echo "<li class=\"";
+				
+				if (is_array($moduleCompletion) && $moduleCompletion['1'] == "2") {
+					echo "completed";
+				} elseif (is_array($moduleCompletion) && $moduleCompletion['1'] == "0") {
+					echo "notStarted";
+				} elseif (is_array($moduleCompletion) && $moduleCompletion['1'] == "1") {
+					echo "inProgress";
+				} else {
+					echo "notStarted";
+				}
+				
+				echo "\">" . URL($moduleData['name'], "../modules/lesson.php?id=" . $moduleData['id']) . "</li>";
+			}
+			
+			echo "</ul>";
 		} else {
 			echo "<div class=\"spacer\"><p>You are not currently enrolled in any modules. " . URL("Browse the list of modules", "../modules/index.php") . ", and enroll in the one's you choose.</p></div>";
 		}

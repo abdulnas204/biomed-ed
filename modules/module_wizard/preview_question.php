@@ -13,7 +13,7 @@
 	}
 	
 //Title
-	title("Preview Test Question", false, true, "preview");
+	title("Preview Test Question", false, false, "preview");
 	
 //Display the test question
 	test($monitor['testTable'], true, $_GET['id']);
