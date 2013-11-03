@@ -43,14 +43,14 @@
 	function descriptionLink() {
 		global $connDBA, $monitor;
 		
-		$descriptionCheck = mysql_query("SELECT * FROM `{$monitor['testTable']}`", $connDBA);
+		$descriptionCheck = mysql_query("SELECT * FROM `{$monitor['testTable']}` ORDER BY `position` ASC", $connDBA);
 		
 		if ($descriptionCheck) {
 			$descriptionID = ",";			
 			$descriptionName = "- Select -,";
 			
 			while ($description = mysql_fetch_array($descriptionCheck)) {
-				if ($description['type'] == "Description") {
+				if ($description['type'] == "Description" && $description['questionBank'] != "1") {
 					$descriptionID .= $description['id'] . ",";
 					$descriptionName .= $description['position'] . ". " . commentTrim(25, $description['question']) . ",";
 				}
@@ -61,7 +61,6 @@
 					$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
 					
 					if ($descriptionImport['type'] == "Description") {
-						echo "<option value=\"" . $description['id'] ."\"";
 						$descriptionID .= $description['id'] . ",";
 						$descriptionName .= $description['position'] . ". " . commentTrim(25, $descriptionImport['question']) . ",";
 					}
@@ -73,7 +72,7 @@
 			}
 		} else {
 			$descriptionID = "";			
-			$descriptionName = "- Select -";
+			$descriptionName = "- None -";
 		}
 		
 		$IDs = rtrim($descriptionID, ",");

@@ -866,7 +866,7 @@ ob_start();
 	}
 	
 	//File upload
-	function fileUpload($name, $id, $size = false, $validate = true, $validateAddition = false, $manualValue = false, $editorTrigger = false, $arrayValue = false, $fileURL = false, $uploadNote = false, $additionalParameters = false) {
+	function fileUpload($name, $id, $size = false, $validate = true, $validateAddition = false, $manualValue = false, $editorTrigger = false, $arrayValue = false, $fileURL = false, $uploadNote = false, $hideUploadSize = false, $additionalParameters = false) {
 		global $$editorTrigger;
 		
 		if ($editorTrigger == true && isset($$editorTrigger)) {
@@ -878,7 +878,7 @@ ob_start();
 		}
 		
 		if ($manualValue == true) {
-			echo "Current file: <a href=\"" . $fileURL . "/" . $manualValue . "\" target=\"_blank\">" . $manualValue . "</a><br />";
+			echo "Current file: <a href=\"" . $fileURL . "/" . urlencode($manualValue) . "\" target=\"_blank\">" . $manualValue . "</a><br />";
 		}
 		
 		echo "<input type=\"file\" name=\"" . $name . "\" id=\"" . $id . "\" size=\"";
@@ -897,7 +897,9 @@ ob_start();
 		
 		echo ">";
 		
-		echo "<br />Max file size: " .  ini_get('upload_max_filesize');
+		if ($hideUploadSize == false) {
+			echo "<br />Max file size: " .  ini_get('upload_max_filesize');
+		}
 		
 		if (($manualValue == true || (isset($$editorTrigger) && $editorTrigger == true)) && $uploadNote == true) {
 			echo "<br /><strong>Note:</strong> Uploading a new file will replace the existing one.";
@@ -1299,7 +1301,7 @@ ob_start();
 	
 	//Test content
 	function test($table, $fileURL, $preview = false) {
-		global $connDBA, $testValues;
+		global $connDBA, $testValues, $monitor;
 		
 		form("test", "post", true, true);
 		echo "<table width=\"100%\" class=\"dataTable\">";
@@ -1343,7 +1345,7 @@ ob_start();
 				$order = " ORDER BY `position` ASC";
 			}
 			
-			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition";
+			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition, testdata_" . $userData['id'] . ".questionValueScrambled";
 			$join = " LEFT JOIN testdata_" . $userData['id'] . " ON " . $table . ".id = testdata_" . $userData['id'] . ".questionID";
 		}
 		
@@ -1364,13 +1366,17 @@ ob_start();
 				$testData = $testDataLoop;
 			}
 			
-			if (!is_numeric($preview) && $testData['link'] != "0" && !empty($testData['link'])) {
-				if (!in_array($testData['link'], $restrictImport) && !query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}' AND `questionID` = '{$testDataLoop['id']}'", "raw")) {
-					$linkData = query("SELECT * FROM `{$table}` WHERE `id` = '{$testData['link']}'");
-					array_push($restrictImport, $testData['link']);
-					echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($linkData['question'], false, true) . "</td></tr>";
-					unset($linkData);
+			if (!is_numeric($preview) && exist($table, "id", $testData['link']) && $moduleInfo['randomizeAll'] == "Randomize" && !empty($testData['link']) && $testDataLoop['link'] != "0" && !in_array($testDataLoop['link'], $restrictImport)) {
+				$importDescription = query("SELECT * FROM `{$table}` WHERE `id` = '{$testDataLoop['link']}'");
+				
+				if ($importDescription['questionBank'] == "1") {
+					$importDescription = query("SELECT * FROM `questionbank` WHERE `id` = '{$importDescription['linkID']}'");
+				} else {
+					$importDescription = $importDescription;
 				}
+				
+				echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($importDescription['question'], false, true) . "</td></tr>";
+				array_push($restrictImport, $testDataLoop['link']);
 			}
 			
 			if ($testData['type'] != "Description") {
@@ -1387,6 +1393,7 @@ ob_start();
 				} else {
 					echo "Points";
 				}
+				
 				echo "</span>";
 				
 				if ($testData['extraCredit'] == "on") {
@@ -1398,14 +1405,14 @@ ob_start();
 			
 			switch ($testData['type']) {
 				case "Description" : 
-					if (!in_array($testData['id'], $restrictImport)) {
+					if (!in_array($testDataLoop['id'], $restrictImport)) {
 						echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($testData['question'], false, true) . "</td></tr>";
 					}
 					
 					break;
 				case "Essay" : 
 					if (isset($testValues)) {
-						textArea($testDataLoop['id'], $testDataLoop['id'], "small", true, false, unserialize($testValues['answer']));
+						textArea($testDataLoop['id'], $testDataLoop['id'], "small", true, false, unserialize($testValues['userAnswer']));
 					} else {
 						textArea($testDataLoop['id'], $testDataLoop['id'], "small", true);
 					}
@@ -1413,15 +1420,56 @@ ob_start();
 					break;
 					
 				case "File Response" : 
-					if ($testData['totalFiles'] > 1) {
-						echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload" . $testDataLoop['id'] . "\"><tr><td>";
-						fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, "testValues", $testDataLoop['id'], $monitor['gatewayFile'], true);
-						echo "</td></tr></table><p><span class=\"smallAdd\" id=\"add" . $testDataLoop['id'] . "\" onclick=\"appendRow('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "', '\' name=\'" . $testDataLoop['id'] . "[]', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "', 'add" . $testDataLoop['id'] . "');\">Add Another File</span></p>";
+					if ($testData['totalFiles'] > 1 || sizeof(unserialize($testValues['userAnswer'])) > 1) {
+						if (isset($monitor)) {
+							$URL = $monitor['gatewayPath'] . "/test/responses";
+						} else {
+							$URL = "../gateway.php/modules/" . $_GET['id'] . "/test/responses";
+							$fillValue = unserialize($testValues['userAnswer']);
+						}
+						
+						echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload_" . $testDataLoop['id'] . "\">";
+						
+						if (isset($testValues) && !empty($fillValue)) {
+							$fileID = 1;
+							
+							foreach ($fillValue as $key => $file) {
+								echo "<tr id=\"" . $fileID . "\"><td>";
+								
+								fileUpload($testDataLoop['id'] . "_" . $fileID, $testDataLoop['id'] . "_" . $fileID, false, true, false, $fillValue[$key], false, false, $URL, false, true);
+								echo "</td><td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=" . $fileID, "action smallDelete", false, false, false, false, false, false, " return confirm('This action will delete this file. Continue?')");
+								echo "</td></tr>";
+								
+								$fileID++;
+							}
+							
+							unset($fileID);
+							
+							echo "</table><p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "_', '\' name=\'" . $testDataLoop['id'] . "_', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "');\">Add Another File</span></p><p><strong>Note:</strong> Uploading a new file will replace the existing one.</p>";
+						} else {
+							echo "<tr id=\"1\"><td>";
+							fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, false, false, false, false, false, true);
+							echo "</td><td><span class=\"action smallDelete\" onclick=\"deleteObject('upload_" . $testDataLoop['id'] . "', '1', '1', true)\"></span>";
+							echo "</td></tr></table><p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "_', '\' name=\'" . $testDataLoop['id'] . "_', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "');\">Add Another File</span></p>";
+						}
+						
+						echo "<p>Max file size (for single file): " . ini_get('upload_max_filesize') . "<br>Max file size (for all files): " . ini_get('post_max_size') . "</p>";
 					} else {
 						if (isset($testValues)) {
-							fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, unserialize($testValues['answer']), false, false, "../gateway.php/modules/" . $_GET['id'] . "/test/responses", true);
+							$fillValue = unserialize($testValues['userAnswer']);
+							
+							if (!empty($fillValue)) {
+								echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload_" . $testDataLoop['id'] . "\">";
+								echo "<tr id=\"1\"><td>";
+								fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, $fillValue['0'], false, false, "../gateway.php/modules/" . $_GET['id'] . "/test/responses", false, false);
+								echo "</td><td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=1", "action smallDelete", false, false, false, false, false, false, " return confirm('This action will delete this file. Continue?')");
+								echo "</td></tr></table>";
+								echo "<p><strong>Note:</strong> Uploading a new file will replace the existing one.</p>";
+							} else {
+								fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true);
+							}
 						} else {
-							fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true);
+							fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true);
 						}
 					}
 					
@@ -1430,6 +1478,7 @@ ob_start();
 				case "Fill in the Blank" : 
 					$blankQuestion = unserialize($testData['questionValue']);
 					$blank = unserialize($testData['answerValue']);
+					$answerCompare = unserialize($testData['answerValue']);
 					$valueNumbers = sizeof($blankQuestion);
 					$matchingCount = 1;
 					echo "<p>";
@@ -1439,9 +1488,17 @@ ob_start();
 					   
 					   if (!empty($blank[$list])) {
 						   if (isset($testValues)) {
-							   $value = unserialize($testValues['answer']);
+							   $value = unserialize($testValues['userAnswer']);
 							   
-							   echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true, false, $value[$list])  . " ";
+							   if (is_array($value)) {
+								   if (array_key_exists($list, $value)) {
+									   echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true, false, $value[$list])  . " ";
+								   } elseif (!array_key_exists($list, $value) && isset($answerCompare[$list])) {
+									   echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true)  . " ";
+								   }
+							   } else {
+								    echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true)  . " ";
+							   }
 						   } else {
 						   		echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true)  . " ";
 						   }
@@ -1453,11 +1510,11 @@ ob_start();
 				
 				case "Matching" : 
 					$question = unserialize($testData['questionValue']);
-					$answerPrep = unserialize($testValues['question']);
-					$answer = $answerPrep['1'];
+					$answer = unserialize($testValues['questionValueScrambled']);
+					$answerCompare = unserialize($testData['answerValue']);
 					$valueNumbers = sizeof($question);
 					$matchingCount = 1;
-					$fillValue = unserialize($testValues['answer']);
+					$fillValue = unserialize($testValues['userAnswer']);
 					
 					echo "<table width=\"100%\">";
 					
@@ -1475,9 +1532,19 @@ ob_start();
 						$IDs = rtrim($dropDownID, ",");
 						
 						if (isset($testValues)) {
-							dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true, false, $fillValue[$list]);
+							$value = unserialize($testValues['userAnswer']);
+							 
+							if (is_array($value)) {
+								if (array_key_exists($list, $value)) {
+									echo dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true, false, $fillValue[$list])  . " ";
+								} elseif (!array_key_exists($list, $value) && isset($answerCompare[$list])) {
+									dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
+								}
+							} else {
+								dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
+							}
 						} else {
-							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true);
+							dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true);
 						}
 						
 						echo"</td><td width=\"200\"><p>" . prepare($question[$list], false, true) . "</p></td><td width=\"200\"><p>" . $matchingCount++ . ". " . prepare($answer[$list], false, true) . "</p></td></tr>";
@@ -1486,24 +1553,29 @@ ob_start();
 					echo"</table>";				  
 					break;
 				
-				case "Multiple Choice" : 
-					$questions = unserialize($testData['questionValue']);
-					
-					if ($preview == false) {
+				case "Multiple Choice" : 					
+					if ($preview == true) {
+						$questions = unserialize($testData['questionValue']);
+						
 						if ($testData['randomize'] == "1") {
-							$questionsDisplay = shuffle($questions);
+							$questionsDisplay = $questions;
+							shuffle($questionsDisplay);
 						} else {
 							$questionsDisplay = $questions;
 						}
 					} else {
-						$questionsDisplay = $questions;
+						if ($testData['randomize'] == "1") {
+							$questions = unserialize($testData['questionValueScrambled']);
+						} else {
+							$questions = unserialize($testData['questionValue']);
+						}
 					}
 					
 					if ($testData['choiceType'] == "radio") {
 						$questionValue = "";
 						$questionID = "";
 					
-						while (list($questionKey, $questionArray) = each($questionsDisplay)) {
+						while (list($questionKey, $questionArray) = each($questions)) {
 							$questionValue .= $questionArray . ",";
 							$questionID .= $questionKey + 1 . ",";
 						}
@@ -1513,19 +1585,19 @@ ob_start();
 						
 						
 						if (isset($testValues)) {
-							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true, false, unserialize($testValues['answer']));
+							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true, false, unserialize($testValues['userAnswer']));
 						} else {
 							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true);
 						}
 						
 					} else {
-						while (list($questionKey, $questionArray) = each($questionsDisplay)) {
+						while (list($questionKey, $questionArray) = each($questions)) {
 							$identifier = $questionKey + 1;
 							if (isset($testValues)) {
-								if (is_array(unserialize($testValues['answer']))) {
-									$fillValue = unserialize($testValues['answer']);
+								if (is_array(unserialize($testValues['userAnswer']))) {
+									$fillValue = unserialize($testValues['userAnswer']);
 								} else {
-									$fillValue = array(unserialize($testValues['answer']));
+									$fillValue = array(unserialize($testValues['userAnswer']));
 								}
 								
 								if (in_array($identifier, $fillValue)) {
@@ -1545,7 +1617,7 @@ ob_start();
 					
 				case "Short Answer" : 
 					if (isset($testValues)) {
-						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, unserialize($testValues['answer']));
+						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, unserialize($testValues['userAnswer']));
 					} else {
 						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true);
 					}
@@ -1553,10 +1625,30 @@ ob_start();
 					break;
 					
 				case "True False" : 
-					if (isset($testValues)) {
-						radioButton($testDataLoop['id'], $testDataLoop['id'], "True,False", "1,0", true, true, false, unserialize($testValues['answer']));
+					if ($testData['randomize'] == "1") {						
+						$id = implode(",", unserialize($testValues['questionValueScrambled']));
+						$label = explode(",", $id);
 					} else {
-						radioButton($testDataLoop['id'], $testDataLoop['id'], "True,False", "1,0", true, true);
+						$id = implode(",", unserialize($testValues['questionValue']));
+						$label = explode(",", $id);
+					}
+					
+					if ($label['0'] == "1") {
+						$values = "True,";
+					} else {
+						$values = "False,";
+					}
+					
+					if ($label['1'] == "1") {
+						$values .= "True";
+					} else {
+						$values .= "False";
+					}
+					
+					if (isset($testValues)) {
+						radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true, false, unserialize($testValues['userAnswer']));
+					} else {
+						radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true);
 					}
 					
 					break;
@@ -1955,7 +2047,7 @@ ob_start();
 		return $returnArray;
 	}
 	
-	//A function to check to see if a value is present in an array
+	//A case-insensitive version of in_array()
 	function inArray($needle, $haystack) {
 		if (is_array($haystack)) {
 			foreach($haystack as $value) {
@@ -1965,7 +2057,7 @@ ob_start();
 						exit;
 					}
 				} else {
-					if ($value == $needle) {
+					if (strtolower($value) == strtolower($needle)) {
 						return true;
 						exit;
 					}
@@ -1993,7 +2085,11 @@ ob_start();
 		return array_unique($result);
 	}
 
-
+	//A function to return of the size of an array, even if several values are left empty
+	function size($array) {
+		$return = end($array);
+		return key($return);
+	}
 	
 	//A function to delete a folder and all of its contents
 	function deleteAll($directory, $empty = false) {
@@ -2033,12 +2129,29 @@ ob_start();
 	}
 	
 	//A function to grab grab the previous item in the database
-	function lastItem($table) {
+	function lastItem($table, $whereColumn = false, $whereValue = false, $column = false) {
 		global $connDBA;
 		
-		$lastItemGrabber = mysql_query("SELECT * FROM {$table} ORDER BY position DESC", $connDBA);
-		$lastItem = mysql_fetch_array($lastItemGrabber);
-		return $lastItem['position'] + 1;
+		if ($column == false) {
+			$column = "position";
+		} else {
+			$column = $column;
+		}
+		
+		if ($whereColumn == true && $whereValue == true) {
+			$where = " WHERE `{$whereColumn}` = '{$whereValue}' ";
+		} else {
+			$where = "";
+		}
+		
+		$lastItemGrabber = query("SELECT * FROM {$table}{$where} ORDER BY {$column} DESC", "raw", false);
+		
+		if ($lastItemGrabber) {
+			$lastItem = mysql_fetch_array($lastItemGrabber);
+			return $lastItem[$column] + 1;
+		} else {
+			return "1";
+		}
 	}
 	
 	//A function to return the mime type of a file
@@ -2454,7 +2567,15 @@ ob_start();
 	
 	//A function to prevent access to question question types if certain sessions are set
 	function questionAccess() {
+		if (isset($_SESSION['currentModule'])) {
+			die(errorMessage("The question bank cannot be opened while the module wizard is open. Please finish the module before opening the question bank."));
+		}
 		
+		if (isset($_SESSION['feedback'])) {
+			die(errorMessage("The question bank cannot be opened while the feedback generator is open. Please finish the close the feedback generator before opening the question bank."));
+		}
+		
+		//$_SESSION['currentModule']
 	}
 	
 	//A function to regulate the how questions are inserted and updated
@@ -2552,7 +2673,8 @@ ob_start();
 		
 		if (!$action) {
 			if ($showError == true) {
-				die(errorMessage("There is an error with your query: " . $query . "<br /><br />" . mysql_error() . "<br />" . print_r(debug_backtrace())));
+				$error = debug_backtrace();
+				die(errorMessage("There is an error with your query: " . $query . "<br /><br />" . mysql_error() . "<br /><br />Error on line: " . $error['0']['line'] . "<br />Error in file: " . $error['0']['file']));
 			} else {
 				return false;
 			}
@@ -2589,8 +2711,8 @@ ob_start();
 					unset($query, $action, $result);
 					exit;
 				} elseif ($returnType == "num") {
-					return mysql_num_rows($action);
-					
+					$result = mysql_num_rows($action);
+					return $result;
 					unset($query, $action, $result);
 					exit;
 				} elseif ($returnType == "selected") {

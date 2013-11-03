@@ -6,7 +6,7 @@
 	$questionData = dataGrabber("True False");
 	
 //Process the form
-	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['answer'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && is_numeric($_POST['answer'])) {
 		$question = mysql_real_escape_string($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];

@@ -73,6 +73,23 @@ function addShortAnswer(tableID, cellOneStart, cellOneEnd) {
 	newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '1', true)\">";
 }
 
+function addFile(tableID, cellOneStart, cellOneMiddle, cellOneEnd, totalFiles) {
+	var table = document.getElementById(tableID);
+	var newRow = table.insertRow(table.rows.length);
+	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
+	var currentID = Number(previousID) + 1;
+	newRow.id = currentID;
+	
+	if (table.rows.length <= totalFiles) {
+		var newCell1 = newRow.insertCell(0);
+		newCell1.innerHTML = cellOneStart + currentID + cellOneMiddle + currentID + cellOneEnd;
+		var newCell2 = newRow.insertCell(1);
+		newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('" + tableID + "', '" + currentID + "', '1', true)\">";
+	} else {
+		alert("You have reached the maximum number of allowed files for this question.")
+	}
+}
+
 function deleteObject(tableID, rowID, values, noHeader, shiftValues) {
 	var table = document.getElementById(tableID);
 	var row = document.getElementById(rowID);

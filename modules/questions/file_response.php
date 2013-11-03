@@ -25,6 +25,7 @@
 			$uploadDir = $monitor['directory'] . "test/answers";
 			$fileNameArray = explode(".", $targetFile);
 			$targetFile = "";
+			extension($_FILES['answer'] ['name']);
 			
 			for ($count = 0; $count <= sizeof($fileNameArray) - 1; $count++) {
 				if ($count == sizeof($fileNameArray) - 2) {
