@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 4th, 2010
-Last updated: February 9th, 2010
+Last updated: February 26th, 2010
 
 This is the lesson content management page for the learning 
 unit generator.
@@ -35,7 +35,7 @@ unit generator.
 	if (isset($_POST['submit']) && isset($_POST['title']) && isset($_POST['content'])) {
 		$title = escape($_POST['title']);
 		$content = escape($_POST['content']);
-		$targetFile = fileProcess("file", $monitor['directory'] . "lesson", false, false, $monitor['lessonTable'], "attachment", false, "error=upload", "error=fileType", array("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "wav", "mp3", "avi", "wmv", "flv", "mp4", "mov", "swf"));
+		$targetFile = escape(fileProcess("file", $monitor['directory'] . "lesson", false, false, $monitor['lessonTable'], "attachment", false, "error=upload", "error=fileType", array("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "wav", "mp3", "avi", "wmv", "flv", "mp4", "mov", "swf")));
 		
 		if (!isset($_GET['id'])) {
 			$lastPage = lastItem($monitor['lessonTable']);

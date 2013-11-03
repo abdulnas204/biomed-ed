@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: December 12th, 2010
-Last updated: February 14th, 2011
+Last updated: February 24th, 2011
 
 This script enables to view an overview of relevant 
 transactions, as well as the details of each transaction.
@@ -52,7 +52,7 @@ transactions, as well as the details of each transaction.
 				
 				$items = "";
 				
-				foreach(unserialize($payment['items']) as $item) {
+				foreach(arrayRevert($payment['items']) as $item) {
 					if ($itemName = exist("learningunits", "id", $item['item'])) {
 						$items .= $itemName['name'] . ", ";
 					} else {
@@ -129,7 +129,7 @@ transactions, as well as the details of each transaction.
 		
 		$count = 1;
 		
-		foreach (unserialize($paymentInfo['items']) as $item) {
+		foreach (arrayRevert($paymentInfo['items']) as $item) {
 			$data = query("SELECT * FROM `learningunits` WHERE `id` = '{$item['item']}'");
 			$price = str_replace(".", "", $data['price']);
 			
@@ -152,7 +152,7 @@ transactions, as well as the details of each transaction.
 		echo "</table>\n";
 		
 		$total = $paymentInfo['total'];
-		$quantity = sizeof(unserialize($paymentInfo['items']));
+		$quantity = sizeof(arrayRevert($paymentInfo['items']));
 		
 		echo "<hr />\n";
 		echo "<table width=\"100%\">\n";

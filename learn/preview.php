@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: Janurary 10th, 2011
-Last updated: February 9th, 2011
+Last updated: February 25th, 2011
 
 This is the preview script, which will selectively allow 
 access to secured filed based on the user's credentials, 

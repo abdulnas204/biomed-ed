@@ -27,7 +27,7 @@
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
 			$choiceType = $_POST['type'];
-			$questionValue = mysql_real_escape_string(serialize($_POST['questionValue']));
+			$questionValue = mysql_real_escape_string(arrayStore($_POST['questionValue']));
 		
 			$updateChoiceQuery = "UPDATE feedback SET `choiceType` = '{$choiceType}', `question` = '{$question}', `questionValue` = '{$questionValue}' WHERE id = '{$update}'";
 							
@@ -39,7 +39,7 @@
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
 			$choiceType = $_POST['type'];
-			$questionValue = mysql_real_escape_string(serialize($_POST['questionValue']));
+			$questionValue = mysql_real_escape_string(arrayStore($_POST['questionValue']));
 			
 			//Get the last feedBack question, and add one to the value for the next feedBack
 			$lastQuestionGrabber = mysql_query("SELECT * FROM feedback ORDER BY position DESC", $connDBA);
@@ -118,7 +118,7 @@
 		<?php
 			//Grab all of the answers and values if the question is being edited
 				if (isset ($update)) {	
-					$values = unserialize($testData['questionValue']);
+					$values = arrayRevert($testData['questionValue']);
 					
 					echo "<table width=\"50%\" name=\"values\" id=\"values\">";
 					while (list($valueKey, $valueArray) = each($values)) {

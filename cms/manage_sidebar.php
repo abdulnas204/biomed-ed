@@ -1,25 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: September 9th, 2010
-Last updated: Feburary 4th, 2010
-
-This is the page for managing the sidebars on the public 
-website.
+This is the page for managing the public website.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("cms/system/php") . "index.php");
-	require_once(relativeAddress("cms/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	
 //Check to see if the item is being edited
 	if (isset ($_GET['id'])) {

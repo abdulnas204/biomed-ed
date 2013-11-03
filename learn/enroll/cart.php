@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: August 18th, 2010
-Last updated: February 13th, 2011
+Last updated: February 26th, 2011
 
 This script is to review the items in a user's cart before 
 buying a learning unit.
@@ -36,6 +36,25 @@ buying a learning unit.
 		
 	//Redirect back to this page to avoid a browser resend alert on reload
 		redirect("cart.php");
+	}
+	
+//Process the outgoing information
+	if (isset($_POST['enroll'])) {
+		$total = 0;
+		
+		foreach ($_SESSION['cart'] as $item) {
+			$data = query("SELECT * FROM `learningunits` WHERE `id` = '{$item}'");
+			$total = $total + $data['item'];
+		}
+		
+		if (number_format($total, 2) > 0) {
+			$post = curl_init();
+			curl_setopt($post, CURLOPT_URL, 'http://fullurl/page2.php');
+			curl_setopt($post, CURLOPT_POST, true);
+			curl_setopt($post, CURLOPT_POSTFIELDS, 'firstName=John&lastName=Doe ');
+			curl_exec($post);
+			curl_close($post); 
+		}
 	}
 	
 //Remove items from an array
@@ -67,8 +86,8 @@ buying a learning unit.
 		}
 	}
 	
-	if (is_array(unserialize($userData['learningunits']))) {
-		foreach(unserialize($userData['learningunits']) as $key => $value) {
+	if (is_array(arrayRevert($userData['learningunits']))) {
+		foreach(arrayRevert($userData['learningunits']) as $key => $value) {
 			$sql .= " AND `id` !=  '{$key}'";
 		}
 	}
@@ -106,34 +125,50 @@ buying a learning unit.
 			$identifier = $count++;
 			$arrayKey = $identifier - 1;
 			
-			echo hidden("cmd", "cmd", "_cart");
-			echo hidden("upload", "upload", "1");
-			echo hidden("item_name_" . $identifier, "item_name_" . $identifier, prepare($data['name']));
-			echo hidden("item_number_" . $identifier, "item_number_" . $identifier, "unit_" . $item);
-			
-			if (!empty($data['enablePrice']) && !empty($data['price']) && $price > 0) {
-				echo hidden("amount_" . $identifier, "amount_" . $identifier, prepare($data['price']));
+			if ($price > 0) {				
+				echo hidden("cmd", "cmd", "_cart");
+				echo hidden("upload", "upload", "1");
+				echo hidden("item_name_" . $identifier, "item_name_" . $identifier, prepare($data['name']));
+				echo hidden("item_number_" . $identifier, "item_number_" . $identifier, "unit_" . $item);
+				
+				if (!empty($data['enablePrice']) && !empty($data['price']) && $price > 0) {
+					echo hidden("amount_" . $identifier, "amount_" . $identifier, prepare($data['price']));
+				} else {
+					echo hidden("amount_" . $identifier, "amount_" . $identifier, "0");
+				}
+				
+				echo "<tr align=\"center\" id=\"" . $identifier ."\"";
+				if ($columnCount & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
+				echo cell(prepare($data['name']));
+				
+				if (!empty($data['price'])) {
+					echo cell("\$" . $data['price'], "100");
+				} else {
+					echo cell("$0.00", "100");
+				}
+				
+				echo cell("1", "75");
+				echo cell(URL("", "cart.php?delete=" . $arrayKey, "action smallDelete", false, "Remove item"), "25");
+				echo "</tr>\n";
+				
+				array_push($paymentArray, $data['price']);
+				unset($data, $price);
+				$columnCount++;
 			} else {
-				echo hidden("amount_" . $identifier, "amount_" . $identifier, "0");
+				echo "<tr align=\"center\" id=\"" . $identifier ."\"";
+				if ($columnCount & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
+				echo cell(prepare($data['name']));
+				
+				if (!empty($data['price'])) {
+					echo cell("\$" . $data['price'], "100");
+				} else {
+					echo cell("$0.00", "100");
+				}
+				
+				echo cell("1", "75");
+				echo cell(URL("", "cart.php?delete=" . $arrayKey, "action smallDelete", false, "Remove item"), "25");
+				echo "</tr>\n";
 			}
-			
-			echo "<tr align=\"center\" id=\"" . $identifier ."\"";
-			if ($columnCount & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
-			echo cell(prepare($data['name']));
-			
-			if (!empty($data['price'])) {
-				echo cell("\$" . $data['price'], "100");
-			} else {
-				echo cell("$0.00", "100");
-			}
-			
-			echo cell("1", "75");
-			echo cell(URL("", "cart.php?delete=" . $arrayKey, "action smallDelete", false, "Remove item"), "25");
-			echo "</tr>\n";
-			
-			array_push($paymentArray, $data['price']);
-			unset($data, $price);
-			$columnCount++;
 		}
 		
 		echo "</table>\n";
@@ -194,7 +229,7 @@ buying a learning unit.
 			$total = $total + sprintf("%01.2f", $paymentDue);
 		}
 		
-		echo hidden("notify_url", "notify_url", $pluginRoot . "enroll/ipn.php?value=" . base64_encode(gzdeflate($total)) . "&user=" . base64_encode(gzdeflate($_SESSION['userName'])) . "&product=" . base64_encode(gzdeflate(serialize($products))));
+		echo hidden("notify_url", "notify_url", $pluginRoot . "enroll/ipn.php?value=" . base64_encode(gzdeflate($total)) . "&user=" . base64_encode(gzdeflate($_SESSION['userName'])) . "&product=" . base64_encode(gzdeflate(arrayStore($products))));
 		
 		if ($count != 1) {	
 			$quantity = $count - 1;
@@ -217,9 +252,11 @@ buying a learning unit.
 		echo "</p>\n";
 		echo "</div>\n";
 		
-		echo "<div align=\"right\">\n";
-		echo "<p><img src=\"https://" . $paymentInfo['transaction'] . "/en_US/i/bnr/horizontal_solution_PPeCheck.gif\"></p>";
-		echo "</div>\n";
+		if (number_format($total, 2) > 0) {
+			echo "<div align=\"right\">\n";
+			echo "<p><img src=\"https://" . $paymentInfo['transaction'] . "/en_US/i/bnr/horizontal_solution_PPeCheck.gif\"></p>";
+			echo "</div>\n";
+		}
 	} else {
 		echo "<div class=\"noResults\">Your shopping cart is empty, please " . URL("go back to the learning units page", "../index.php") . " and select which ones you would like the purchase.</div>\n";
 	}

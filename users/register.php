@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: September 30th, 2010
-Last updated: February 14th, 2011
+Last updated: February 26th, 2011
 
 This is user registration page.
 */
@@ -22,11 +22,11 @@ This is user registration page.
 	validateName("users", "userName");
 	
 //Top content
-	headers("Register", "validate");
+	headers("Register", "validate", true);
 	
 //Process the form
 	if (isset($_POST['submit']) && !empty($_POST['firstName']) && !empty($_POST['lastName']) && !empty($_POST['userName']) && !empty($_POST['primaryEmail'])) {
-		if (!exist("user", "userName", escape(strip($_POST['userName'], "lettersNumbers")))) {
+		if (!exist("user", "userName", escape(strip($_POST['userName'], "lettersNumbers"))) && $_POST['verify'] === "DITEC") {
 			$firstName = escape(strip($_POST['firstName'], "lettersNumbers"));
 			$lastName = escape(strip($_POST['lastName'], "lettersNumbers"));
 			$userName = escape(strip($_POST['userName'], "lettersNumbers"));
@@ -87,7 +87,13 @@ This is user registration page.
 	indent(textField("tertiaryEmail", "tertiaryEmail", false, false, false, false, ",custom[email]"));
 	echo "</blockquote>\n";
 	
-	catDivider("Submit", "three");
+	catDivider("Verification Code", "three");
+	echo "<blockquote>\n";
+	directions("Verification Code", true, "Please enter the verification code provided <br />by your instructor in order to register.");
+	indent(textField("verify", "verify", false, false, false, true));
+	echo "</blockquote>\n";
+	
+	catDivider("Submit", "four");
 	indent(button("submit", "submit", "Register", "submit"));
 	echo closeForm();
 	

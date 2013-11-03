@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: Janurary 25th, 2011
+Last updated: February 24th, 2011
 
 This is the fill in the blank management page for the 
 test generator.
@@ -34,8 +34,8 @@ test generator.
 		$partialCredit = $_POST['partialCredit'];
 		$case = $_POST['case'];
 		$tags = escape($_POST['tags']);
-		$questionValue = escape(serialize($_POST['questionValue']));
-		$answerValue = escape(serialize($_POST['answerValue']));
+		$questionValue = escape(arrayStore($_POST['questionValue']));
+		$answerValue = escape(arrayStore($_POST['answerValue']));
 		$feedBackCorrect = escape($_POST['feedBackCorrect']);
 		$feedBackIncorrect = escape($_POST['feedBackIncorrect']);
 		$feedBackPartial = escape($_POST['feedBackPartial']);
@@ -79,8 +79,8 @@ test generator.
 	echo "</tr>\n";
 	
 	if (isset($questionData)) {
-		$questions = unserialize($questionData['questionValue']);
-		$answers = unserialize($questionData['answerValue']);
+		$questions = arrayRevert($questionData['questionValue']);
+		$answers = arrayRevert($questionData['answerValue']);
 		
 		for ($count = 0; $count <= sizeof($questions) - 1; $count ++) {
 			$value = $count + 1;

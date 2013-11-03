@@ -44,7 +44,7 @@
 				  echo "<tr><td width=\"100\" valign=\"top\"><strong>Question " . $count++ . "</strong></td>";
 			  //Echo the multiple choice content
 				  echo "<td valign=\"top\">" . stripslashes($feedbackData['question']) . "<br /><br/ >";
-				  $questions = unserialize($feedbackData['questionValue']);
+				  $questions = arrayRevert($feedbackData['questionValue']);
 				  $start = sizeof ($questions);
 				  if ($feedbackData['choiceType'] == "radio") {
 					  while (list($questionKey, $questionArray) = each($questions)) {

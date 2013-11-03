@@ -1,174 +1,291 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: December 23rd, 2010
-Last updated: Janurary 3rd, 2011
-
-This is the configuration script for the session control 
-extension.
+This is the configuration script for the session control extension.
 */
 
 //Header functions
-	require_once("../core/index.php");
+	require_once("../server/index.php");
 	
 //Output this as a JavaScript file
 	header("Content-type: text/javascript");
 ?>
-//######
-//## This work is licensed under the Creative Commons Attribution-Share Alike 3.0 
-//## United States License. To view a copy of this license, 
-//## visit http://creativecommons.org/licenses/by-sa/3.0/us/ or send a letter 
-//## to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
-//######
+/*
+LICENSE: See "license.php" located at the root installation
+*/
 
-var returnURL = window.location.href.replace("<?php echo rtrim($root, "/"); ?>", "");
-var redirectTo = <?php echo "'" . $root . "users/login.htm?return='";?> + escape(returnURL);
+<?php
+	if (!loggedIn()) {
+?>
+$(document).ready(function() {
+    $('a#login').click(function() {
+        $('<div id="modal" title="Login Prompt"></div>')
+        .html('<p>Please login to access your account.</p><span id="loginAttempt"></span><p>Username<span class="require">*</span>: </p><blockquote><p><input type="text" name="userNameModal" id="userNameModal" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote><p>Password<span class="require">*</span>: </p><blockquote><p><input type="password" name="passWordModal" id="passWordModal" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote>')
+         .dialog({
+            height : 400,
+            width : 640,
+            modal : true,
+            resizable : false,
+            draggable : false,
+            closeOnEscape: false,
+            open : function() {
+                $(".ui-dialog-titlebar-close").hide();
+            },
+            buttons : {
+            	'Login' : function() {
+                	var userName = $('#userNameModal');
+                    var passWord = $('#passWordModal');
+                    var messageBox = $('#loginAttempt');
+                    var modal = $('#modal');
+                	
+                	if (userName.val() == "" || passWord.val() == "") {
+                    	 messageBox.addClass('require').text('A username and password are required.');
+                         modal.dialog({height : 440});
+                    } else {
+                        $.ajax({
+                            type : 'POST',
+                            url : '<?php echo $root; ?>users/modal_login.php?type=modal',
+                            data : {
+                                'userName' : userName.val(),
+                                'passWord' : passWord.val()
+                            },
+                            success : function(data) {
+                                if (data == "success") {
+                                    messageBox.empty();
+                                    modal.dialog('close');
+                                    window.location.href = '<?php echo $root; ?>portal/index.htm';
+                                } else {
+                                    messageBox.addClass('require').text('Your username and/or password was incorrect.');
+                                    userName.val('');
+                                    passWord.val('');
+                                    modal.dialog({height : 440});
+                                }
+                            }
+                        });
+                    }
+                 },
+                 'Forgot Password' : function() {
+                 	$('#modal').dialog('close');
+                    window.location.href = '<?php echo $root; ?>users/forgot_password.htm';
+                 },
+                 'Register' : function() {
+                 	$('#modal').dialog('close');
+                 	window.location.href = '<?php echo $root; ?>users/register.htm';
+                 },
+                 'Cancel' : function() {
+                    $('#modal').dialog('close');
+                 }
+            }
+         });
+    });
+});
+<?php
+		exit;
+	}
+?>
+// Begin configuration
+var logoutCountdown = 1200000-300000; // Number of milliseconds before showing the logout countdown
+var reloginMinutes = 5; // Number of minutes remaining before logged out (e.g.: 5 will give 5 minutes and 0 seconds)
+var reloginSeconds = 0; // Number of seconds remaining before logged out (e.g.: 30 will give 0 minutes and 30 seconds)
+// End configuration
 
-function countDown() {
-    var element = document.getElementById('countDown').innerHTML;
-    var content = parseFloat(element) - 1;
+var timer;
+
+function relogin() {
+    timer = setInterval("timeOut()", 1000);
     
-    if (element > 0) {
-    	document.getElementById('countDown').innerHTML = content;
+    if (reloginMinutes > 1) {
+        var minuteText = "minutes";
+    } else if (reloginMinutes == 1) {
+        var minuteText = "minute";
+    } else {
+        var minuteText = "";
+    }
+    
+    if (reloginSeconds > 1) {
+        var secondText = "seconds";
+    } else if (reloginSeconds == 1) {
+        var secondText = "second";
+    } else {
+        var secondText = "";
+    }
+    
+    if (reloginMinutes > 1 && reloginSeconds > 1) {
+        var andText = "and";
+    } else {
+        var andText = "";
+    }
+    
+    if (reloginMinutes == 0) {
+        reloginMinutes = '';
+    }
+    
+    if (reloginSeconds == 0) {
+        reloginSeconds = '';
+    }
+    
+    $('<div id="relogin" title="Session Expiration Warning"></div>')
+        .html('<p>You have been inactive for about ' + Math.ceil((logoutCountdown)/60000) + ' minutes, and will be automatically logged out in <strong><span id="minutes">' + reloginMinutes + '</span> <span id="minutesText">' + minuteText + '</span> <span id="and">' + andText + '</span> <span id="seconds">' + reloginSeconds + '</span> <span id="secondsText">' + secondText + '</span></strong> for security reasons.</p><p>Click &quot;Stay Logged In&quot; to keep your session active.</p>')
+        .dialog({
+            height : 300,
+            width : 550,
+            modal : true,
+            resizable : false,
+            draggable : false,
+            closeOnEscape: false,
+            open : function() {
+                $(".ui-dialog-titlebar-close").hide();
+            },
+            buttons : {
+                'Stay Logged In' : function() {
+                    $.ajax({
+                        type : 'GET',
+                        url : '<?php echo $root; ?>users/modal_login.php?type=modal',
+                        data : {'type' : 'modal'},
+                        success : function() {
+                            clearInterval(timer);
+                            setTimeout("relogin()", logoutCountdown);
+                            $('#relogin').dialog('close').remove();
+                        }
+                    });
+                },
+                'Logout' : function() {
+                   $('#relogin').dialog('close');
+                   window.location.href = '<?php echo $root; ?>users/logout.htm';
+                }
+            }
+        });  
+}
+
+function timeOut() {
+    var minutes = $('#minutes');
+    var minutesValue = minutes.text();
+    var minutesText = $('#minutesText');
+    var and = $('#and');
+    var seconds = $('#seconds');
+    var secondsValue = seconds.text();
+    var secondsText = $('#secondsText');
+    
+    if (secondsValue > 2) {
+    	seconds.text(secondsValue-1);
+    } else if (secondsValue == 2) {
+    	seconds.text(secondsValue-1);
+        secondsText.text('second');
+    } else if (secondsValue == 1) {
+        and.text('');
+        seconds.text('');
+        secondsText.text('');
+    } else {    
+        if (minutesValue-1 == 1) {
+        	minutes.text('1');
+            minutesText.text('minute');
+        } else if (minutesValue-1 > 1) {
+             minutesText.text('minutes');
+        } else {
+            minutes.text('');
+            minutesText.text('');
+            and.text('');
+        }
+        
+        if ((secondsValue == 0 || secondsValue == "") && minutesValue !== "") {
+        	if (minutesValue > 1) {
+                minutes.text(minutesValue-1);
+                and.text('and');
+            }
+            
+            seconds.text('59');
+            secondsText.text('seconds');
+        } else if ((secondsValue == 0 || secondsValue == "") && minutesValue == "") {
+            $('#relogin').dialog('close');
+            clearInterval(timer);
+            modal();
+        } else {
+            seconds.text(secondsValue-1);
+        }
     }
 }
 
-(function($){
-    $.fn.idleTimeout = function(options) {
-    	var defaults = {
-            inactivity: 1200000, //20 Minutes
-            noconfirm: 60000, //60 Seconds
-            sessionAlive: 600000, //10 Minutes
-            redirect_url: redirectTo,
-            click_reset: true,
-            alive_url: document.location.href,
-            logout_url: redirectTo
-    	}
-    	
-    	var opts = $.extend(defaults, options);
-    	var liveTimeout, confTimeout, sessionTimeout;
-    	var warning = "<div id='modal_pop'><p>You will be logged out in <span id='countDown'>10</span> seconds due to inactivity.<br /><br />Click &quot;Stay Logged In&quot; to continue your session.</p></div>";
-        var login = "<div id='modal_pop'><p>You have been logged out due to inactivity. All entered information is still in queue.</p><p>User name<span class='require'>*</span>: </p><blockquote><p><input type='text' name='userName' id='userName' size='50' autocomplete='off' spellcheck='true' class='validate[required]' /></p></blockquote><p>Password<span class='require'>*</span>: </p><blockquote><p><input type='text' name='passWord' id='passWord' size='50' autocomplete='off' spellcheck='true' class='validate[required]' /></p></blockquote>";
-
-    
-    	var start_liveTimeout = function() {
-			clearTimeout(liveTimeout);
-			clearTimeout(confTimeout);
-			liveTimeout = setTimeout(logout, opts.inactivity);
-			
-			if(opts.sessionAlive) {
-				clearTimeout(sessionTimeout);
-				sessionTimeout = setTimeout(keep_session, opts.sessionAlive);
-			}
-		}
-    
-    	var logout = function() {
-			confTimeout = setTimeout(loginPrompt, opts.noconfirm);
-            
-			$(warning).dialog({
-				buttons: {
-                	"Stay Logged In":  function(){
-                    	$(this).dialog('close');
-                    	stay_logged_in();
-					},
-                    
-                    "Logout":  function(){
-                    	$(this).dialog('close');
-                    	window.location.href = '<?php echo $root; ?>users/logout.htm';
-					}
-				},
-                
-                width: 480,
-                height: 280,
-                modal: true,
-                resizable: false,
-                draggable: false,
-                title: 'Login Expiration'
-            });
-            
-            var interval = self.setInterval("countDown()", 1000);
-		}
-    
-        var loginPrompt = function() {
-            $("#modal_pop").dialog('close');
-            
-            $(login).dialog({
-				buttons: {
-                	"Login":  function(){
-                    	process();
-					},
-                    
-                    "Logout":  function(){
-                    	$(this).dialog('close');
-                    	window.location.href = '<?php echo $root; ?>users/logout.htm';
-					}
-				},
-                
-                width: 640,
-                height: 400,
-                modal: true,
-                resizable: false,
-                draggable: false,
-                title: 'Login'
-            });
-        }
+function modal() {
+    $('<div id="modal" title="Login Prompt"></div>')
+        .html('<p>You have been logged out due to inactivity. All entered information is still in queue.</p><span id="loginAttempt"></span><p>Username<span class="require">*</span>: </p><blockquote><p><input type="text" name="userName" id="userName" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote><p>Password<span class="require">*</span>: </p><blockquote><p><input type="password" name="passWord" id="passWord" size="50" autocomplete="off" spellcheck="true" class="validate[required]" /></p></blockquote>')
+        .dialog({
+            height : 400,
+            width : 640,
+            modal : true,
+            resizable : false,
+            draggable : false,
+            closeOnEscape: false,
+            open : function() {
+                $(".ui-dialog-titlebar-close").hide();
+            },
+            buttons : {
+                'Login' : function() {
+                	var userName = $('#userName');
+                    var passWord = $('#passWord');
+                    var messageBox = $('#loginAttempt');
+                    var modal = $('#modal');
+                	
+                	if (userName.val() == "" || passWord.val() == "") {
+                    	 messageBox.addClass('require').text('A username and password are required.');
+                         modal.dialog({height : 440});
+                    } else {
+                        $.ajax({
+                            type : 'POST',
+                            url : '<?php echo $root; ?>users/modal_login.php?type=modal',
+                            data : {
+                                'userName' : userName.val(),
+                                'passWord' : passWord.val()
+                            },
+                            success : function(data) {
+                                if (data == "success") {
+                                    messageBox.empty();
+                                    modal.dialog('close');
+                                    setTimeout("relogin()", logoutCountdown);
+                                } else {
+                                    messageBox.addClass('require').text('Your username and/or password was incorrect.');
+                                    userName.val('');
+                                    passWord.val('');
+                                    modal.dialog({height : 440});
+                                }
+                            }
+                        });
+                    }
+                 },
+                 'Logout' : function() {
+                    $('#modal').dialog('close');
+                    window.location.href = '<?php echo $root; ?>users/logout.htm';
+                 }
+            }
+        });
         
-        var process = function() {
-            var userName = $("input#userName").val();
-            var passWord = $("input#userPassword").val();
-            var dataString = 'userName=' + userName + '&passWord=' + passWord;  
-            
-            $.ajax({
-                type: "POST",
-                url: "<?php echo $root . "users/login.htm";?>",
-                data: dataString,
-                success: function() {
-                   alert("whoo!");
+    $('.ui-widget-overlay').fadeTo(3000, 1);
+}
+
+setTimeout("relogin()", logoutCountdown);
+
+//Confirm before logging out
+$(document).ready(function() {
+    $('a#logout').click(function() {
+        $('<div id="logoutConfirm" title="Confirm Logout"></div>').html('Are you sure you wish to logout?').dialog({
+            height : 175,
+            width : 300,
+            modal : true,
+            resizable : false,
+            draggable : false,
+            closeOnEscape: false,
+            open : function() {
+                $(".ui-dialog-titlebar-close").hide();
+            },
+            buttons : {
+            	'Yes' : function() {
+                	window.location.href = '<?php echo $root; ?>users/logout.htm';
+                },
+                'No' : function() {
+                	$(this).dialog('close');
+                	return false;
                 }
-            });
-        }
-        
-        var stay_logged_in = function(el) {
-            start_liveTimeout();
-            
-            if(opts.alive_url) {
-                $.get(opts.alive_url);
             }
-        }
-        
-        var keep_session = function() {
-            $.get(opts.alive_url);
-            clearTimeout(sessionTimeout);
-            sessionTimeout = setTimeout(keep_session, opts.sessionAlive);
-        } 
-        
-        return this.each(function() {
-            obj = $(this);
-            start_liveTimeout();
-            
-            if(opts.click_reset) {
-                $(document).bind('click', start_liveTimeout);
-            }
-            
-            if(opts.sessionAlive) {
-                keep_session();
-            }
-		});
-	};
-})(jQuery);
-
-$(document).ready(function(){
-	$(document).idleTimeout({
-		inactivity: 1200000, //20 Minutes
-        noconfirm: 60000, //60 Seconds
-        sessionAlive: 600000 //10 Minutes
-	});
+        });
+    });
 });

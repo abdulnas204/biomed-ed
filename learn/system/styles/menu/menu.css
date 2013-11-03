@@ -78,6 +78,7 @@ http://www.cssplay.co.uk/menus/css3-fade-menu.html
 	-moz-transition: opacity 0.6s ease-in-out;
 	-o-transition: opacity 0.6s ease-in-out;
 	transition: opacity 0.6s ease-in-out;
+	z-index:1000;
 }
 #menu ul.level3 {
 	background:#ea3;

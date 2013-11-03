@@ -1,12 +1,15 @@
-<?php 
+<?php
+/*
+LICENSE: See "license.php" located at the root installation
+
+This is a modified version of the SpryPagedView file, for use to display the list of users.
+*/
+
 //Header functions
-	require_once('../../connections/connDBA.php');
+	require_once('../../server/index.php');
 	
 //Export data to XML
 	header("Content-type: text/javascript");
-	
-//Grab the user's data
-	$userData = userData();
 ?>
 // SpryPagedView.js - version 0.7 - Spry Pre-Release 1.6.1
 //
@@ -101,7 +104,7 @@ function formatLine(region, lookupFunc) {
 	if (lookupFunc("{pvUsers::organization}") == "None") {
 		return "<span class=\"notAssigned\">" + lookupFunc("{pvUsers::organization}") + "</span>";
 	} else {
-		return "<a href=\"../organizations/profile.php?id=" + lookupFunc("{pvUsers::organizationID}") + "\">" + lookupFunc("{pvUsers::organization}") + "</a>";
+		return "<a href=\"../organizations/profile.htm?id=" + lookupFunc("{pvUsers::organizationID}") + "\">" + lookupFunc("{pvUsers::organization}") + "</a>";
 	}
 }
 
@@ -109,7 +112,7 @@ function noDelete(region, lookupFunc) {
 	if (lookupFunc("{pvUsers::id}") == <?php echo $userData['id']; ?>) {
 		return "<span class=\"action noDelete\" onmouseover=\"Tip('You may not delete yourself')\" onmouseout=\"UnTip()\"></span>";
 	} else {
-		return "<a href=\"index.php?action=delete&id=" + lookupFunc("{pvUsers::id}") + "\" class=\"action delete\" onmouseover=\"Tip('Delete <strong>" + lookupFunc("{pvUsers::firstName}") + " " + lookupFunc("{pvUsers::lastName}") + "</strong>')\" onmouseout=\"UnTip()\" onclick=\"return confirm('This action cannot be undone. Continue?');\"></a>";
+		return "<a href=\"index.htm?action=delete&id=" + lookupFunc("{pvUsers::id}") + "\" class=\"action delete\" onmouseover=\"Tip('Delete <strong>" + lookupFunc("{pvUsers::firstName}") + " " + lookupFunc("{pvUsers::lastName}") + "</strong>')\" onmouseout=\"UnTip()\" onclick=\"return confirm('This action cannot be undone. Continue?');\"></a>";
 	}
 }
 
@@ -117,7 +120,7 @@ function email(region, lookupFunc) {
 	if (lookupFunc("{pvOrganizations::email}") == "None") {
 		return "<span class=\"notAssigned\">Awaiting Information</span>";
 	} else {
-		return "<a href=\"../communication/send_email.php?type=organization&id=" + lookupFunc("{pvOrganizations::id}") + "&limit=billing\">" + lookupFunc("{pvOrganizations::email}") + "</a>";
+		return "<a href=\"../communication/send_email.htm?type=organization&id=" + lookupFunc("{pvOrganizations::id}") + "&limit=billing\">" + lookupFunc("{pvOrganizations::email}") + "</a>";
 	}
 }
 

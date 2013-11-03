@@ -1,24 +1,12 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
-
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-*/
-
-/* 
-Created by: Oliver Spryn
-Created on: May 11th, 2010
-Last updated: December 1th, 2010
+LICENSE: See "license.php" located at the root installation
 
 This is the log out page.
 */
 
 //Header functions
-	require_once('../system/core/index.php');	
+	require_once('../system/server/index.php');	
 	headers("Logout", false, false, false, true);
 	
 //Logout the user

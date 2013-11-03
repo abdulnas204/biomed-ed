@@ -10,10 +10,10 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: February 24th, 2011
 
 This is the page for previewing individual questions from 
-the lesson generator.
+the test generator.
 */
 
 //Header functions

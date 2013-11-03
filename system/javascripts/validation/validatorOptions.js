@@ -2,66 +2,66 @@
 	$.fn.validationEngineLanguage = function() {};
 	$.validationEngineLanguage = {
 		newLang: function() {
-			$.validationEngineLanguage.allRules = 	{
-					"required":{    			// Add your regex rules here, you can take telephone as an example
+			$.validationEngineLanguage.allRules = {
+					"required": {
 						"regex":"none",
 						"alertText":"* Required (Click to hide)",
 						"alertTextCheckboxMultiple":"* Required (Click to hide)",
 						"alertTextCheckboxe":"* Required (Click to hide)"},
-					"length":{
+					"length": {
 						"regex":"none",
 						"alertText":"* Between ",
 						"alertText2":" and ",
 						"alertText3": " characters allowed"},
-					"maxCheckbox":{
+					"maxCheckbox": {
 						"regex":"none",
 						"alertText":"* Checks allowed Exceeded"},	
-					"minCheckbox":{
+					"minCheckbox": {
 						"regex":"none",
 						"alertText":"* Please select at least ",
 						"alertText2":" option"},	
-					"confirm":{
+					"confirm": {
 						"regex":"none",
 						"alertText":"* Your field is not matching"},		
-					"telephone":{
+					"telephone": {
 						"regex":"/^[0-9\-\(\)\ ]+$/",
 						"alertText":"* Invalid phone number"},	
-					"email":{
+					"email": {
 						"regex":"/^[a-zA-Z0-9_\.\-]+\@([a-zA-Z0-9\-]+\.)+[a-zA-Z0-9]{2,4}$/",
 						"alertText":"* Invalid email address"},	
-					"date":{
-                         "regex":"/^[0-9]{4}\-\[0-9]{1,2}\-\[0-9]{1,2}$/",
-                         "alertText":"* Invalid date, must be in YYYY-MM-DD format"},
-					"onlyNumber":{
+					"date": {
+						"regex":"/^[0-9]{4}\-\[0-9]{1,2}\-\[0-9]{1,2}$/",
+						"alertText":"* Invalid date, must be in YYYY-MM-DD format"},
+					"onlyNumber": {
 						"regex":"/^[0-9\ ]+$/",
 						"alertText":"* Numbers only"},	
-					"noSpecialCharacters":{
+					"noSpecialCharacters": {
 						"regex":"/^[0-9a-zA-Z ]+$/",
 						"alertText":"* No special characters allowed"},	
-					"noSpecialCharactersSpaces":{
+					"noSpecialCharactersSpaces": {
 						"regex":"/^[0-9a-zA-Z]+$/",
-						"alertText":"* No special characters allowed"},	
-					"ajaxUser":{
-						"file": document.location.href,
-						"extraData":"name=eric",
-						"alertTextOk":"* This user is available",	
-						"alertTextLoad":"* Loading, please wait",
-						"alertText":"* This user is already taken"},	
-					"ajaxName":{
+						"alertText":"* No special characters allowed"},
+					"ajaxName": {
 						"file": document.location.href,
 						"alertText":"* This name is already taken",
 						"alertTextOk":"* This name is available",	
 						"alertTextLoad":"* Loading, please wait"},		
-					"onlyLetter":{
+					"onlyLetter": {
 						"regex":"/^[a-zA-Z\ \']+$/",
 						"alertText":"* Letters only"},
-					"validate2fields":{
+					"validate2fields": {
     					"nname":"validate2fields",
     					"alertText":"You must have a firstname and a lastname"},
-					"uploadCheck":{
+					"uploadCheck": {
 						"nname":"uploadCheck",
 						"alertText":"* Invalid file type"},
-					"URL":{
+					"bannerCheck": {
+						"nname":"bannerCheck",
+						"alertText":"* Invalid file type"},
+					"iconCheck": {
+						"nname":"iconCheck",
+						"alertText":"* Invalid file type"},
+					"URL": {
 						"regex":"/^http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?$/",
 						"alertText":"* Invalid address"}
 					}	

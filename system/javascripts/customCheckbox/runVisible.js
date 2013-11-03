@@ -1,11 +1,29 @@
-$(document).ready(function(){
-	$("input:checkbox").each( function() {
-		(this.checked) ? $("#fake"+this.id).addClass('hidden') : $("#fake"+this.id).removeClass('hidden');
+//Create a fake checkbox and submit this data in realtime when clicked
+	$(document).ready(function(){
+		$("a.visible, a.hidden").live('click', function() {
+			var object = $(this);
+			
+			if(object.hasClass('hidden')) {
+				var option = 'on';
+			} else {
+				var option = '';
+			}
+			
+			$.ajax({
+				'type' : 'POST',
+				'url' : document.location.href,
+				'data' : {
+					'action' : 'setAvaliability',
+					'id' : object.attr('id'),
+					'option' : option
+				},
+				'success' : function() {
+					if(object.hasClass('hidden')) {
+						object.removeClass('hidden');
+					} else {
+						object.addClass('hidden');
+					}
+				}
+			});
+		});
 	});
-	$(".visible").click(function(){
-		($(this).hasClass('hidden')) ? $(this).removeClass('hidden') : $(this).addClass('hidden');
-		$(this.hash).trigger("click");
-		Spry.Utils.submitForm(this.parentNode);
-		return false;
-	});
-});

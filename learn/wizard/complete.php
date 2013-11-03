@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: February 24th, 2011
 
 This is the completion page, stating that the learning unit 
 has been set up, and it handles some final processing.

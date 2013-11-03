@@ -1,30 +1,19 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: November 24th, 2010
-Last updated: December 1st, 2010
-
-This is the developer administration login page.
+This is the login page for the system administration panel.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("admin/system/php") . "index.php");
-	require_once(relativeAddress("admin/system/php") . "functions.php");
-	headers("Developer Administration Login", "validate");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
+	headers("System Administration Login", "validate");
 	
 //Process the login
 	if (isset($_POST['submit']) && !empty($_POST['userName']) && !empty($_POST['passWord'])) {
 		if ($_POST['userName'] === $rootUserName && $_POST['passWord'] === $rootPassWord) {
-			$_SESSION['developerAdministration'] = $_POST['userName'];
+			$_SESSION['administration'] = $_POST['userName'];
 			redirect("index.php");
 		} else {
 			redirect("login.php?alert=true");
@@ -32,7 +21,7 @@ This is the developer administration login page.
 	}
 	
 //Title
-	title("Developer Administration Login", "Login to access the developer panel for this site.");
+	title("System Administration Login", "Login to access the system administration panel for this site.");
 	
 //Display message updates
 	message("alert", "true", "error", "Your username and/or password is incorrect.");

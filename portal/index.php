@@ -1,26 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: August 31st, 2010
-Last updated: Janurary 25th, 2011
-
-This is the home page for logged in users, which displays
-information relavent to the user.
+This is the home page for logged in users, which displays information relavent to the user.
 */
 
 //Header functions
-	require_once('../system/core/index.php');	
+	require_once('../system/server/index.php');	
 	headers("Home", false, true);
-	
-	echo preg_replace("/<title>(.*)<\/title>/", "<title>Replace with me</title>", "<title>SoMe CoNeNt</title>");
 	
 //Title
 	title("Home", "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above.");
@@ -39,7 +26,10 @@ information relavent to the user.
 	}
 	
 //A function to calculate the number of users in a particular system
-	/*function userCount($role, $type) {
+
+	/*
+		echo preg_replace("/<title>(.*)<\/title>/", "<title>Replace with me</title>", "<title>SoMe CoNeNt</title>");
+	function userCount($role, $type) {
 		global $connDBA;	
 		
 		if ($type == true) {

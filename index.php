@@ -1,29 +1,17 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
-
-Created by: Oliver Spryn
-Created on: July 30th, 2010
-Last updated: February 14th, 2011
-
-This is the home page of the site, which contains content 
-from the CMS portion of the site, as well as a customizeable 
-sidebar.
+This is the home page of the site, which contains content from the CMS addon of the site, as well as a customizeable sidebar.
 */
 
 //Header functions
-	require_once('system/core/index.php');
+	require_once('system/server/index.php');
 	login();
 	
 //If no page URL variable is defined, then choose the home page
 	if (!isset($_GET['page']) || $_GET['page'] == "") { 
-		$pageInfo = query("SELECT * FROM `pages` WHERE `position` = '1'");
+		$pageInfo = query("SELECT * FROM `pages` WHERE `position` = '1'", false, false);
 	} else {		
 		$pageInfo = query("SELECT * FROM `pages` WHERE `id` = {$_GET['page']}");	
 	}
@@ -88,7 +76,7 @@ sidebar.
 //Admin toolbar
 	if (loggedIn() && !empty($pageInfo['content'])) {
 		echo form("pages");
-		echo "<div class=\"toolBar noPadding\">\n<div align=\"center\">";
+		echo "<div class=\"toolBar noPadding\">\n<div align=\"center\">\n";
 		echo URL("Edit This Page", "cms/manage_page.php?id=" . $pageInfo['id']);
 		echo " | Visible: ";
 		echo hidden("action", "action", "setAvaliability");
@@ -130,9 +118,9 @@ sidebar.
 		echo "</div>\n<div class=\"";
 		
 		if ($sideBarLocation['sideBar'] == "Left") {
-			echo "dataLeft";
+			echo "dataLeft sideBarLeft";
 		} else {
-			echo "dataRight";
+			echo "dataRight sideBarRight";
 		}
 		
 		echo "\">\n";

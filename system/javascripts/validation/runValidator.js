@@ -640,7 +640,7 @@ $.validationEngine = {
 })(jQuery);
 
 $(document).ready(function() {
-	$("#validate").validationEngine();
+	$("form").validationEngine();
 });
 
 //Developer Enhancement

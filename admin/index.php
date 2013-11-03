@@ -1,79 +1,59 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: November 24th, 2010
-Last updated: December 15th, 2010
-
-This is the developer administration overview page, which 
-displays a summary of developer-administered extensible 
-content, and provides quick access to each of these tools.
+This is the system administration overview page, which displays a list of add-ons currently installed add-ons, as well as the ability to install new ones, and manage existing ones.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("admin/system/php") . "index.php");
-	require_once(relativeAddress("admin/system/php") . "functions.php");
-	headers("Developer Administration Panel");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
+	headers("System Administration Panel");
 	lockAccess();
 	
+//Reorder pages	
+	reorder("addons", "index.php");
+	
 //Title
-	title("Developer Administration Panel", "This is the developer administration panel, designed for developers to administer extensible areas of the site.");
+	title("System Administration Panel", "This is the system administration panel, which is designed to manage existing add-ons, and install new ones.");
 	
 //Admin toolbar
-	echo "<div class=\"toolBar\">";
-	echo toolBarURL("Manage Roles", "roles/index.php", "toolBarItem user");
+	echo "<div class=\"toolBar\">\n";
+	echo toolBarURL("Install New Add-on", "roles/index.php", "toolBarItem new");
 	echo toolBarURL("Leave Administration", "logout.php", "toolBarItem back");
-	echo "</div>";
+	echo "</div>\n";
+	echo "<br />\n";
 	
-//Display the loaded plugins
-	echo "<p class=\"homeDivider\">Loaded Plugins</p>\n";
-	echo "<blockquote>\n";
-	
-	$pluginsDirectory = opendir("../");
-	
-	while ($plugins = readdir($pluginsDirectory)) {
-		if ($plugins !== "." && $plugins !== "..") {
-			if (is_dir("../" . $plugins) && file_exists("../" . $plugins . "/system/php/index.php")) {
-				require("../" . $plugins . "/system/php/index.php");
-				echo "<strong>" . $name . "</strong>";
-				
-				//Link to the administration page if there is an administration plugin
-				if (file_exists("../" . $plugins . "/system/php/admin/index.php")) {
-					echo " (" .  URL("Manage Plugin", "../" . $plugins . "/system/php/admin/index.php") . ")";
-				}
-				
-				echo "<br />\n";
-				echo "<blockquote>\n";
-				echo "Version: " . $version . "<br />\n";
-				echo "Author: " . $author . "<br />\n";
-				echo "Installation Root: " . URL($pluginRoot . "index.php", $pluginRoot . "index.php", false, "_blank") . "<br />\n";
-				echo "Information: " . URL($infoURL, $infoURL, false, "_blank") . "<br />\n";				
-				echo "</blockquote>\n";
-			}
+//Display the loaded add-ons
+	if (exist("addons")) {
+		$addonsGrabber = query("SELECT * FROM `addons` ORDER BY `position`", "raw");
+		
+		echo "<table class=\"dataTable\">\n";
+		echo "<tr>\n";
+		echo column("Menu Order", "75");
+		echo column("Name", "250");
+		echo column("Version", "75");
+		echo column("Author", "125");
+		echo column("Information", "125");
+		echo column("Manage", "50");
+		echo "</tr>\n";
+		
+		while ($addon = fetch($addonsGrabber)) {
+			echo "<tr";
+			if ($addon['position'] & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
+			echo reorderMenu("addons", $addon['id']);
+			echo cell(URL($addon['name'], $root . $addon['pluginRoot'] . "index.php", false, "_blank"), "250");
+			echo cell($addon['version'], "75");
+			echo cell($addon['author'], "125");
+			echo cell(URL($addon['infoURL'], $addon['infoURL'], false, "_blank"), "125");
+			echo editURL($addon['pluginRoot'] . "index.php", $addon['name'], "addon");
+			echo "</tr>\n";
 		}
+		
+		echo "</table>\n";
+	} else {
+		echo "<div class=\"noResults\">There are no add-ons currently installed.</div>\n";
 	}
-	
-	echo "</blockquote>\n";
-	
-//Display the list of roles
-	echo "<p class=\"homeDivider\">Roles</p>\n";
-	echo "<blockquote>\n";
-	
-	$rolesGrabber = query("SELECT * FROM `roles` ORDER BY `position` ASC", "raw");
-	
-	while($roles = fetch($rolesGrabber)) {
-		echo URL($roles['name'], "roles/details.php?id=" . $roles['id']) . " - " . strip_tags($roles['description']) . "<br />\n";
-	}
-	
-	echo "</blockquote>\n";
 	
 //Include the footer
 	footer();

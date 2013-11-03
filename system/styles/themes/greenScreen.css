@@ -1,0 +1,203 @@
+/*
+LICENSE: See "license.php" located at the root installation
+
+Sections of the code are courtesy of Dynamic Drive DHTML.
+---------------------------------------------------------
+*/
+
+/* Universal declarations */
+body {
+	width:100%;
+	height:100%;
+	padding:0px;
+	margin:0px;
+	font-family:Arial, Helvetica, sans-serif;
+}
+
+h2 {
+	font-size:18px;
+}
+
+a {
+	text-decoration:underline;
+	color:#666;
+}
+
+a:visited {
+	text-decoration:underline;
+	color:#666;
+}
+
+a:hover {
+	text-decoration:none;
+	color:#0C3;
+}
+
+img {
+	border:0px;
+}
+
+/* Header */
+/***********************************************
+BEGIN LGEAL NOTICE
+
+* DD Tab Menu script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+* This notice MUST stay intact for legal use
+* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
+***********************************************/
+
+ul.tabMenu {
+	margin:0px;
+	padding:0px;
+	font:bold 12px Arial;
+	text-align:center;
+	background:url(../../images/themes/green_screen/bar_background.png) top repeat-x;
+	border-bottom:thin solid black;
+	height:25px;
+	width:100%;
+}
+
+ul.tabMenu li {
+	display:inline;
+	display:inline-block;
+}
+
+ul.tabMenu li a, ul.tabMenu li span {
+	text-decoration:none;
+	color:#333;
+	float:left;
+	padding:5px 11px 0px 11px;
+	border-right:thin solid black;
+	height:20px;
+}
+
+ul.tabMenu li a.first, ul.tabMenu li span.first {
+	border-left:thin solid black;
+}
+
+ul.tabMenu li a:visited {
+	color:#333;
+}
+
+ul.tabMenu li a:hover, ul.tabMenu li a.current {
+	color:white;
+	background:transparent url(../../images/themes/green_screen/tab_background.png) center repeat-x;
+	border-bottom:thin solid #72980E;
+}
+
+/***********************************************
+END LGEAL NOTICE
+***********************************************/
+
+div.loginStatus {
+	position:absolute;
+	padding-top:2px;
+	right:5px;
+}
+
+div.header {
+	height:200px;
+	background:url(../../images/themes/green_screen/body_background.png) top repeat-x;
+}
+
+div.header div.navigation {
+	position:absolute;
+	width:100%;
+	top:153px;
+	text-align:center;
+}
+
+div.header div.navigation p a {
+	text-decoration:none;
+	color:#333;
+	padding:3px 11px 4px 11px;
+	border-right:thin solid #006600;
+	height:20px;
+}
+
+div.header div.navigation p a.current {
+	text-decoration:none;
+	color:#333;
+	padding:3px 11px 4px 11px;
+	border-top:thin solid #72980E;
+	border-right:thin solid #006600;
+	border-bottom:thin solid #FFF;
+	height:20px;
+	background:url(../../images/themes/green_screen/navigation_background.png) #FFF;
+}
+
+div.header div.navigation p a.first {
+	border-left:thin solid #006600;
+}
+
+/* Sidebar */
+div.sideBarLeft {
+	height:100%;
+	width:275px;
+	background:url(../../images/themes/green_screen/sidebar_left_background.png) top repeat-y;
+}
+
+div.sideBarRight {
+	height:100%;
+	width:275px;
+	padding-left:16px;
+	background:url(../../images/themes/green_screen/sidebar_right_background.png) top repeat-y;
+}
+
+h2.boxTitle {
+	text-align:center;
+	font-size:16px;
+}
+
+div.sideBarLeft div {
+	padding-bottom:5px;
+	width:275px;
+	font-size:12px;
+	background:url(../../images/themes/green_screen/sidebar_divider_left.png) left bottom no-repeat;
+}
+
+div.sideBarRight div {
+	padding-bottom:5px;
+	width:275px;
+	font-size:12px;
+	padding-left:5px;
+	background:url(../../images/themes/green_screen/sidebar_divider_right.png) left bottom no-repeat;
+}
+
+/* Content */
+div.content {
+	height:100%;
+	padding:0px 15px 0px 15px;
+}
+
+/* Footer */
+div.footer {
+	padding:20px 0px 0px 0px;
+	margin-top:10px;
+	width:100%;
+	background:url(../../images/themes/green_screen/footer_background.png) top repeat-x;
+}
+
+div.footer div.navigation {
+	padding-left:12%;
+	width:75%;
+	text-align:center;
+}
+
+div.footer div.navigation p a {
+	padding:0px 5px 0px 5px;
+}
+
+div.footer div.powered {
+	text-align:left;
+	position:absolute;
+	width:45%;
+	left:5px;
+}
+
+div.footer div.text {
+	text-align:right;
+	position:absolute;
+	width:45%;
+	right:5px;
+}

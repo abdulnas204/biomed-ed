@@ -1,27 +1,25 @@
 <?php
 /*
 ---------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+(C) Copyright 2011 ForwardFour - All Rights Reserved
 
 This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: August 14th, 2010
-Last updated: December 11th, 2010
+Last updated: March 7th, 2011
 
 This is the dedicated login page.
 */
 
 //Header functions
-	require_once('../system/core/index.php');	
+	require_once('../system/server/index.php');
 	headers("Login", "validate", false, false, true);
-
-//Login the user
+	
+//Login a user
 	login();
 	
 //Title

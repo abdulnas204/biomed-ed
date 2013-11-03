@@ -48,7 +48,7 @@
 				  echo "<tr><td width=\"100\" valign=\"top\"><p>&nbsp;</p></td>";
 			  //Echo the multiple choice content
 				  echo "<td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br />";
-				  $question = unserialize($testData['questionValue']);
+				  $question = arrayRevert($testData['questionValue']);
 				  
 				  $start = sizeof ($question);
 				  if ($testData['choiceType'] == "radio") {

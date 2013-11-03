@@ -231,7 +231,7 @@
 			echo "<blockquote><p>" . $penalties . "</p></blockquote>";
 			
 			if ($moduleData['timer'] == "on") {
-				$time = unserialize($testData['time']);
+				$time = arrayRevert($testData['time']);
 				
 				if ($time['0'] == 0) {
 					$hours = "";
@@ -255,7 +255,7 @@
 		echo $moduleData['randomizeAll'];
 		echo "</p></blockquote>";
 		
-		$displayGrabber = unserialize($moduleData['display']);
+		$displayGrabber = arrayRevert($moduleData['display']);
 		$displayPrep = "";
 				
 		if (is_array($displayGrabber) && !empty($displayGrabber)) {

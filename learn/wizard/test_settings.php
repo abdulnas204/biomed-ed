@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: February 10th, 2011
+Last updated: February 24th, 2011
 
 This is the test settings page for the test and learning 
 generators.
@@ -39,20 +39,20 @@ generators.
 		$penalties = $_POST['penalties'];
 		$randomizeAll = $_POST['randomizeAll'];
 		$questionBank = $_POST['questionBank'];
-		$display = serialize($_POST['display']);
+		$display = arrayStore($_POST['display']);
 		
 		if (isset($_POST['timer']) && isset($_POST['timeHours']) && isset($_POST['timeMinutes'])) {
 			if ($_POST['timer'] == "on" && $_POST['timeHours'] == "0" && $_POST['timeMinutes'] == "00") {
-				$time = serialize(array("0", "00"));
+				$time = arrayStore(array("0", "00"));
 				$timer = "0";
 			} else {	
 				$timeHours = $_POST['timeHours'];
 				$timeMinutes = $_POST['timeMinutes'];
-				$time = serialize(array($timeHours, $timeMinutes));
+				$time = arrayStore(array($timeHours, $timeMinutes));
 				$timer = "on";
 			}
 		} else {
-			$timeValue = serialize(array("0", "00"));
+			$timeValue = arrayStore(array("0", "00"));
 			$timer = "0";
 		}		
 					
@@ -117,7 +117,7 @@ generators.
 	directions("Timer", false, "Sets a timer, which will only allow the test to be open for a set duration");
 	echo "<blockquote><p>\nHours: ";
 	
-	$time = unserialize($testData['time']);
+	$time = arrayRevert($testData['time']);
 	$testH = $time['0'];
 	$testM = $time['1'];
 	
@@ -169,7 +169,7 @@ generators.
 	
 	directions("After the test is taken display", false, "Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Display a breakdown of points that the user recieved on each quesiton<br/><strong>Selected Answers:</strong> The answer(s) the user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>");
 	
-	$checks = unserialize($testData['display']);
+	$checks = arrayRevert($testData['display']);
 	$firstValue = false;
 	$secondValue = false;
 	$thirdValue = false;

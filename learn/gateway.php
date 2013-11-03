@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: February 9th, 2011
+Last updated: February 26th, 2011
 
 This is the gateway script, which will selectively allow 
 access to secured filed based on the user's credentials, 
@@ -27,7 +27,6 @@ access to the subject, and other conditions.
 		global $gatewayFile, $fileSize;
 		
 		if (isset($_GET['force']) && $_GET['force'] == "true") {
-			die();
 			$mimeType = "application/octet-stream";
 		} else {
 			$mimeType = getMimeType($gatewayFile);
@@ -110,7 +109,7 @@ access to the subject, and other conditions.
 			
 		//Students will have access to lesson and answer files partaining to them
 			if (access("Purchase Learning Unit")) {
-				$fileAccess = unserialize($userData['learningunits']);
+				$fileAccess = arrayRevert($userData['learningunits']);
 				
 				if (strstr($directoryArray['0'], "unit_")) {
 					$id = str_replace("unit_", "", $directoryArray['0']);
@@ -131,7 +130,7 @@ access to the subject, and other conditions.
 							
 						//Fetch all files that the user uploaded for the current test
 							while($fileData = fetch($fileDataGrabber)) {
-								foreach(unserialize($fileData['userAnswer']) as $file) {
+								foreach(arrayRevert($fileData['userAnswer']) as $file) {
 									array_push($userFiles, urlencode($file));
 								}
 								
@@ -139,7 +138,7 @@ access to the subject, and other conditions.
 							}
 							
 						//After the test has been completed, check to see if the user will have access to their answers, and the correct answers
-							foreach(unserialize($unitInfo['display']) as $setting) {
+							foreach(arrayRevert($unitInfo['display']) as $setting) {
 								switch ($setting) {
 									case "2" : $selectedAnswers = true; break;
 									case "3" : $correctAnswers = true; break;

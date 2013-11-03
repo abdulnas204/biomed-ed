@@ -1,31 +1,19 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
+LICENSE: See "license.php" located at the root installation
 
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: February 13th, 2010
-Last updated: February 13th, 2010
-
-This is the page where user's can manage their lesson 
-plan.
+This is the page where user's can manage their lesson plan with a visual drag-and-drop calendar.
 */
 
 //Header functions
-	require_once('../../system/core/index.php');
-	require_once(relativeAddress("learn/system/php") . "index.php");
-	require_once(relativeAddress("learn/system/php") . "functions.php");
+	require_once('../../system/server/index.php');
+	require_once('../system/server/index.php');
 	
 //Generate JSON data for calendar
 	if (isset($_GET['data']) && $_GET['data'] == "JSON") {
 		$calendarReturn = array();
 		
-		foreach(unserialize($userData['learningunits']) as $event) {
+		foreach(arrayRevert($userData['learningunits']) as $event) {
 			$detailsGrabber = query("SELECT * FROM `learningunits` WHERE `id` = '{$event['item']}'");
 			$time = strip($detailsGrabber['timeFrame'], "numbersOnly");
 			$timeLabel = strip($detailsGrabber['timeFrame'], "lettersOnly");	
@@ -42,14 +30,14 @@ plan.
 //Process the form
 	if (isset($_POST['events'])) {
 		$events = "";
-		$oldEvents = unserialize($userData['learningunits']);
+		$oldEvents = arrayRevert($userData['learningunits']);
 		
 		foreach(json_decode($_POST['events'], true) as $event) {
 			$eventTime = explode(" GMT", $event['start']);
 			$oldEvents[$event['id']]['startDate'] = strtotime($eventTime['0']);
 		}
 		
-		$eventsUpdate = escape(serialize($oldEvents));
+		$eventsUpdate = escape(arrayStore($oldEvents));
 		
 		query("UPDATE `users` SET `learningunits` = '{$eventsUpdate}' WHERE `id` = '{$userData['id']}'");
 		redirect("index.php");

@@ -50,7 +50,7 @@
 		$userInfo = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'");
 		$count = 0;
 		
-		if (query("SELECT * FROM `moduledata`", "num") == count(unserialize($userInfo['modules']))) {
+		if (query("SELECT * FROM `moduledata`", "num") == count(arrayRevert($userInfo['modules']))) {
 			$masterCheck = true;
 		} else {
 			$masterCheck = false;
@@ -80,8 +80,8 @@
 			$count ++;
 			
 			
-			if (is_array(unserialize($data['modules']))) {
-				foreach(unserialize($data['modules']) as $module) {
+			if (is_array(arrayRevert($data['modules']))) {
+				foreach(arrayRevert($data['modules']) as $module) {
 					if ($module['item'] == $modules['id']) {
 						$alter = true;
 					}

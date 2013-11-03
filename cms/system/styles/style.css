@@ -1,0 +1,8 @@
+/*
+LICENSE: See "license.php" located at the root installation
+*/
+
+/* Tool bar and menu options */
+	a.sideBar {
+		background:url(../../images/admin_icons/sideBar.png) no-repeat left;
+	}

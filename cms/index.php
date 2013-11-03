@@ -1,24 +1,13 @@
 <?php
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
-
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
- 
-Created by: Oliver Spryn
-Created on: November 28th, 2010
-Last updated: Feburary 5th, 2010
+LICENSE: See "license.php" located at the root installation
 
 This is the overview page for managing the public website.
 */
 
 //Header functions
-	require_once('../system/core/index.php');
-	require_once(relativeAddress("cms/system/php") . "index.php");
-	require_once(relativeAddress("cms/system/php") . "functions.php");
+	require_once('../system/server/index.php');
+	require_once('system/server/index.php');
 	headers("Pages Control Panel", "liveSubmit,customVisible", true); 
 	
 //Reorder pages	
@@ -35,11 +24,11 @@ This is the overview page for managing the public website.
 	
 //Admin toolbar
 	echo "<div class=\"toolBar\">\n";
-	echo toolBarURL("Create New Page", "manage_page.php", "toolBarItem new") . "\n";
-	echo toolBarURL("Manage Sidebar", "sidebar.php", "toolBarItem sideBar") . "\n";
+	echo toolBarURL("Create New Page", "manage_page.php", "toolBarItem new");
+	echo toolBarURL("Manage Sidebar", "sidebar.php", "toolBarItem sideBar");
 
 	if (exist("pages")) {
-		echo toolBarURL("Preview this Site", "../index.php", "toolBarItem search") . "\n";
+		echo toolBarURL("Preview this Site", "../index.php", "toolBarItem search");
 	}
 	
 	echo "</div>\n";
@@ -50,9 +39,9 @@ This is the overview page for managing the public website.
 
 //Pages table
 	if (exist("pages")) {
-		$pageGrabber = mysql_query("SELECT * FROM pages ORDER BY `position` ASC", $connDBA);
+		$pageGrabber = query("SELECT * FROM pages ORDER BY `position` ASC", "raw");
 		
-		echo "<table class=\"dataTable\">\n<tr>\n";
+		echo "\n<table class=\"dataTable\">\n<tr>\n";
 		echo column("", "25");
 		echo column("Order", "75");
 		echo column("Title", "200");
@@ -61,7 +50,7 @@ This is the overview page for managing the public website.
 		echo column("Delete", "50");
 		echo "</tr>\n";
 		
-		while($pageData = mysql_fetch_array($pageGrabber)) {
+		while($pageData = fetch($pageGrabber)) {
 			echo "<tr";
 			if ($pageData['position'] & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
 			echo option("pages", $pageData['id'], "visible");

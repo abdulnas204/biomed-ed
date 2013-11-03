@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 21st, 2010
+Last updated: February 24th, 2011
 
 This is the multiple choice management page for the test 
 generator.
@@ -34,8 +34,8 @@ generator.
 		$partialCredit = $_POST['partialCredit'];
 		$randomize = $_POST['randomize'];
 		$tags = escape($_POST['tags']);
-		$questionValue = escape(serialize($_POST['values']));
-		$answerValue = escape(serialize($_POST['choices']));
+		$questionValue = escape(arrayStore($_POST['values']));
+		$answerValue = escape(arrayStore($_POST['choices']));
 		$feedBackCorrect = escape($_POST['feedBackCorrect']);
 		$feedBackIncorrect = escape($_POST['feedBackIncorrect']);
 		$feedBackPartial = escape($_POST['feedBackPartial']);
@@ -83,8 +83,8 @@ generator.
 	echo "<blockquote>\n<table id=\"items\">\n";
 	
 	if (isset($questionData)) {
-		$values = unserialize($questionData['questionValue']);
-		$choices = unserialize($questionData['answerValue']);
+		$values = arrayRevert($questionData['questionValue']);
+		$choices = arrayRevert($questionData['answerValue']);
 		
 		for ($count = 0; $count <= sizeof($values) - 1; $count ++) {
 			$value = $count + 1;

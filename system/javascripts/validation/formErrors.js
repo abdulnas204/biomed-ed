@@ -10,9 +10,20 @@ open source, freeware, nor commercial/closed source.
 
 //Script to validate all form field types, and tie serveral validation technologies together
 
-function uploadCheck () {
+function uploadCheck(extensionInput) {
+	return extension("pdf,doc,docx,xls,xlsx,ppt,pptx,txt,rtf,wav,mp3,avi,wmv,flv,mov,mp4,swf");
+}
+
+function logoCheck() {
+	return extension("png,bmp,jpg,gif");
+}
+
+function iconCheck() {
+	return extension("ico,jpg,gif");
+}
+
+function extension(extensionInput) {
 	var formName = document.getElementById('validate');
-	var extensionInput = "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,rtf,wav,mp3,avi,wmv,flv,mov,mp4,swf";
 	var extensionSplit = extensionInput.split(",");
 	var possibleExtensions = extensionSplit.length - 1;
 	var returnType = false;

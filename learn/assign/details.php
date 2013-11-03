@@ -39,7 +39,7 @@
 	if (isset($_GET['data'])) {
 		$calendarReturn = array();
 		
-		foreach(unserialize($data['modules']) as $event) {
+		foreach(arrayRevert($data['modules']) as $event) {
 			$detailsGrabber = query("SELECT * FROM `moduledata` WHERE `id` = '{$event['item']}'");
 			$letterArray = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
 			$numberArray = array("0","1","2","3","4","5","6","7","8","9");
@@ -60,7 +60,7 @@
 //Title
 	title($title, $description);
 	
-	$modules = unserialize($data['modules']);
+	$modules = arrayRevert($data['modules']);
 	
 //Admin toolbar
 	echo "<div class=\"toolBar\">";
@@ -77,7 +77,7 @@
 	//Overview of assignments
 		catDivider("Schedule Overview", "one", true);
 		//Generate data
-		$module = unserialize($data['modules']);
+		$module = arrayRevert($data['modules']);
 		$moduleTotal = count($module);
 		$startPrep = reset($module);
 		$endPrep = end($module);

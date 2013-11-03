@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: February 12th, 2010
-Last updated: February 14th, 2010
+Last updated: February 24th, 2010
 
 This is the overview page for each user's gradebook.
 */
@@ -30,7 +30,7 @@ This is the overview page for each user's gradebook.
 	echo "</div>\n<br />\n";
 	
 //Learning units table
-	$assignedUnits = unserialize($userData['learningunits']);
+	$assignedUnits = arrayRevert($userData['learningunits']);
 	
 	if (is_array($assignedUnits) && !empty($assignedUnits)) {
 		$units = array();

@@ -101,8 +101,8 @@ occurred.
 			
 			if (strcmp($res, "VERIFIED") == 0) {
 				if ($payment_status === "Completed" && !exist("billing", "transactionID", $txn_id) && $payment_amount === $total && $payment_currency === "USD" && $paymentInfo['email'] === urldecode($receiver_email)) {
-					$currentUnits = unserialize($userData['learningunits']);
-					$userUnits = unserialize(gzinflate(base64_decode($_GET['product'])));
+					$currentUnits = arrayRevert($userData['learningunits']);
+					$userUnits = arrayRevert(gzinflate(base64_decode($_GET['product'])));
 					
 					if (!is_array($currentUnits)) {
 						$currentUnits = array();
@@ -128,8 +128,8 @@ occurred.
 					}
 					
 					$userID = $userData['id'];
-					$units = serialize($currentUnits);
-					$purchasedUnits = escape(serialize($purchasedUnits));
+					$units = arrayStore($currentUnits);
+					$purchasedUnits = escape(arrayStore($purchasedUnits));
 					$date = strtotime("now");
 					$business = escape(urldecode($_POST['business']));
 					$payerEmail = escape($payer_email);

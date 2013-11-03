@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: September 4th, 2010
-Last updated: February 14th, 2011
+Last updated: February 24th, 2011
 
 This script is dedicated to displaying the test section 
 of each learning unit.
@@ -28,7 +28,7 @@ of each learning unit.
 	$questionBank = "questionbank_0";
 	$unitInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}' LIMIT 1");
 	$accessGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
-	$accessArray = unserialize($accessGrabber['learningunits']);
+	$accessArray = arrayRevert($accessGrabber['learningunits']);
 	
 //Set up the user's test table, if needed
 	query("CREATE TABLE IF NOT EXISTS `{$testTable}` (
@@ -241,19 +241,19 @@ of each learning unit.
 						if ($testData['type'] == "Multiple Choice") {
 							$questionValue = "";
 							$answerValue = escape($testData['questionValue']);
-							$answerValueScrambledPrep = unserialize($testData['questionValue']);
+							$answerValueScrambledPrep = arrayRevert($testData['questionValue']);
 						} elseif($testData['type'] == "Matching") {
 							$questionValue = escape($testData['questionValue']);
 							$answerValue = escape($testData['answerValue']);
-							$answerValueScrambledPrep = unserialize($testData['answerValue']);
+							$answerValueScrambledPrep = arrayRevert($testData['answerValue']);
 						} elseif ($testData['type'] == "True False") {
 							$questionValue = "";
-							$answerValue = escape(serialize(array("1", "0")));
+							$answerValue = escape(arrayStore(array("1", "0")));
 							$answerValueScrambledPrep = array("1", "0");
 						}
 						
 						shuffle($answerValueScrambledPrep);
-						$answerValueScrambled = escape(serialize($answerValueScrambledPrep));
+						$answerValueScrambled = escape(arrayStore($answerValueScrambledPrep));
 					} else {
 						$questionValue = "";
 						$answerValue = "";
@@ -271,7 +271,7 @@ of each learning unit.
 			}
 			
 			$accessArray[$testID]['submitted'] = "";
-			$unitInfoUpdate = escape(serialize($accessArray));
+			$unitInfoUpdate = escape(arrayStore($accessArray));
 			
 			query("UPDATE `users` SET `learningunits` = '{$unitInfoUpdate}' WHERE `id` = '{$userData['id']}'");
 			redirect($_SERVER['REQUEST_URI']);
@@ -294,7 +294,7 @@ of each learning unit.
 		$customFields = query("SELECT * FROM `fields` WHERE `testFilter` = '1' AND `fieldType` != 'checkbox' AND `fieldType` != 'textArea' ORDER BY `position` ASC", "raw");
 		
 		while ($field = fetch($customFields)) {
-			if (in_array("Question Generator", unserialize($field['section']))) {				
+			if (in_array("Question Generator", arrayRevert($field['section']))) {				
 				if ($field['showTip'] == "1") {
 					$tip = strip_tags($field['description']);
 				} else {
@@ -399,17 +399,17 @@ of each learning unit.
 				if ($testData['type'] == "Matching") {
 					$questionValue = escape($bankData['questionValue']);
 					$answerValue = escape($bankData['answerValue']);
-					$answerValueScrambledPrep = unserialize($bankData['answerValue']);
+					$answerValueScrambledPrep = arrayRevert($bankData['answerValue']);
 					$answerCompare = $bankData['answerValue'];
 				} else {
 					$questionValue = "";
 					$answerValue = escape($bankData['questionValue']);
-					$answerValueScrambledPrep = unserialize($bankData['questionValue']);
+					$answerValueScrambledPrep = arrayRevert($bankData['questionValue']);
 					$answerCompare = $bankData['questionValue'];
 				}
 				
 				shuffle($answerValueScrambledPrep);
-				$answerValueScrambled = escape(serialize($answerValueScrambledPrep));
+				$answerValueScrambled = escape(arrayStore($answerValueScrambledPrep));
 				
 				if ($answerCompare !== $testData['answerValue']) {
 					query("UPDATE `{$testTable}` SET `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `answerValueScrambled` = '{$answerValueScrambled}' WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}'");
@@ -428,7 +428,7 @@ of each learning unit.
 		
 		foreach ($_POST as $key => $answer) {
 			if (exist($parentTable, "id", $key)) {
-				$value = escape(serialize($answer));
+				$value = escape(arrayStore($answer));
 				
 				query("UPDATE `{$testTable}` SET `userAnswer` = '{$value}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$key}'");
 				array_push($questions, $key);
@@ -470,15 +470,15 @@ of each learning unit.
 				if (move_uploaded_file($tempFile, $uploadDir . "/" . $targetFile)) {
 					$fileGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$id['0']}'");
 											
-					if (is_array(unserialize($fileGrabber['userAnswer']))) {
-						$filesArray = unserialize($fileGrabber['userAnswer']);
+					if (is_array(arrayRevert($fileGrabber['userAnswer']))) {
+						$filesArray = arrayRevert($fileGrabber['userAnswer']);
 					} else {
 						$filesArray = array();
 					}
 					
 					unlink($uploadDir . "/" . $filesArray[intval($id['1']) - 1]);
 					$filesArray[intval($id['1']) - 1] = $targetFile;
-					$value = escape(serialize($filesArray));
+					$value = escape(arrayStore($filesArray));
 					query("UPDATE `{$testTable}` SET `userAnswer` = '{$value}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$id['0']}'");
 				} else {
 					$errors = true;
@@ -555,8 +555,8 @@ of each learning unit.
 				if (empty($testData['score']) && in_array($testData['type'], $gradeConfig)) {					
 					switch ($testData['type']) {
 						case "Fill in the Blank" :
-							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($userSelection['userAnswer']);
+							$testAnswers = arrayRevert($testData['answerValue']);
+							$userAnswers = arrayRevert($userSelection['userAnswer']);
 							$wrong = 0;
 							
 							if (empty($testAnswers[sprintf(sizeof($testAnswers) - 1)])) {
@@ -584,9 +584,9 @@ of each learning unit.
 							break;
 							
 						case "Matching" :
-							$testQuestion = unserialize($testData['answerValue']);
-							$testAnswers = unserialize($userSelection['answerValueScrambled']);
-							$userAnswers = unserialize($userSelection['userAnswer']);
+							$testQuestion = arrayRevert($testData['answerValue']);
+							$testAnswers = arrayRevert($userSelection['answerValueScrambled']);
+							$userAnswers = arrayRevert($userSelection['userAnswer']);
 							$totalValues = sizeof($testAnswers);
 							$wrong = 0;
 							
@@ -604,14 +604,14 @@ of each learning unit.
 							
 						case "Multiple Choice" :
 							if ($testData['randomize'] == "1") {
-								$answerCompare = unserialize($userSelection['answerValueScrambled']);
+								$answerCompare = arrayRevert($userSelection['answerValueScrambled']);
 							} else {
-								$answerCompare = unserialize($testData['questionValue']);
+								$answerCompare = arrayRevert($testData['questionValue']);
 							}
 							
-							$testQuestion = unserialize($testData['questionValue']);
-							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($userSelection['userAnswer']);
+							$testQuestion = arrayRevert($testData['questionValue']);
+							$testAnswers = arrayRevert($testData['answerValue']);
+							$userAnswers = arrayRevert($userSelection['userAnswer']);
 							$correctAnswers = array();
 							$wrong = 0;
 							
@@ -646,8 +646,8 @@ of each learning unit.
 							break;
 							
 						case "Short Answer" :
-							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($userSelection['userAnswer']);
+							$testAnswers = arrayRevert($testData['answerValue']);
+							$userAnswers = arrayRevert($userSelection['userAnswer']);
 							$totalValues = 1;
 							$wrong = 0;
 							
@@ -675,7 +675,7 @@ of each learning unit.
 							
 						case "True False" :
 							$testAnswers = $testData['answer'];
-							$userAnswers = unserialize($userSelection['userAnswer']);
+							$userAnswers = arrayRevert($userSelection['userAnswer']);
 							$totalValues = 1;
 							$wrong = 0;
 							
@@ -727,7 +727,7 @@ of each learning unit.
 			}
 			
 			$testUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}' LIMIT 1");
-			$testUpdateArray = unserialize($testUpdateGrabber['learningunits']);
+			$testUpdateArray = arrayRevert($testUpdateGrabber['learningunits']);
 			
 			if (!empty($noGrade)) {
 				$testUpdateArray[$testID]['testStatus'] = "A";
@@ -736,7 +736,7 @@ of each learning unit.
 			}
 			
 			$testUpdateArray[$testID]['submitted'] = time();
-			$testUpdate = serialize($testUpdateArray);
+			$testUpdate = arrayStore($testUpdateArray);
 			
 			query("UPDATE `users` SET `learningunits` = '{$testUpdate}' WHERE `id` = '{$userData['id']}'");
 			redirect("review.php?id=" . $_GET['id'] . "&attempt=" . $currentAttempt);
@@ -747,11 +747,11 @@ of each learning unit.
 	if (isset($_GET['delete']) && $_GET['delete'] == "true" && isset($_GET['questionID']) && isset($_GET['fileID'])) {
 		$fileData = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$_GET['questionID']}'");
 		
-		if (array_key_exists(intval($_GET['fileID']) - 1, unserialize($fileData['userAnswer']))) {
-			$file = unserialize($fileData['userAnswer']);
+		if (array_key_exists(intval($_GET['fileID']) - 1, arrayRevert($fileData['userAnswer']))) {
+			$file = arrayRevert($fileData['userAnswer']);
 			unlink("unit_" . $testID . "/test/responses/" . $file[intval($_GET['fileID']) - 1]);
 			unset($file[intval($_GET['fileID']) - 1]);
-			$return = serialize(array_merge($file));
+			$return = arrayStore(array_merge($file));
 			query("UPDATE `{$testTable}` SET `userAnswer` = '{$return}' WHERE `testID` = '{$testID}' AND `questionID` = '{$_GET['questionID']}' AND `attempt` = '{$currentAttempt}'");
 			redirect($_SERVER['PHP_SELF'] . "?id=" . $_GET['id']);
 		}
@@ -773,7 +773,7 @@ of each learning unit.
 
 //Display a timer alert
 	if ($unitInfo['timer'] == "on") {
-		$time = unserialize($unitInfo['time']);
+		$time = arrayRevert($unitInfo['time']);
 		
 		if ($unitInfo['time'] !== "") {
 			$testH = $time['0'];

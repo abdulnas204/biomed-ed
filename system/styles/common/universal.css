@@ -1,34 +1,3 @@
-.breadcrumb ul {
-  padding:0;
-  margin:0;
-  text-indent:0;
-  list-style:none;
-}
-
-.breadcrumb li {
-  display:inline;
-}
-
-#footer {
-  text-align:center;
-  margin-top: 40px;
-}
-
-.sideblock .header .hide-show-image {
-  float:right;
-  height:11px;
-  width:11px;
-  margin-top:0.25em;
-}
-
-.sideblock .content {
-  padding: 4px;
-  border-width: 1px;
-  border-style: solid;
-}
-
-/* Extra */
-
 /* Begin universal declarations */
 	a img {	
 		border:none;
@@ -42,7 +11,6 @@
 
 /* Begin layout control */
 	.layoutControl {
-		clear: both;
 		display:table;
 		width:100%;
 		*display:inline-block;
@@ -59,22 +27,24 @@
 	
 	.contentLeft{
 		width:75%;
-		float:left;
+		display:table-cell;
 	}
 	
 	.contentRight{
 		width:75%;
-		float:right;
+		display:table-cell;
 	}
 	
 	.dataLeft {
 		width:20%;
-		float:left;
+		height:100%;
+		display:table-cell;
 	}
 	
 	.dataRight{
 		width:20%;
-		float:right;
+		height:100%;
+		display:table-cell;
 	}
 	
 	.halfLeft {
@@ -355,49 +325,41 @@
 		background: #e9c7b4;
 	}
 	
-	a.sortHover:link, a.sortHover:visited {
+	span.sortHover {
 		color:#D8325D;
 		padding-right:12px;
+		text-decoration:underline;
+		cursor:pointer;
 	}
 	
-	a.sortHover:hover, a.sortHover:active {
-		color:#D8325D;
-		background-image:url(../../images/admin_icons/sortDescending.png);
-		background-position:right;
-		background-repeat:no-repeat;
-		padding-right:12px;
-	}
-	
-	a.descending:link, a.descending:visited {
-		color:#D8325D;
-		background-image:url(../../images/admin_icons/sortDescending.png);
-		background-position:right;
-		background-repeat:no-repeat;
-		padding-right:12px;
-	}
-	
-	a.descending:hover, a.descending:active {
+	span.sortHover:hover, span.sortHover:active {
 		color:#D8325D;
 		background-image:url(../../images/admin_icons/sortAscending.png);
 		background-position:right;
 		background-repeat:no-repeat;
 		padding-right:12px;
+		text-decoration:none;
+		cursor:pointer;
 	}
 	
-	a.ascending:link, a.ascending:visited {
+	span.ascending {
 		color:#D8325D;
 		background-image:url(../../images/admin_icons/sortAscending.png);
 		background-position:right;
 		background-repeat:no-repeat;
 		padding-right:12px;
+		text-decoration:underline;
+		cursor:pointer;
 	}
 	
-	a.ascending:hover, a.ascending:active {
+	span.descending {
 		color:#D8325D;
 		background-image:url(../../images/admin_icons/sortDescending.png);
 		background-position:right;
 		background-repeat:no-repeat;
 		padding-right:12px;
+		text-decoration:underline;
+		cursor:pointer;
 	}
 	
 	.checked {
@@ -419,21 +381,19 @@
 	}
 	
 	.visible {
-		background: url(../../images/admin_icons/visible.png) no-repeat;
-		height: 16px;
-		display: block;
-		padding: 1px 0px 0px;
-		color: #666666;
-		text-decoration: none;
-		width: 16px;
-		font: 12px Tahoma, Arial, Helvetica, sans-serif;
-		outline: none;
+		padding:5px 12px 5px 12px;
+		background: url(../../images/admin_icons/visible.png) left no-repeat;
 		cursor:pointer;
 	}
 	
 	.hidden {
-		background: url(../../images/admin_icons/hidden.png) no-repeat;
+		background: url(../../images/admin_icons/hidden.png) left no-repeat;
 		cursor:pointer;
+	}
+	
+	a.draggable {
+		background: url(../../images/admin_icons/draggable.png) center no-repeat;
+		cursor: move;
 	}
 	
 	span.noShow {
@@ -585,7 +545,17 @@
 	}
 	
 	a.searchNumber, span.searchNumber {
-		padding: 0px 5px 0px 5px;	
+		padding: 0px 5px 0px 5px;
+		margin: 0px 2px 0px 2px;
+		border:thin #CCC solid;
+		cursor:pointer;
+	}
+	
+	a.searchNumber:hover, span.searchNumber:hover {
+		padding: 0px 5px 0px 5px;
+		margin: 0px 2px 0px 2px;
+		border:thin #999 solid;
+		cursor:pointer;
 	}
 	
 	span.currentSearchNumber {

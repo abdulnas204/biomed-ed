@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: December 4th, 2010
-Last updated: February 14th, 2010
+Last updated: February 26th, 2010
 
 This script is dedicated to displaying the lesson section 
 of each learning unit.
@@ -23,24 +23,26 @@ of each learning unit.
 	
 //Grab all learning unit data
 	if (isset($_GET['id'])) {
-		$learningUnits = unserialize($userData['learningunits']);
+		$learningUnits = arrayRevert($userData['learningunits']);
 		$unitInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}' LIMIT 1");
 		
 		if (!exist("learningunits", "id", $_GET['id']) || !exist("lesson_" . $_GET['id']) || !access("View Learning Units") || empty($unitInfo['visible'])) {
 			redirect("index.php");
 		}
 		
-		if (isset($_GET['page']) && (access("Edit Unowned Learning Units") || !is_array($learningUnits) || array_key_exists($_GET['id'], $learningUnits))) {
-			if (!is_array($learningUnits)) {
-				redirect("index.php");
-			}
-				
-			if ($learningUnits[$_GET['id']]['lessonStatus'] == "C") {
-				redirect($_SERVER['PHP_SELF'] . "?id=" . $_GET['id']);
-			}
-								
-			if ($learningUnits[$_GET['id']]['lessonStatus'] == "F" && $learningUnits[$_GET['id']]['testStatus'] != "F" && $learningUnits[$_GET['id']]['testStatus'] != "A" && $unitInfo['reference'] == "0") {
-				redirect("test.php?id=" . $_GET['id']);
+		if (isset($_GET['page']) && (access("Edit Unowned Learning Units") || is_array($learningUnits) || array_key_exists($_GET['id'], $learningUnits))) {
+			if (!access("Edit Unowned Learning Units")) {
+				if (!is_array($learningUnits)) {
+					redirect("index.php");
+				}
+					
+				if ($learningUnits[$_GET['id']]['lessonStatus'] == "C") {
+					redirect($_SERVER['PHP_SELF'] . "?id=" . $_GET['id']);
+				}
+									
+				if ($learningUnits[$_GET['id']]['lessonStatus'] == "F" && $learningUnits[$_GET['id']]['testStatus'] != "F" && $learningUnits[$_GET['id']]['testStatus'] != "A" && $unitInfo['reference'] == "0") {
+					redirect("test.php?id=" . $_GET['id']);
+				}
 			}
 		}
 	} else {
@@ -50,7 +52,7 @@ of each learning unit.
 //Open the lesson
 	if (loggedIn() && isset($_POST['submit'])) {
 		$learningUnits[$_GET['id']]['lessonStatus'] = "O";
-		$updatedUnits = escape(serialize($learningUnits));
+		$updatedUnits = escape(arrayStore($learningUnits));
 		
 		query("UPDATE `users` SET `learningUnits` = '{$updatedUnits}' WHERE `id` = '{$userData['id']}'");
 		redirect($_SERVER['PHP_SELF'] . "?id=" . $_GET['id'] . "&page=1");
@@ -69,7 +71,7 @@ of each learning unit.
 					$learningUnits[$_GET['id']]['submitted'] = time();
 				}
 				
-				$updatedUnits = escape(serialize($learningUnits));
+				$updatedUnits = escape(arrayStore($learningUnits));
 				
 				query("UPDATE `users` SET `learningunits` = '{$updatedUnits}' WHERE `id` = '{$userData['id']}'");
 			}
@@ -88,7 +90,7 @@ of each learning unit.
 	if (isset($_POST['retake']) && $lastAttempt && ($unitInfo['attempts'] == "999" || $unitInfo['attempts'] > $lastAttempt['attempt'])) {
 		if ($learningUnits[$_GET['id']]['lessonStatus'] == "F" && $learningUnits[$_GET['id']]['testStatus'] == "F" && exist("test_" . $_GET['id'])) {
 			$learningUnits[$_GET['id']]['testStatus'] = "O";
-			$updatedUnits = escape(serialize($learningUnits));
+			$updatedUnits = escape(arrayStore($learningUnits));
 			
 			query("UPDATE `users` SET `learningunits` = '{$updatedUnits}' WHERE `id` = '{$userData['id']}'");
 			redirect("test.php?id=" . $_GET['id']);
@@ -115,7 +117,7 @@ of each learning unit.
 		$additionalFieldsGrabber = query("SELECT * FROM `fields` ORDER BY `position` ASC", "raw");
 		
 		while($additionalFields = fetch($additionalFieldsGrabber)) {
-			if (is_array(unserialize($additionalFields['section'])) && in_array("Lesson Settings", unserialize($additionalFields['section']))) {
+			if (is_array(arrayRevert($additionalFields['section'])) && in_array("Lesson Settings", arrayRevert($additionalFields['section']))) {
 				echo "<strong>" . $additionalFields['name'] . ":</strong> ";
 				
 				switch($additionalFields['fieldType']) {
@@ -132,7 +134,7 @@ of each learning unit.
 					case "checkbox" : 
 						$return = "";
 						
-						foreach(unserialize($unitInfo['field_' . $additionalFields['id']]) as $value) {
+						foreach(arrayRevert($unitInfo['field_' . $additionalFields['id']]) as $value) {
 							$return .= $value . ", ";
 						}
 						
@@ -149,7 +151,7 @@ of each learning unit.
 	if (!isset($_GET['page'])) {
 		echo $unitInfo['comments'];
 		
-		if (access("Edit Unowned Learning Units") || (is_array($learningUnits) && array_key_exists($_GET['id'], $learningUnits))) {
+		if (is_array($learningUnits) && array_key_exists($_GET['id'], $learningUnits)) {
 			echo "\n<div class=\"noResults\">\n";
 			
 			switch ($learningUnits[$_GET['id']]['lessonStatus']) {
@@ -205,6 +207,7 @@ of each learning unit.
 						echo "<div class=\"complete\">You have completed this learning unit!</div>\n";
 						echo "<br /><br />";
 						echo button("continue", "continue", "Review Lesson", "button", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'] . "&page=1");
+						echo button("exit", "exit", "Finish", "button", "index.php");
 					}
 					
 					break;
@@ -212,11 +215,25 @@ of each learning unit.
 			
 			echo "</div>\n";
 		} elseif (access("Purchase Learning Unit")) {
+			if (!empty($unitInfo['enablePrice'])) {
+				echo "\n<div class=\"noResults\">\n";
+				echo form("cart", false, false, "enroll/cart.php");
+				echo hidden("purchase[]", "purchase[]", $_GET['id']);
+				echo button("submit", "submit", "Add to Cart", "submit");
+				echo closeForm(false);
+				echo "</div>\n";
+			} else {
+				echo "\n<div class=\"noResults\">\n";
+				echo form("cart", false, false, "enroll/enroll.php");
+				echo hidden("enroll", "enroll", $_GET['id']);
+				echo hidden("redirect", "redirect", "true");
+				echo button("submit", "submit", "Enroll in Unit", "submit");
+				echo closeForm(false);
+				echo "</div>\n";
+			}
+		} elseif (access("Edit Unowned Learning Units")) {
 			echo "\n<div class=\"noResults\">\n";
-			echo form("cart", false, false, "enroll/cart.php");
-			echo hidden("purchase[]", "purchase[]", $_GET['id']);
-			echo button("submit", "submit", "Add to Cart", "submit");
-			echo closeForm(false);
+			echo button("begin", "begin", "Begin Lesson", "button", "lesson.php?id=" . $_GET['id'] . "&page=1");
 			echo "</div>\n";
 		}
 	} else {

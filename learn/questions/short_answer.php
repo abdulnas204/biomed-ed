@@ -33,7 +33,7 @@ generator.
 		$link = $_POST['link'];
 		$case = $_POST['case'];
 		$tags = escape($_POST['tags']);
-		$answerValue = escape(serialize($_POST['answerValue']));
+		$answerValue = escape(arrayStore($_POST['answerValue']));
 		$feedBackCorrect = escape($_POST['feedBackCorrect']);
 		$feedBackIncorrect = escape($_POST['feedBackIncorrect']);
 		$feedBackPartial = escape($_POST['feedBackPartial']);
@@ -72,7 +72,7 @@ generator.
 	echo "<blockquote>\n<table id=\"items\">\n";
 	
 	if (isset($questionData)) {
-		$answers = unserialize($questionData['answerValue']);
+		$answers = arrayRevert($questionData['answerValue']);
 		
 		for ($count = 0; $count <= sizeof($answers) - 1; $count ++) {
 			$value = $count + 1;

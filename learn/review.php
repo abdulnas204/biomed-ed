@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: September 1st, 2010
-Last updated: February 14th, 2011
+Last updated: February 24th, 2011
 
 This script is dedicated to displaying the results of a 
 test, and grading questions which could not be automatically
@@ -29,7 +29,7 @@ graded.
 	$testTable = "testdata_" . $userData['id'];
 	$questionBank = "questionbank_0";
 	$updateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
-	$updateArray = unserialize($updateGrabber['learningunits']);
+	$updateArray = arrayRevert($updateGrabber['learningunits']);
 	
 	if (!exist("testdata_" . $userData['id'], "testID", $_GET['id'])) {
 		redirect("index.php");
@@ -65,7 +65,7 @@ graded.
 			}
 			
 			$updateArray[$testID]['testStatus'] = "F";
-			$update = serialize($updateArray);
+			$update = arrayStore($updateArray);
 			
 			query("UPDATE `users` SET `learningunits` = '{$update}' WHERE `id` = '{$userData['id']}'");
 			redirect($_SERVER['REQUEST_URI']);
@@ -75,7 +75,7 @@ graded.
 		echo form("review");
 		$count = 1;
 		$restrictImport = array();
-		$values = unserialize($unitInfo['display']);
+		$values = arrayRevert($unitInfo['display']);
 		$displayScore = false;
 		$selectedAnswers = false;
 		$correctAnswers = false;
@@ -242,7 +242,7 @@ graded.
 						echo "<p>Selected Answer: </p>\n<blockquote>\n";
 						
 						if (!empty ($testData['userAnswer'])) {
-							echo unserialize($testData['userAnswer']);
+							echo arrayRevert($testData['userAnswer']);
 						} else {
 							echo "<span class=\"notAssigned\">None Given</span>";
 						}
@@ -257,7 +257,7 @@ graded.
 					break;
 					
 				case "File Response" : 
-					$fillValue = unserialize($testData['userAnswer']);
+					$fillValue = arrayRevert($testData['userAnswer']);
 					
 					if (empty($testData['score']) || ($selectedAnswers == true && !empty($testData['userAnswer']))) {
 						echo "<p>Selected Answers: </p>\n<ol>\n";
@@ -294,9 +294,9 @@ graded.
 					break;
 					
 				case "Fill in the Blank" : 
-					$sentenceValues = unserialize($testData['questionValue']);
-					$correctAnswer = unserialize($testData['testAnswer']);
-					$userAnswer = unserialize($testData['userAnswer']);
+					$sentenceValues = arrayRevert($testData['questionValue']);
+					$correctAnswer = arrayRevert($testData['testAnswer']);
+					$userAnswer = arrayRevert($testData['userAnswer']);
 					
 					if (empty($testData['score']) || $selectedAnswers == true) {
 						echo "<p>Selected Answer: </p>\n<blockquote>\n";
@@ -333,10 +333,10 @@ graded.
 					break;
 				
 				case "Matching" : 
-					$questionValue = unserialize($testData['questionValue']);
-					$userAnswer = unserialize($testData['userAnswer']);
-					$answerValues = unserialize($testData['answerValueScrambled']);
-					$correctAnswer = unserialize($testData['testAnswer']);
+					$questionValue = arrayRevert($testData['questionValue']);
+					$userAnswer = arrayRevert($testData['userAnswer']);
+					$answerValues = arrayRevert($testData['answerValueScrambled']);
+					$correctAnswer = arrayRevert($testData['testAnswer']);
 					
 					if (empty($testData['score']) || $selectedAnswers == true || $correctAnswers == true) {
 						echo "<table width=\"100%\" class=\"dataTable\">\n<tr>\n";
@@ -375,14 +375,14 @@ graded.
 					break;
 				
 				case "Multiple Choice" : 
-					$answers = unserialize($testData['userAnswer']);
-					$correctAnswer = unserialize($testData['testAnswer']);
-					$correctAnswerValues = unserialize($testData['answerValue']);
+					$answers = arrayRevert($testData['userAnswer']);
+					$correctAnswer = arrayRevert($testData['testAnswer']);
+					$correctAnswerValues = arrayRevert($testData['answerValue']);
 					
 					if ($testData['randomizeQuestion'] == "1") {
-						$choices = unserialize($testData['answerValueScrambled']);
+						$choices = arrayRevert($testData['answerValueScrambled']);
 					} else {
-						$choices = unserialize($testData['answerValue']);
+						$choices = arrayRevert($testData['answerValue']);
 					}
 									
 					if (empty($testData['score']) || $selectedAnswers == true) {				
@@ -426,22 +426,22 @@ graded.
 					
 				case "Short Answer" : 
 					if (empty($testData['score']) || $selectedAnswers == true) {
-						echo "<p>Selected Answer: </p>\n<blockquote>\n<p><strong>" . unserialize($testData['userAnswer']) . "</strong></p>\n</blockquote>\n";
+						echo "<p>Selected Answer: </p>\n<blockquote>\n<p><strong>" . arrayRevert($testData['userAnswer']) . "</strong></p>\n</blockquote>\n";
 					}
 					
 					if (empty($testData['score']) || $correctAnswers == true) {				
-						if (is_array(unserialize($testData['testAnswer']))) {
+						if (is_array(arrayRevert($testData['testAnswer']))) {
 							echo "<p>Correct Answers: </p>\n";
 							echo "<ul>\n";
 							
-							foreach (unserialize($testData['testAnswer']) as $correctAnswer) {
+							foreach (arrayRevert($testData['testAnswer']) as $correctAnswer) {
 								echo "<li>" . $correctAnswer . "</li>\n";
 							}
 							
 							echo "</ul>\n";
 						} else {
 							echo "<p>Correct Answer: </p>\n";
-							echo "<blockquote>\n<p><strong>" . unserialize($testData['testAnswer']) . "</strong></p>\n</blockquote>\n";
+							echo "<blockquote>\n<p><strong>" . arrayRevert($testData['testAnswer']) . "</strong></p>\n</blockquote>\n";
 						}
 					}
 					
@@ -451,7 +451,7 @@ graded.
 					if ($selectedAnswers == true) {
 						echo "<p>Selected Answer: </p>\n<blockquote>\n<p>";
 						
-						if (unserialize($testData['userAnswer']) == "1") {
+						if (arrayRevert($testData['userAnswer']) == "1") {
 							echo "True";
 						} else {
 							echo "False";

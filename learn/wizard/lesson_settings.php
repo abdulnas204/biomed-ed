@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 16th, 2010
-Last updated: Janurary 27th, 2010
+Last updated: February 24th, 2011
 
 This is the lesson settings page for the learning unit 
 generator.
@@ -52,7 +52,7 @@ generator.
 			query("INSERT INTO `{$monitor['parentTable']}` (
 				  `id`, `locked`, `visible`, `name`, `category`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `feedback`, `tags`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
 				  ) VALUES (
-				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
+				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'YToyOntpOjA7czoxOiIwIjtpOjE7czoyOiIwMCI7fQ==', 'Sequential Order', '0', 'YToxOntpOjA7czoxOiIxIjt9', '{$organization}'
 				  )");
 						
 			$id =  mysql_insert_id();

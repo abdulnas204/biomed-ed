@@ -1,11 +1,5 @@
 /*
----------------------------------------------------------
-(C) Copyright 2010 Apex Development - All Rights Reserved
-
-This script may NOT be used, copied, modified, or
-distributed in any way shape or form under any license:
-open source, freeware, nor commercial/closed source.
----------------------------------------------------------
+LICENSE: See "license.php" located at the root installation
 */
 
 /* Tool bar and menu options */
@@ -121,4 +115,12 @@ open source, freeware, nor commercial/closed source.
 		right:50%;
 		background-color:#900;
 		color:#FFF;
+	}
+	
+	div.container {
+		right:5%;
+		border:solid thin #666;
+		background:#CCC;
+		margin:5px 0px 5px 0px;
+		padding:2px;
 	}

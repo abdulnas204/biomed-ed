@@ -12,7 +12,7 @@
 			echo "<root>";
 			
 			while ($users = mysql_fetch_array($userGrabber)) {
-				$module = unserialize($users['modules']);
+				$module = arrayRevert($users['modules']);
 				
 				if ($module) {
 					$modules = count($module);
