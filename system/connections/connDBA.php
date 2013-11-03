@@ -1345,8 +1345,13 @@ ob_start();
 				$order = " ORDER BY `position` ASC";
 			}
 			
-			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition, testdata_" . $userData['id'] . ".questionValueScrambled";
+			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition, testdata_" . $userData['id'] . ".answerValueScrambled";
 			$join = " LEFT JOIN testdata_" . $userData['id'] . " ON " . $table . ".id = testdata_" . $userData['id'] . ".questionID";
+		}
+		
+		if (!is_numeric($preview)) {
+			$testID = str_replace("moduletest_", "", $table);
+			$moduleInfo = query("SELECT * FROM	`moduledata` WHERE `id` = '{$testID}'");
 		}
 		
 		$testDataGrabber = query("SELECT {$grab} FROM `{$table}`{$join}{$additionalSQL}{$order}{$limit}", "raw");
@@ -1407,6 +1412,7 @@ ob_start();
 				case "Description" : 
 					if (!in_array($testDataLoop['id'], $restrictImport)) {
 						echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($testData['question'], false, true) . "</td></tr>";
+						array_push($restrictImport, $testDataLoop['id']);
 					}
 					
 					break;
@@ -1510,7 +1516,7 @@ ob_start();
 				
 				case "Matching" : 
 					$question = unserialize($testData['questionValue']);
-					$answer = unserialize($testValues['questionValueScrambled']);
+					$answer = unserialize($testValues['answerValueScrambled']);
 					$answerCompare = unserialize($testData['answerValue']);
 					$valueNumbers = sizeof($question);
 					$matchingCount = 1;
@@ -1565,7 +1571,7 @@ ob_start();
 						}
 					} else {
 						if ($testData['randomize'] == "1") {
-							$questions = unserialize($testData['questionValueScrambled']);
+							$questions = unserialize($testData['answerValueScrambled']);
 						} else {
 							$questions = unserialize($testData['questionValue']);
 						}
@@ -1626,7 +1632,7 @@ ob_start();
 					
 				case "True False" : 
 					if ($testData['randomize'] == "1") {						
-						$id = implode(",", unserialize($testValues['questionValueScrambled']));
+						$id = implode(",", unserialize($testValues['answerValueScrambled']));
 						$label = explode(",", $id);
 					} else {
 						$id = implode(",", unserialize($testValues['questionValue']));
@@ -1663,8 +1669,8 @@ ob_start();
 		
 		if ($preview == false) {
 			echo "<blockquote><p>";
-			button("submit", "submit", "Submit", "submit", false, " return confirm('Once the test is submitted, it cannot be reopened. Continue?');");
 			button("save", "save", "Save", "submit", false);
+			button("submit", "submit", "Submit", "submit", false, " return confirm('Once the test is submitted, it cannot be reopened. Continue?');");
 			echo "</p></blockquote>";
 		}
 		
@@ -1919,6 +1925,13 @@ ob_start();
 		global $root;
 		
 		echo "<script src=\"" . $root . "system/javascripts/common/newObject.js\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include a script to calculate the score of a question
+	function calculate() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/common/scoreCalculate.js\" type=\"text/javascript\"></script>";
 	}
 /* End page scripting functions */
 	

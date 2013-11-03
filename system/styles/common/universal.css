@@ -1118,6 +1118,28 @@ a.skip:focus, a.skip:active {
 	li.inProgress {
 		list-style-image:url(../../images/common/percent.png);
 	}
+	
+	tr.attention {
+		background:#EBEBEB;
+	}
+	
+	.calculate {
+		background-color:transparent;
+		border:none;
+		text-align:center;
+	}
+	
+	.good {
+		color:#0F0;
+	}
+	
+	.average {
+		color:#333;
+	}
+	
+	.bad {
+		color:#F00;
+	}
 /* End module styles */
 
 /* Begin naviagtion styles */
