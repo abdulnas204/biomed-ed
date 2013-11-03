@@ -64,7 +64,13 @@
 			
 			echo "<tr";
 			if ($testData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-			echo "<td width=\"75\">"; reorderMenu($testData['id'], $testData['position'], "testData", $monitor['testTable']); echo "</td>";
+			echo "<td width=\"75\"><div";
+			
+			if ($testData['questionBank'] == "1") {
+				echo " class=\"questionBank\"";
+			}
+			
+			echo ">"; reorderMenu($testData['id'], $testData['position'], "testData", $monitor['testTable']); echo "</div></td>";
 			echo "<td width=\"150\">" . URL($type, "preview_question.php?id=" . $testData['id'], false, true, "Preview this <strong>" . $type . "</strong> question", false, true, "640", "480") . "</td>";
 			echo "<td width=\"100\"><div";
 			
@@ -85,7 +91,7 @@
 			echo "<td width=\"50\">";
 			
 			if (isset($importedQuestion)) {
-				echo URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, " onclick=\"return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')\"");
+				echo URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, "return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')");
 			} else {
 				$URL = "../questions/";
 				

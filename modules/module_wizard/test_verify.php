@@ -23,7 +23,7 @@
 	navigation("Verify Test Content", "Content may be reviewed in the section below. Changes can be made to  the lesson by clicking the &quot;Make Changes&quot; button, and modifying the test." . $message);
 
 //Display the test
-	test($monitor['testTable'], $monitor['gatewayPath'], false);
+	test($monitor['testTable'], $monitor['gatewayPath'], true);
 	
 //Display navigation buttons
 	echo "<blockquote>";

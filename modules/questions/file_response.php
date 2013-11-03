@@ -92,7 +92,7 @@
 	echo "<blockquote>";
 	directions("Provide an example of a correct answer");
 	echo "<blockquote>";
-	fileUpload("answer", "answer", false, false, false, "questionData", "fileURL", $monitor['gatewayPath'] . "test/answers", true);
+	fileUpload("answer", "answer", false, false, false, false, "questionData", "fileURL", $monitor['gatewayPath'] . "test/answers", true);
 	echo "</blockquote></blockquote>";
 	
 	catDivider("Feedback", "four");	

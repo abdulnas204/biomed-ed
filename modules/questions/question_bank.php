@@ -55,9 +55,11 @@
 		if ($_POST['import']) {
 			if (exist("questionbank", "id", $_POST['id'])) {
 				$id = $_POST['id'];
+				$questionData = query("SELECT * FROM `questionbank` WHERE `id` = '{$id}'");
+				$type = $questionData['type'];
 				$lastQuestion = lastItem($monitor['testTable']);
 				
-				insertQuery("Module", "NULL, '1', '{$id}', '{$lastQuestion}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
+				insertQuery("Module", "NULL, '1', '{$id}', '{$lastQuestion}', '{$type}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
 				
 				redirect("../module_wizard/test_content.php");
 			}

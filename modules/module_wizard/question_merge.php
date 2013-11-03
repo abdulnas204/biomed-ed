@@ -1,7 +1,7 @@
 <?php
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Question Merge");
+	$monitor = monitor("Question Merge", false, true);
 
 //Check to see if questions from the question bank need to be merged
 	if (!isset($_GET['type'])) {
@@ -53,15 +53,13 @@
 	if (isset($_GET['type']) && $_GET['type'] == "import" && isset($_GET['questionID']) && isset($_GET['bankID'])) {
 		$bankID = $_GET['bankID'];
 		$questionID = $_GET['questionID'];
-		$importQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$bankID}'", $connDBA);
-		$importQuestions = mysql_fetch_array($importQuestionsGrabber);
+		$importQuestions = query("SELECT * FROM `questionbank` WHERE `id` = '{$bankID}'");
 		
 		$type = $importQuestions['type'];
 		$points = $importQuestions['points'];
 		$extraCredit = $importQuestions['extraCredit'];
 		$partialCredit = $importQuestions['partialCredit'];
 		$difficulty = $importQuestions['difficulty'];
-		$category = $importQuestions['category'];
 		$link = $importQuestions['link'];
 		$randomize = $importQuestions['randomize'];
 		$totalFiles = $importQuestions['totalFiles'];
@@ -77,22 +75,25 @@
 		$incorrectFeedback = mysql_real_escape_string(stripslashes($importQuestions['incorrectFeedback']));
 		$partialFeedback = mysql_real_escape_string(stripslashes($importQuestions['partialFeedback']));
 							
-		mysql_query("UPDATE `{$monitor['testTable']}_{$monitor['currentTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE id = '{$questionID}'", $connDBA);
+		mysql_query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'", $connDBA);
+		
+		$redirect = "../questions/";
 		
 		switch ($type) {
-			case "Description" : $redirect = "questions/description.php"; break;
-			case "Essay" : $redirect = "questions/essay.php"; break;
-			case "File Response" : $redirect = "questions/file_response.php"; break;
-			case "Fill in the Blank" : $redirect = "questions/blank.php"; break;
-			case "Matching" : $redirect = "questions/matching.php"; break;
-			case "Multiple Choice" : $redirect = "questions/multiple_choice.php"; break;
-			case "Short Answer" : $redirect = "questions/short_answer.php"; break;
-			case "True False" : $redirect = "questions/true_false.php"; break;
+			case "Description" : $redirect .= "description"; break;
+			case "Essay" : $redirect .= "essay"; break;
+			case "File Response" : $redirect .= "file_response"; break;
+			case "Fill in the Blank" : $redirect .= "blank"; break;
+			case "Matching" : $redirect .= "matching"; break;
+			case "Multiple Choice" : $redirect .= "multiple_choice"; break;
+			case "Short Answer" : $redirect .= "short_answer"; break;
+			case "True False" : $redirect .= "true_false"; break;
 		}
 		
-		$questionInfoGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}_{$monitor['currentTable']}` WHERE `id` = '{$questionID}'", $connDBA);
-		$questionInfo = mysql_fetch_array($questionInfoGrabber);
+		$redirect .= ".php";
 		
-		redirect($redirect . "?question=" . $questionInfo['position'] . "&id=" . $questionInfo['id']);
+		$questionInfo = query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$questionID}'");
+		
+		redirect($redirect . "?id=" . $questionInfo['id']);
 	}
 ?>

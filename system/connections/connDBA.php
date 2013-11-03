@@ -41,7 +41,7 @@ ob_start();
 
 /* Begin site layout functions */		
 	//Include the start of a page
-		function headers($title, $role = false, $functions = false, $toolTip = false, $additionalParameters = false, $publicNavigation = false, $meta = false, $description = false, $additionalKeywords = false, $hideHTML = false) {
+		function headers($title, $role = false, $functions = false, $toolTip = false, $additionalParameters = false, $publicNavigation = false, $meta = false, $description = false, $additionalKeywords = false, $hideHTML = false, $customScript = false) {
 		global $connDBA;
 		global $root;
 		
@@ -154,7 +154,7 @@ ob_start();
 			}
 			
 		//Close the header
-			echo "</head><body" . $additionalHTML . ">";
+			echo $customScript . "</head><body" . $additionalHTML . ">";
 			
 		//Include a tooltip
 			if ($toolTip == true) {
@@ -754,7 +754,7 @@ ob_start();
 	function button($name, $id, $value, $type, $URL = false, $additionalParameters = false) {		
 		switch ($type) {
 			case "submit" : 
-				echo "<input type=\"submit\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"tinyMCE.triggerSave();" . $additionalParameters . "\">"; break;
+				echo "<input type=\"submit\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"" . ltrim($additionalParameters) . "tinyMCE.triggerSave();\">"; break;
 			case "reset" : 
 				echo "<input type=\"reset\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"return confirm('Are you sure you wish to reset all of the content in this form? Click OK to continue');$.validationEngine.closePrompt('#validate',true);" . $additionalParameters . "\">"; break;
 			case "cancel" : 
@@ -866,7 +866,7 @@ ob_start();
 	}
 	
 	//File upload
-	function fileUpload($name, $id, $size = false, $validate = true, $validateAddition = false, $editorTrigger = false, $arrayValue = false, $fileURL = false, $uploadNote = false, $additionalParameters = false) {
+	function fileUpload($name, $id, $size = false, $validate = true, $validateAddition = false, $manualValue = false, $editorTrigger = false, $arrayValue = false, $fileURL = false, $uploadNote = false, $additionalParameters = false) {
 		global $$editorTrigger;
 		
 		if ($editorTrigger == true && isset($$editorTrigger)) {
@@ -875,6 +875,10 @@ ob_start();
 			if (isset($$editorTrigger)) {
 				echo "Current file: <a href=\"" . $fileURL . "/" . $value[$arrayValue] . "\" target=\"_blank\">" . $value[$arrayValue] . "</a><br />";
 			}
+		}
+		
+		if ($manualValue == true) {
+			echo "Current file: <a href=\"" . $fileURL . "/" . $manualValue . "\" target=\"_blank\">" . $manualValue . "</a><br />";
 		}
 		
 		echo "<input type=\"file\" name=\"" . $name . "\" id=\"" . $id . "\" size=\"";
@@ -895,7 +899,7 @@ ob_start();
 		
 		echo "<br />Max file size: " .  ini_get('upload_max_filesize');
 		
-		if ($uploadNote == true && $editorTrigger == true && isset($$editorTrigger)) {
+		if (($manualValue == true || (isset($$editorTrigger) && $editorTrigger == true)) && $uploadNote == true) {
 			echo "<br /><strong>Note:</strong> Uploading a new file will replace the existing one.";
 		}
 	}
@@ -1014,13 +1018,13 @@ ob_start();
 		global $$editorTrigger;
 		
 		if ($manualValue == true && ($editorTrigger == false || !isset($$editorTrigger))) {
-			echo "value=\"" . $manualValue . "\"";
+			echo "value=\"" . prepare($manualValue, true, true) . "\"";
 		} else {
 			if ($editorTrigger == true && isset($$editorTrigger)) {
 				$value = $$editorTrigger;
 				
 				if (isset($$editorTrigger)) {
-					echo "value=\"" . $value[$arrayValue] . "\"";
+					echo "value=\"" . prepare($value[$arrayValue], true, true) . "\"";
 				}
 			}
 		}
@@ -1295,169 +1299,284 @@ ob_start();
 	
 	//Test content
 	function test($table, $fileURL, $preview = false) {
-		global $connDBA;
+		global $connDBA, $testValues;
 		
+		form("test", "post", true, true);
 		echo "<table width=\"100%\" class=\"dataTable\">";
 		
 		if ($preview == true) {
-			$additionalSQL = " WHERE `id` = '{$preview}' LIMIT 1";
+			if (is_numeric($preview)) {
+				$additionalSQL = " WHERE `id` = '{$preview}'";
+				$limit = " LIMIT 1";
+			} else {
+				$additionalSQL = "";
+				$limit = "";
+			}
 		} else {
-			$additionalSQL = "";
+			$userData = userData();
+			$testID = str_replace("moduletest_", "", $table);
+			$selectionGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}'", "raw");
+			$additionalSQLConstruct = " WHERE ";
+			
+			while ($selection = mysql_fetch_array($selectionGrabber)) {
+				$additionalSQLConstruct .= "`id` = '{$selection['questionID']}' OR ";
+			}
+			
+			$additionalSQL = rtrim($additionalSQLConstruct, " OR ");
+			$limit = "";
 		}
 		
-		$testDataGrabber = mysql_query("SELECT * FROM `{$table}`{$additionalSQL}", $connDBA);
+		if ($table != "questionbank" && $preview != false) {
+			$order = " ORDER BY `position` ASC";
+			$grab = "*";
+			$join = "";
+		} elseif (is_numeric($preview)) {
+			$order = "";
+			$grab = "*";
+			$join = "";
+		} else {
+			$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$_GET['id']}'");
+			
+			if ($moduleInfo['randomizeAll'] == "Randomize") {
+				$order = " ORDER BY `randomPosition` ASC";
+			} else {
+				$order = " ORDER BY `position` ASC";
+			}
+			
+			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition";
+			$join = " LEFT JOIN testdata_" . $userData['id'] . " ON " . $table . ".id = testdata_" . $userData['id'] . ".questionID";
+		}
+		
+		$testDataGrabber = query("SELECT {$grab} FROM `{$table}`{$join}{$additionalSQL}{$order}{$limit}", "raw");
 		$count = 1;
-	
+		$restrictImport = array();
+		
 	  	while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
-		  if ($table != "questionbank" && $testDataLoop['questionBank'] == "1") {
-			  $importID = $testDataLoop['linkID'];
-			  $importQuestion = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
-			  $testData = mysql_fetch_array($importQuestion);
-		  } else {
-			  $testData = $testDataLoop;
-		  }
-		  
-		  if ($testData['type'] != "Description") {
-			  echo "<tr><td width=\"100\" valign=\"top\"><p>";
-			  
-			  if ($preview == false) {
-				  echo "<span class=\"questionNumber\">Question " . $count++ . "</span><br />";
-			  }
-			  
-			  echo "<span class=\"questionPoints\">" . $testData['points'] . " ";
-			  
-			  if ($testData['points'] == "1") {
-				  echo "Point";
-			  } else {
-				  echo "Points";
-			  }
-			  echo "</span>";
-			  
-			  if ($testData['extraCredit'] == "on") {
-				  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
-			  }
-			  
-			  echo "</p></td><td valign=\"top\">" . prepare($testData['question'], false, true) . "<br /><br />";
-		  }
-	  
-		  switch ($testData['type']) {
-			  case "Description" : 
-				  echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($testData['question'], false, true) . "</td></tr>"; break;
-				  
-			  case "Essay" : 
-				  textArea($testDataLoop['id'], $testDataLoop['id'], "small", true, false, false, "testValues", $testDataLoop['id']);
-				  break;
-				  
-			  case "File Response" : 
-				  if ($testData['totalFiles'] > 1) {
-					  echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload" . $testDataLoop['id'] . "\"><tr><td>";
-					  fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, "testValues", $testDataLoop['id'], $monitor['gatewayFile'], true);
-					  echo "</td></tr></table><p><span class=\"smallAdd\" id=\"add" . $testDataLoop['id'] . "\" onclick=\"appendRow('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "', '\' name=\'" . $testDataLoop['id'] . "[]', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "', 'add" . $testDataLoop['id'] . "');\">Add Another File</span></p>";
-				  } else {
-					  fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, "testValues", $testDataLoop['id'], $fileURL, true);
-				  }
-				  
-				  break;
-				  
-			  case "Fill in the Blank" : 
-				  $blankQuestion = unserialize($testData['questionValue']);
-				  $blank = unserialize($testData['answerValue']);
-				  $valueNumbers = sizeof($blankQuestion);
-				  $matchingCount = 1;
-				  echo "<p>";
-				  
-				  for ($list = 0; $list <= $valueNumbers - 1; $list++) {
-					 echo prepare($blankQuestion[$list], false, true) . " ";
-					 
-					 if (!empty($blank[$list])) {
-						 echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true, false, false, "testValues", $testDataLoop['id'])  . " ";
-					 }
-				  }
-				  
-				  echo "</p>";
-				  break;
-			  
-			  case "Matching" : 
-				  $question = unserialize($testData['questionValue']);
-				  $answer = unserialize($testData['answerValue']);
-				  shuffle($answer);
-				  $valueNumbers = sizeof($question);
-				  $matchingCount = 1;
-				  
-				  echo "<table width=\"100%\">";
-				  
-				  for ($list = 0; $list <= $valueNumbers - 1; $list++) {
-					  echo "<tr><td width=\"20\">";
-					  $dropDownValue = "-,";
-					  $dropDownID = ",";
-					  
-					  for ($value = 1; $value <= $valueNumbers; $value++) {
-						  $dropDownValue .= $value . ",";
-						  $dropDownID .= $value . ",";
-					  }
-					  
-					  $values = rtrim($dropDownValue, ",");
-					  $IDs = rtrim($dropDownID, ",");
-					  
-					  dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true, false, false, "testValues", $testDataLoop['id']);
-					  
-					  echo"</td><td width=\"200\"><p>" . prepare($question[$list], false, true) . "</p></td><td width=\"200\"><p>" . $matchingCount++ . ". " . prepare($answer[$list], false, true) . "</p></td></tr>";
-				  }
-				  
-				  echo"</table>";				  
-				  break;
-			  
-			  case "Multiple Choice" : 
-				  $questions = unserialize($testData['questionValue']);
-				  
-				  if ($preview == false) {
-					  if ($testData['randomize'] == "1") {
-						  $questionsDisplay = shuffle($questions);
-					  } else {
-						  $questionsDisplay = $questions;
-					  }
-				  } else {
-					  $questionsDisplay = $questions;
-				  }
-				  
-				  if ($testData['choiceType'] == "radio") {
-					  $questionValue = "";
-					  $questionID = "";
-				  
-					  while (list($questionKey, $questionArray) = each($questionsDisplay)) {
-						  $questionValue .= $questionArray . ",";
-						  $questionID .= $questionKey + 1 . ",";
-					  }
-					  
-					  $values = rtrim($questionValue, ",");
-					  $IDs = rtrim($questionID, ",");
-					  
-					  radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true, false, false, "testValues", $testDataLoop['id']);
-				  } else {
-					  while (list($questionKey, $questionArray) = each($questionsDisplay)) {
-						  $identifier = $questionKey + 1;
-						  
-						  checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1", false, "testValues", $testDataLoop['id'], $questionKey + 1);
-					  }
-				  }
-				  
-				  break;
-				  
-			  case "Short Answer" : 
-				  textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, false, "testValues", $testDataLoop['id']);
-				  break;
-				  
-			  case "True False" : 
-				  radioButton($testDataLoop['id'], $testDataLoop['id'], "True,False", "1,0", true, true, false, false, "testValues", $testDataLoop['id']);
-				  break;
-		  }
-		  
-		  if ($testData['type'] != "Description") {
-			  echo "<br /><br /></td></tr>";
-		  }
-	  }
-	  
-	  echo "</table>";
+			if ($preview == false) {
+				$testValues = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}' AND `questionID` = '{$testDataLoop['id']}'");
+			}
+			
+			if ($table != "questionbank" && $testDataLoop['questionBank'] == "1") {
+				$importID = $testDataLoop['linkID'];
+				$importQuestion = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
+				$testData = mysql_fetch_array($importQuestion);
+			} else {
+				$testData = $testDataLoop;
+			}
+			
+			if (!is_numeric($preview) && $testData['link'] != "0" && !empty($testData['link'])) {
+				if (!in_array($testData['link'], $restrictImport) && !query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}' AND `questionID` = '{$testDataLoop['id']}'", "raw")) {
+					$linkData = query("SELECT * FROM `{$table}` WHERE `id` = '{$testData['link']}'");
+					array_push($restrictImport, $testData['link']);
+					echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($linkData['question'], false, true) . "</td></tr>";
+					unset($linkData);
+				}
+			}
+			
+			if ($testData['type'] != "Description") {
+				echo "<tr><td width=\"100\" valign=\"top\"><p>";
+				
+				if (!is_numeric($preview)) {
+					echo "<span class=\"questionNumber\">Question " . $count++ . "</span><br />";
+				}
+				
+				echo "<span class=\"questionPoints\">" . $testData['points'] . " ";
+				
+				if ($testData['points'] == "1") {
+					echo "Point";
+				} else {
+					echo "Points";
+				}
+				echo "</span>";
+				
+				if ($testData['extraCredit'] == "on") {
+					echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
+				}
+				
+				echo "</p></td><td valign=\"top\">" . prepare($testData['question'], false, true) . "<br /><br />";
+			}
+			
+			switch ($testData['type']) {
+				case "Description" : 
+					if (!in_array($testData['id'], $restrictImport)) {
+						echo "<tr><td colspan=\"2\" valign=\"top\">" . prepare($testData['question'], false, true) . "</td></tr>";
+					}
+					
+					break;
+				case "Essay" : 
+					if (isset($testValues)) {
+						textArea($testDataLoop['id'], $testDataLoop['id'], "small", true, false, unserialize($testValues['answer']));
+					} else {
+						textArea($testDataLoop['id'], $testDataLoop['id'], "small", true);
+					}
+						
+					break;
+					
+				case "File Response" : 
+					if ($testData['totalFiles'] > 1) {
+						echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload" . $testDataLoop['id'] . "\"><tr><td>";
+						fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, "testValues", $testDataLoop['id'], $monitor['gatewayFile'], true);
+						echo "</td></tr></table><p><span class=\"smallAdd\" id=\"add" . $testDataLoop['id'] . "\" onclick=\"appendRow('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "', '\' name=\'" . $testDataLoop['id'] . "[]', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "', 'add" . $testDataLoop['id'] . "');\">Add Another File</span></p>";
+					} else {
+						if (isset($testValues)) {
+							fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true, false, unserialize($testValues['answer']), false, false, "../gateway.php/modules/" . $_GET['id'] . "/test/responses", true);
+						} else {
+							fileUpload($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_1", false, true);
+						}
+					}
+					
+					break;
+					
+				case "Fill in the Blank" : 
+					$blankQuestion = unserialize($testData['questionValue']);
+					$blank = unserialize($testData['answerValue']);
+					$valueNumbers = sizeof($blankQuestion);
+					$matchingCount = 1;
+					echo "<p>";
+					
+					for ($list = 0; $list <= $valueNumbers - 1; $list++) {
+					   echo prepare($blankQuestion[$list], false, true) . " ";
+					   
+					   if (!empty($blank[$list])) {
+						   if (isset($testValues)) {
+							   $value = unserialize($testValues['answer']);
+							   
+							   echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true, false, $value[$list])  . " ";
+						   } else {
+						   		echo textField($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount++, false, false, false, true)  . " ";
+						   }
+					   }
+					}
+					
+					echo "</p>";
+					break;
+				
+				case "Matching" : 
+					$question = unserialize($testData['questionValue']);
+					$answerPrep = unserialize($testValues['question']);
+					$answer = $answerPrep['1'];
+					$valueNumbers = sizeof($question);
+					$matchingCount = 1;
+					$fillValue = unserialize($testValues['answer']);
+					
+					echo "<table width=\"100%\">";
+					
+					for ($list = 0; $list <= $valueNumbers - 1; $list++) {
+						echo "<tr><td width=\"20\">";
+						$dropDownValue = "-,";
+						$dropDownID = ",";
+						
+						for ($value = 1; $value <= $valueNumbers; $value++) {
+							$dropDownValue .= $value . ",";
+							$dropDownID .= $value . ",";
+						}
+						
+						$values = rtrim($dropDownValue, ",");
+						$IDs = rtrim($dropDownID, ",");
+						
+						if (isset($testValues)) {
+							dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true, false, $fillValue[$list]);
+						} else {
+							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true);
+						}
+						
+						echo"</td><td width=\"200\"><p>" . prepare($question[$list], false, true) . "</p></td><td width=\"200\"><p>" . $matchingCount++ . ". " . prepare($answer[$list], false, true) . "</p></td></tr>";
+					}
+					
+					echo"</table>";				  
+					break;
+				
+				case "Multiple Choice" : 
+					$questions = unserialize($testData['questionValue']);
+					
+					if ($preview == false) {
+						if ($testData['randomize'] == "1") {
+							$questionsDisplay = shuffle($questions);
+						} else {
+							$questionsDisplay = $questions;
+						}
+					} else {
+						$questionsDisplay = $questions;
+					}
+					
+					if ($testData['choiceType'] == "radio") {
+						$questionValue = "";
+						$questionID = "";
+					
+						while (list($questionKey, $questionArray) = each($questionsDisplay)) {
+							$questionValue .= $questionArray . ",";
+							$questionID .= $questionKey + 1 . ",";
+						}
+						
+						$values = rtrim($questionValue, ",");
+						$IDs = rtrim($questionID, ",");
+						
+						
+						if (isset($testValues)) {
+							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true, false, unserialize($testValues['answer']));
+						} else {
+							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true);
+						}
+						
+					} else {
+						while (list($questionKey, $questionArray) = each($questionsDisplay)) {
+							$identifier = $questionKey + 1;
+							if (isset($testValues)) {
+								if (is_array(unserialize($testValues['answer']))) {
+									$fillValue = unserialize($testValues['answer']);
+								} else {
+									$fillValue = array(unserialize($testValues['answer']));
+								}
+								
+								if (in_array($identifier, $fillValue)) {
+									checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1", true);
+								} else {
+									checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1");
+								}
+							} else {
+								checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1");
+							}
+							
+							echo "<br />";
+						}
+					}
+					
+					break;
+					
+				case "Short Answer" : 
+					if (isset($testValues)) {
+						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, unserialize($testValues['answer']));
+					} else {
+						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true);
+					}
+					
+					break;
+					
+				case "True False" : 
+					if (isset($testValues)) {
+						radioButton($testDataLoop['id'], $testDataLoop['id'], "True,False", "1,0", true, true, false, unserialize($testValues['answer']));
+					} else {
+						radioButton($testDataLoop['id'], $testDataLoop['id'], "True,False", "1,0", true, true);
+					}
+					
+					break;
+			}
+			
+			if ($testData['type'] != "Description") {
+				echo "<br /><br /></td></tr>";
+			}
+		}
+		
+		echo "</table>";
+		
+		if ($preview == false) {
+			echo "<blockquote><p>";
+			button("submit", "submit", "Submit", "submit", false, " return confirm('Once the test is submitted, it cannot be reopened. Continue?');");
+			button("save", "save", "Save", "submit", false);
+			echo "</p></blockquote>";
+		}
+		
+		closeForm(false, true);
 	}
 	
 	//Statistics charting
@@ -1666,12 +1785,20 @@ ob_start();
 		echo "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
 	}
 	
-	//Include live error script
+	//Include a live error script
 	function liveError() {
 		global $connDBA;
 		global $root;
 		
-		echo "<script src=\"" . $root . "jsystem/avascripts/liveError/errorCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveError/runNameError.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "system/javascripts/liveError/errorCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveError/runNameError.js\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include a live update script
+	function liveUpdate() {
+		global $connDBA;
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateOptions.js\" type=\"text/javascript\"></script>";
 	}
 	
 	//Include a show or hide script
@@ -1850,6 +1977,23 @@ ob_start();
 			return false;
 		}
 	}
+	
+	//A function to flatten a nested array
+	function flatten($array) {
+		if (!is_array($array)) {
+			return array($array);
+		}
+	
+		$result = array();
+		
+		foreach ($array as $value) {
+			$result = array_merge($result, flatten($value));
+		}
+	
+		return array_unique($result);
+	}
+
+
 	
 	//A function to delete a folder and all of its contents
 	function deleteAll($directory, $empty = false) {
@@ -2413,51 +2557,53 @@ ob_start();
 				return false;
 			}
 		} else {
-			if ($returnType == false || $returnType == "array") {
-				$result = mysql_fetch_array($action);
-				
-				if (is_array($result) && !empty($result)) {
-					array_merge_recursive($result);
-					$return = array();
+			if (!strstr($query, "INSERT INTO") && !strstr($query, "UPDATE") && !strstr($query, "SET") && !strstr($query, "CREATE TABLE")) {
+				if ($returnType == false || $returnType == "array") {
+					$result = mysql_fetch_array($action);
 					
-					foreach ($result as $key => $value) {
-						$return[$key] = prepare($value, false, true);
+					if (is_array($result) && !empty($result)) {
+						array_merge_recursive($result);
+						$return = array();
+						
+						foreach ($result as $key => $value) {
+							$return[$key] = prepare($value, false, true);
+						}
+						
+						return $result;
+					} else {
+						return false;
 					}
 					
-					return $result;
-				} else {
-					return false;
+					unset($query, $action, $result);
+					exit;
+				} elseif ($returnType == "raw") {
+					$actionTest = mysql_query($query, $connDBA);
+					$result = mysql_fetch_array($actionTest);
+					
+					if ($result) {
+						return $action;
+					} else {
+						return false;
+					}
+					
+					unset($query, $action, $result);
+					exit;
+				} elseif ($returnType == "num") {
+					return mysql_num_rows($action);
+					
+					unset($query, $action, $result);
+					exit;
+				} elseif ($returnType == "selected") {
+					$return = array();
+					
+					while ($result = mysql_fetch_array($action)) {
+						array_push($return, $result);
+					} 
+					
+					return flatten($return,array());
+					unset($query, $action, $result);
+					exit;
 				}
-				
-				unset($query, $action, $result);
-				exit;
-			} elseif ($returnType == "raw") {
-				$actionTest = mysql_query($query, $connDBA);
-				$result = mysql_fetch_array($actionTest);
-				
-				if ($result) {
-					return $action;
-				} else {
-					return false;
-				}
-				
-				unset($query, $action, $result);
-				exit;
-			} elseif ($returnType == "num") {
-				return mysql_num_rows($action);
-				
-				unset($query, $action, $result);
-				exit;
-			} elseif ($returnType == "selected") {
-				$return = array();
-				
-				while ($result = mysql_fetch_array($action)) {
-					array_push($return, $result);
-				} 
-				
-				return $return;
-				unset($query, $action, $result);
-				exit;
 			}
 		}
 	}

@@ -210,9 +210,9 @@
 			echo "<blockquote><p>";
 			
 			if (!isset($_GET['id'])) {
-				fileUpload("file", "file", false, true, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
+				fileUpload("file", "file", false, true, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			} else {
-				fileUpload("file", "file", false, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
+				fileUpload("file", "file", false, false, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			}
 			
 			echo "</p></blockquote></blockquote>";
