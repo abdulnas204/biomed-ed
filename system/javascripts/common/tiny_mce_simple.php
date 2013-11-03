@@ -1,4 +1,4 @@
-<?php require_once("../../connections/connDBA.php"); ?>
+<?php require_once("../../core/index.php"); ?>
 <?php
 //Select the API key for the spell checker
 	$apiGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);

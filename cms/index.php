@@ -1,8 +1,8 @@
 <?php 
 //Header functions
 	require_once('../system/core/index.php');
-	require_once(relativeAddress("cms") . "config.php");
 	require_once(relativeAddress("cms/system/php") . "index.php");
+	require_once(relativeAddress("cms/system/php") . "functions.php");
 	headers("Pages Control Panel", "liveSubmit,customVisible", true); 
 
 //Reorder pages	
@@ -18,16 +18,16 @@
 	title("Pages Control Panel", "This is the pages control panel, where you can add, edit, delete, and reorder pages.");
 	
 //Admin toolbar
-	echo "<div class=\"toolBar\">";
-	echo URL("Create New Page", "manage_page.php", "toolBarItem new");
-	echo URL("Manage Site Settings", "site_settings.php", "toolBarItem settings");
-	echo URL("Manage Sidebar", "sidebar.php", "toolBarItem sideBar");
+	echo "<div class=\"toolBar\">\n";
+	echo URL("Create New Page", "manage_page.php", "toolBarItem new") . "\n";
+	echo URL("Manage Site Settings", "site_settings.php", "toolBarItem settings") . "\n";
+	echo URL("Manage Sidebar", "sidebar.php", "toolBarItem sideBar") . "\n";
 
 	if (exist("pages")) {
-		echo URL("Preview this Site", "../../index.php", "toolBarItem search");
+		echo URL("Preview this Site", "../index.php", "toolBarItem search") . "\n";
 	}
 	
-	echo "</div>";
+	echo "</div>\n";
 
 //Display message updates
 	message("added", "page", "success", "The page was successfully added");
@@ -41,13 +41,13 @@
 	if (exist("pages")) {
 		$pageGrabber = mysql_query("SELECT * FROM pages ORDER BY `position` ASC", $connDBA);
 		
-		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+		echo "<table class=\"dataTable\">\n<tbody>\n<tr>\n<th width=\"25\" class=\"tableHeader\"></th>\n<th width=\"75\" class=\"tableHeader\">Order</th>\n<th class=\"tableHeader\" width=\"200\">Title</th>\n<th class=\"tableHeader\">Content</th>\n<th width=\"50\" class=\"tableHeader\">Edit</th>\n<th width=\"50\" class=\"tableHeader\">Delete</th>\n</tr>\n";
 		
 		while($pageData = mysql_fetch_array($pageGrabber)) {
 			echo "<tr";
-			if ($pageData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-			echo "<td width=\"25\">"; option($pageData['id'], $pageData['visible'], "pageData", "visible"); echo "</td>";
-			echo "<td width=\"75\">"; reorderMenu($pageData['id'], $pageData['position'], "pageData", "pages"); echo "</td>";
+			if ($pageData['position'] & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
+			echo "<td width=\"25\">"; option($pageData['id'], $pageData['visible'], "pageData", "visible"); echo "</td>\n";
+			echo "<td width=\"75\">"; reorderMenu($pageData['id'], $pageData['position'], "pageData", "pages"); echo "</td>\n";
 			echo "<td width=\"200\">";
 			
 			if ($pageData['position'] == "1") {

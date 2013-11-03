@@ -7,15 +7,13 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: Novemeber 29th, 2010
 
 This script is used to process, maintain, and secure all 
-login actions.
+login actions and user-related queries.
 */
 
 /*
@@ -94,7 +92,7 @@ Login management
 				if ($userInfo) {
 					$timeStamp = time();
 					
-					query("UPDATE `users` SET `active` = '{$timeStamp}' WHERE `id` = '{$userInfo['id']}'", $connDBA);
+					query("UPDATE `users` SET `active` = '{$timeStamp}' WHERE `id` = '{$userInfo['id']}'");
 					
 					$_SESSION['userName'] = $userInfo['userName'];
 					$_SESSION['role'] = $userInfo['role'];	
@@ -116,14 +114,8 @@ Login management
 	}
 	
 //Process a logout request
-	function logout($total = true) {
-	//If $total == true, the destroy the session data
-		if ($total == true) {
-			session_destroy();
-	//If $total == false, then simply log out of the developer administration area
-		} else {
-			unset($_SESSION['developerAdministration']);
-		}
+	function logout() {
+		session_destroy();
 	}
 	
 //Maintain login status
@@ -140,5 +132,28 @@ Login management
 //Grab the user's data
 	function userData() {
 		return query("SELECT * FROM `users` WHERE `userName` = '{$_SESSION['userName']}'");
+	}
+	
+	$userData = userData();
+	
+//Check the user's access to a particular item
+	function access() {
+		$values = func_get_args();
+		$role = query("SELECT * FROM `roles` WHERE `name` = '{$_SESSION['role']}'");
+		$privileges = unserialize($role['privileges']);
+		$return = false;
+		
+		if (loggedIn() && exist("roles", "name", $_SESSION['role'])) {
+			for($count = 0; $count <= sizeof($values) - 1; $count ++) {
+				$currentPrivilege = str_replace(" ", "_", $values[$count]);
+				
+				if (!empty($privileges) && array_key_exists($currentPrivilege, $privileges) && $privileges[$currentPrivilege] == "1") {
+					$return = true;
+					break;
+				}
+			}
+		}
+		
+		return $return;
 	}
 ?>

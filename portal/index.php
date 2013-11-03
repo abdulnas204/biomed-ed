@@ -7,12 +7,10 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: August 31st, 2010
-Last updated: Novemeber 27th, 2010
+Last updated: Novemeber 29th, 2010
 
 This is the home page for logged in users, which displays
 information relavent to the user.
@@ -23,18 +21,20 @@ information relavent to the user.
 	headers("Home", false, true);
 	
 //Title
-	switch($_SESSION['MM_UserGroup']) {
-		case "Site Administrator" :
-			$description = "Welcome to the administration home page. This page contains a quick reference to major information about this site. Major parts of this site can be administered by navigating the links above."; break;
-		case "Organization Administrator" :
-			$description = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
-		case "Instructor" : 
-			$description = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
-		case "Student" : 
-			$description = "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above."; break;
-	}
+	title("Home", "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above.");
 	
-	title("Home", $description, false);
+//Locate and load all the plugins for this page
+	$pluginsDirectory = opendir("../");
+	
+	while ($plugins = readdir($pluginsDirectory)) {
+		if ($plugins !== "." && $plugins !== "..") {
+			if (is_dir("../" . $plugins) && file_exists("../" . $plugins . "/system/php/plugin.php")) {
+				require("../" . $plugins . "/system/php/index.php");
+				require("../" . $plugins . "/system/php/functions.php");
+				require("../" . $plugins . "/system/php/plugin.php");
+			}
+		}
+	}
 	
 //A function to calculate the number of users in a particular system
 	function userCount($role, $type) {

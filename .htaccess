@@ -10,6 +10,14 @@
 	order allow,deny
 	allow from all
 </Files>
+<Files ~ "\.(swf)$">
+	order allow,deny
+	allow from all
+</Files>
+<Files ~ "\.(png)$">
+	order allow,deny
+	allow from all
+</Files>
 <Files ~ "\.(htaccess)$">
 	order deny,allow
 	deny from all

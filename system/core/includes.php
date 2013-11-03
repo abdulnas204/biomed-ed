@@ -7,12 +7,10 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: Novemeber 29th, 2010
 
 This script contains functions which will construct the 
 JavaScript and CSS callers for client-side modules.
@@ -27,7 +25,10 @@ Widgets
 	function tinyMCEAdvanced () {
 		global $root;
 		
-		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.php\"></script>";
+		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.php\"></script>
+";
 	}
 
 //TinyMCE simple
@@ -36,7 +37,8 @@ Widgets
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>";
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>
+";
 	}
 	
 //TinyMCE small media
@@ -101,19 +103,19 @@ Pre-processor scripts
 	function customVisible() {
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/customCheckbox/runVisible.js\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script>
+<script src=\"" . $root . "system/javascripts/customCheckbox/runVisible.js\" type=\"text/javascript\"></script>";
 	}
 	
 	function customCheckbox() {
-		global $connDBA;
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script>
+<script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
 	}
 	
 	//Include a live update script
 	function liveUpdate() {
-		global $connDBA;
 		global $root;
 		
 		return "<script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateOptions.js\" type=\"text/javascript\"></script>";
@@ -177,13 +179,6 @@ Pre-processor scripts
 		global $root;
 		
 		return "<script src=\"" . $root . "system/javascripts/tabbedPanels/tabbedPanels.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/tabbedPanels.css\" type=\"text/css\">";
-	}
-	
-	//Include a full-size calendar script
-	function fullCalendar() {
-		global $root;
-		
-		return "<script src=\"" . $root . "system/javascripts/calendar/calendarCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/calendar/calendarExtensions.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/calendar/runCalendar.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/calendar/theme.css\" type=\"text/css\"><link rel=\"stylesheet\" href=\"" . $root . "system/styles/calendar/style.css\" type=\"text/css\">";
 	}
 	
 	//Include the assignment javascript library

@@ -7,20 +7,18 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: November 24th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: December 1st, 2010
 
 This is the developer administration login page.
 */
 
 //Header functions
 	require_once('../system/core/index.php');
-	require_once(relativeAddress("admin") . "config.php");
 	require_once(relativeAddress("admin/system/php") . "index.php");
+	require_once(relativeAddress("admin/system/php") . "functions.php");
 	headers("Developer Administration Login", "validate");
 	
 //Process the login

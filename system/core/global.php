@@ -7,12 +7,10 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 27th, 2010
+Last updated: Novemeber 28th, 2010
 
 This script contains user feedback, complete database 
 management, and minor code simplification functions which 
@@ -187,7 +185,7 @@ Database management functions
 			$additionalCheck = "";
 		}
 		
-		$itemCheckGrabber = query("SELECT * FROM `{$table}`{$additionalCheck}", "raw");
+		$itemCheckGrabber = query("SELECT * FROM `{$table}`{$additionalCheck}", "raw", false);
 		
 		if ($itemCheckGrabber) {
 			$itemCheck = query("SELECT * FROM `{$table}`{$additionalCheck}", "num");
@@ -212,6 +210,73 @@ Database management functions
 //Escape a string to store values into a database
 	function escape($value) {
 		return mysql_real_escape_string($value);
+	}
+	
+//Grab the previous item's position in the database
+	function lastItem($table, $whereColumn = false, $whereValue = false, $column = false) {
+		if ($column == false) {
+			$column = "position";
+		} else {
+			$column = $column;
+		}
+		
+		if ($whereColumn == true && $whereValue == true) {
+			$where = " WHERE `{$whereColumn}` = '{$whereValue}' ";
+		} else {
+			$where = "";
+		}
+		
+		$lastItemGrabber = query("SELECT * FROM `{$table}`{$where} ORDER BY {$column} DESC", "raw", false);
+		
+		if ($lastItemGrabber) {
+			$lastItem = fetch($lastItemGrabber);
+			return $lastItem[$column] + 1;
+		} else {
+			return "1";
+		}
+	}
+	
+//Grab the next primary key ID
+	function nextID($table) {
+		$key = query("SHOW TABLE STATUS LIKE '{$table}'");
+		return $key['Auto_increment'];
+	}
+	
+//Live check if a name exists
+	function validateName($table, $column) {
+		if (isset($_POST['validateValue']) && isset($_POST['validateId']) && isset($_POST['validateError'])) {
+			$value = $_POST['validateValue'];
+			$id = $_POST['validateId'];
+			$message = $_POST['validateError'];
+			
+			$return = array();
+			$return[0] = $id;
+			$return[1] = $message;
+		
+			if (!query("SELECT * FROM `{$table}` WHERE `{$column}` = '{$value}'", "raw")) {
+				$return[2] = "true";
+				echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+			} else {
+				$userInfo = userData();
+				
+				if (isset($_GET['id'])) {
+					$data = query("SELECT * FROM `{$table}` WHERE `id` = '{$_GET['id']}'");
+					
+					if ($data[$column] === $value) {
+						$return[2] = "true";
+						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+					} else {
+						$return[2] = "false";
+						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+					}
+				} else {
+					$return[2] = "false";
+					echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+				}
+			}
+			
+			exit;
+		}
 	}
 	
 /*

@@ -12,7 +12,7 @@ open source, freeware, nor commercial/closed source.
 /* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 27th, 2010
+Last updated: Novemeber 29th, 2010
 
 This script is used to construct the layout of a page.
 */
@@ -78,7 +78,8 @@ This script is used to construct the layout of a page.
 			$functionsArray = explode(",", $functions);
 			
 			foreach ($functionsArray as $functions) {
-				$scripts .= $functions();
+				$scripts .= $functions() . "
+";
 			}
 		}
 		
@@ -99,13 +100,11 @@ This script is used to construct the layout of a page.
 		}
 		
 	//Test to see which item to highlight on the navigation bar
-		function headerHighLight($text, $test) {
-			global $root, $requestURL;
-			
-			if (strstr($requestURL, $test)) {
-				return URL($text, $root . $test . "/index.php", "topCurrentPageNav");
+		function headerHighLight($text, $URL) {
+			if (strstr("http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'], $URL)) {
+				return URL($text, $URL . "index.php", "topCurrentPageNav");
 			} else {
-				return URL($text, $root . $test . "/index.php", "topPageNav");
+				return URL($text, $URL . "index.php", "topPageNav");
 			}
 		}
 		
@@ -135,7 +134,7 @@ This script is used to construct the layout of a page.
 				if (isset($_SESSION['developerAdministration']) && $_SESSION['developerAdministration'] === $rootUserName) {
 					$HTML .= 
           URL("(Administration Logout)", $root . "admin/logout.php") . "
-          " .  URL("(Logout)", "admin/logout.php?action=complete");
+          " .  URL("(Logout)", $root . "admin/logout.php?action=complete");
 				} else {
 					$HTML .= 
           URL("(Logout)", $root . "logout.php");
@@ -190,7 +189,7 @@ This script is used to construct the layout of a page.
 			
 			if ($publicNavigation == false) {
 				if (loggedIn()) {
-					$URL = $_SESSION['role'];
+					$URL = "Logged";
 				} else {
 					$URL = "Public";
 				}
@@ -198,88 +197,68 @@ This script is used to construct the layout of a page.
 				$URL = "Public";
 			}
 			
-			switch ($URL) {
-			//Public website navigation bar
-				case "Public" :
-					$pageData = query("SELECT * FROM pages ORDER BY position ASC", "raw");	
-					$lastPageCheck = query("SELECT * FROM pages ORDER BY position DESC LIMIT 1");
-					
-					if (isset ($_GET['page'])) {
-						$currentPage = $_GET['page'];
-					}
-					
-					while ($pageInfo = fetch($pageData)) {
-						if (isset ($currentPage)) {
-							if ($pageInfo['visible'] == "on") {
-								if ($currentPage == $pageInfo['id']) {
-									$class = "topCurrentPageNav";
-								} else {
-									$class = "topPageNav";
-								}
-							}
-						} else {
-							if ($pageInfo['visible'] == "on") {
-								if ($pageInfo['position'] == "1") {
-									$class = "topCurrentPageNav";
-								} else {
-									$class = "topPageNav";
-								}
+		//Public website navigation bar
+			if ($type == "Public") {
+				$pageData = query("SELECT * FROM pages ORDER BY position ASC", "raw");	
+				$lastPageCheck = query("SELECT * FROM pages ORDER BY position DESC LIMIT 1");
+				
+				if (isset ($_GET['page'])) {
+					$currentPage = $_GET['page'];
+				}
+				
+				while ($pageInfo = fetch($pageData)) {
+					if (isset ($currentPage)) {
+						if ($pageInfo['visible'] == "on") {
+							if ($currentPage == $pageInfo['id']) {
+								$class = "topCurrentPageNav";
+							} else {
+								$class = "topPageNav";
 							}
 						}
-						
-						$HTML .= "
-              <li> " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . " </li>";
+					} else {
+						if ($pageInfo['visible'] == "on") {
+							if ($pageInfo['position'] == "1") {
+								$class = "topCurrentPageNav";
+							} else {
+								$class = "topPageNav";
+							}
+						}
 					}
 					
-					break;
-					
-			//Site administrator navigation bar
-				case "Site Administrator" : 
 					$HTML .= "
-              <li> " . headerHighLight("Home", "portal") . " </li>
-              <li> " . headerHighLight("Users", "users") . " </li>
-              <li> " . headerHighLight("Organizations", "organizations") . " </li>
-              <li> " . headerHighLight("Communication", "communication") . " </li>
-              <li> " . headerHighLight("Modules", "modules") . " </li>
-              <li> " . headerHighLight("Statistics", "statistics") . " </li>
-              <li> " . headerHighLight("Public Webiste", "cms") . " </li>
-              <li> " . URL("Logout", $root . "logout.php", "topPageNav") . " </li>";
+              <li> " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . " </li>";
+				 }
+		//Generate the navigation bar based on the user's privileges
+			} else {
+				$HTML .= "
+              <li> " . headerHighLight("Home", $root . "portal/") . " </li>";
+			  
+				$pluginsDirectory = opendir(relativeAddress(""));
+				$roleInfo = query("SELECT * FROM `roles` WHERE `name` = '{$_SESSION['role']}'");
+				$userPrivileges = unserialize($roleInfo['privileges']);
 				
-					break;
-					
-			//Organization administrator navigation bar
-				case "Organization Administrator" : 
-					$HTML .= "
-              <li> " . headerHighLight("Home", "portal") . " </li>
-              <li> " . headerHighLight("Users", "users") . " </li>
-              <li> " . headerHighLight("Organization", "organization") . " </li>
-              <li> " . headerHighLight("Communication", "communication") . " </li>
-              <li> " . headerHighLight("Modules", "modules") . " </li>
-              <li> " . headerHighLight("Statistics", "statistics") . " </li>
-              <li> " . URL("Logout", $root . "logout.php", "topPageNav") . " </li>";
-				
-					break;
-					
-			//Instrcutor navigation bar
-				case "Instructor" : 
-					$HTML .= "
-              <li> " . headerHighLight("Home", "portal") . " </li>
-              <li> " . headerHighLight("Users", "users") . " </li>
-              <li> " . headerHighLight("Communication", "communication") . " </li>
-              <li> " . headerHighLight("Modules", "modules") . " </li>
-              <li> " . headerHighLight("Statistics", "statistics") . " </li>
-              <li> " . URL("Logout", $root . "logout.php", "topPageNav") . " </li>";
-				
-					break;
-					
-			//If this is the student navigation bar
-				case "Student" :
-					$HTML .= "
-              <li> " . headerHighLight("Home", "portal") . " </li>
-              <li> " . headerHighLight("Modules", "modules") . " </li>
-              <li> " . URL("Logout", $root . "logout.php", "topPageNav") . " </li>";
-				
-					break;
+				while ($plugins = readdir($pluginsDirectory)) {
+					if ($plugins !== "." && $plugins !== "..") {
+						if (is_dir(relativeAddress("") . $plugins) && file_exists(relativeAddress("") . $plugins . "/system/php/index.php")) {
+							require(relativeAddress("") . $plugins . "/system/php/index.php");
+							$show = false;
+							
+							foreach($privileges as $privilege) {
+								$renamed = str_replace(" ", "_", $privilege);
+								
+								if (array_key_exists($renamed, $userPrivileges) && $userPrivileges[$renamed] == "1") {
+									$show = true;
+									break;
+								}
+							}
+							
+							if ($menuParent == "top" && $show == true) {
+								$HTML .= "
+              <li> " . headerHighLight($menuName, $pluginRoot) . " </li>";
+							}
+						}
+					}
+				}
 			}
 			
 			$HTML .= "
@@ -317,7 +296,7 @@ Third-party works are accredited where necessary.
 //-->
 
 <!--
-Generated on " . date("F j, Y \a\\t g:i A") . "
+http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on " . date("F j, Y \a\\t g:i A") . "
 //-->
 
 <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
@@ -332,11 +311,10 @@ Generated on " . date("F j, Y \a\\t g:i A") . "
 <!-- The shortcut icon //-->
 <link type=\"" . $MIME . "\" rel=\"shortcut icon\" href=\"" . $root . "system/images/icon." . $siteInfo['iconType'] . "\" />" . $metaInformation . "
   
-<!-- Include javascripts and stylesheets //-->
+<!-- Include JavaScripts and StyleSheets //-->
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/common/universal.css\" />
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/themes/" . $siteInfo['style'] . "\" />
 " . $scripts . "
-
 </head>
 <body" . $additionalHTML . ">" . $toolTipScript . $HTML;
 	}

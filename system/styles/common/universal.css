@@ -1211,6 +1211,12 @@ a.skip:focus, a.skip:active {
 		text-align:center;
 	}
 	
+	p.directions {
+		border-bottom:thin #666 solid;
+		border-top:thin #666 solid;
+		text-align:center;
+	}
+	
 	ul.search li {
 		list-style:none;
 		display:inline;

@@ -1,20 +1,37 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 16th, 2010
+Last updated: December 1st, 2010
+
+This is the lesson settings page for the learning unit 
+generator.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	require_once('../questions/functions.php');
-	$monitor = monitor("Module Settings", "tinyMCESimple,validate,enableDisable,navigationMenu,autoSuggest");
+	$monitor = monitor("Lesson Settings", "tinyMCESimple,validate,enableDisable,navigationMenu,autoSuggest");
 	
 //Grab the form data
-	if (isset($_SESSION['currentModule'])) {
-		$moduleDataGrabber = mysql_query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'", $connDBA);
-		$moduleData = mysql_fetch_array($moduleDataGrabber);
+	if (isset($_SESSION['currentUnit'])) {
+		$lessonData = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentModule']}'");
 	}
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip'])) {
+	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip'])) {
 		$name = mysql_real_escape_string($_POST['name']);
 		$category = mysql_real_escape_string($_POST['category']);
-		$employee = mysql_real_escape_string($_POST['employee']);
 		$difficulty = $_POST['difficulty'];
 		$time = $_POST['time'];
 		$timeLabel = $_POST['timeLabel'];
@@ -29,30 +46,29 @@
 		$searchEngine = $_POST['searchEngine'];
 		$timeFrame = $time . $timeLabel;
 		
-		if (isset($_SESSION['currentModule'])) {
-			$id = $_SESSION['currentModule'];
+		if ($lessonData) {
+			$id = $lessonData['id'];
 								
-			mysql_query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `employee` = '{$employee}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `skip` = '{$skip}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE `id` = '{$id}'", $connDBA);
+			query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `skip` = '{$skip}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE `id` = '{$id}'");
 		} else {
-			$organizationPrep = userData();
-			$organization = $organizationPrep['organization'];
+			$organization = $userData['organization'];
 			
-			mysql_query("INSERT INTO `{$monitor['parentTable']}` (
-						`id`, `locked`, `visible`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
-						) VALUES (
-						NULL, '{$locked}', '', '{$name}', '{$category}', '{$employee}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$skip}', '{$feedback}', '{$tags}', '{$searchEngine}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
-						)", $connDBA);
+			query("INSERT INTO `{$monitor['parentTable']}` (
+				  `id`, `locked`, `visible`, `name`, `category`, `difficulty`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
+				  ) VALUES (
+				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$skip}', '{$feedback}', '{$tags}', '{$searchEngine}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
+				  )");
 						
 			$id =  mysql_insert_id();
 			
-			mysql_query("CREATE TABLE IF NOT EXISTS `{$monitor['prefix']}modulelesson_{$id}` (
-						  `id` int(255) NOT NULL AUTO_INCREMENT,
-						  `position` int(100) NOT NULL,
-						  `title` longtext NOT NULL,
-						  `content` longtext NOT NULL,
-						  `attachment` longtext NOT NULL,
-						  PRIMARY KEY (`id`)
-						)");
+			query("CREATE TABLE IF NOT EXISTS `{$monitor['prefix']}lesson_{$id}` (
+					`id` int(255) NOT NULL AUTO_INCREMENT,
+					`position` int(100) NOT NULL,
+					`title` longtext NOT NULL,
+					`content` longtext NOT NULL,
+					`attachment` longtext NOT NULL,
+					PRIMARY KEY (`id`)
+				  )");
 						
 			mkdir("../" . $id, 0777);
 			mkdir("../" . $id . "/lesson", 0777);
@@ -63,49 +79,44 @@
 			mkdir("../" . $id . "/test/answers", 0777);
 			mkdir("../" . $id . "/test/responses", 0777);
 						
-			$_SESSION['currentModule'] = $id;
+			$_SESSION['currentUnit'] = $id;
 		}
 		
 		if ($_POST['submit'] == "Finish") {
-			redirect("../index.php?updated=module");
+			redirect("../index.php?updated=unit");
 		} else {
 			redirect("lesson_content.php");
 		}
 	}
 	
 //Title
-	navigation("Module Settings", "Setup the module's initial settings, such as the name, time frame, and any comments.");
+	navigation("Lesson Settings", "Setup the lesson settings, such as the name, time frame, and any comments.");
 	
 //Lesson settings form
-	form("lessonSettings");
-	catDivider("Module Information", "one", true);
-	echo "<blockquote>";
-	directions("Module Name", true, "The name of the module");
-	echo "<blockquote><p>";
-	textField("name", "name", false, false, false, true, false, false, "moduleData", "name");
-	echo "</p></blockquote>";
-	directions("Directions" , true, "Comments or directions regarding the content of this module");
-	echo "<blockquote><p>";
-	textArea("comments", "comments", "small", true, false, false, "moduleData", "comments");
-	echo "</p></blockquote>";
-	directions("Due date" , false, "The amount of time the user will have to complete the module from the assigned date");
-	echo "<blockquote><p>";
+	echo form("lessonSettings");
+	echo catDivider("Lesson Information", "one", true);
+	echo "<blockquote>\n";
+	echo directions("Lesson Name", true, "The name of the lesson");
+	indent(textField("name", "name", false, false, false, true, false, false, "lessonData", "name"));
+	indent(directions("Directions" , true, "Comments or directions regarding the content of this lesson"));
+	indent(textArea("comments", "comments", "small", true, false, false, "lessonData", "comments"));
+	directions("Due date" , false, "The amount of time the user will have to complete this unit from the assigned date");
 	
 	//Select the time frame
-	if (isset($_SESSION['currentModule'])) {
+	if ($lessonData) {
 		$letterArray = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
 		$numberArray = array("0","1","2","3","4","5","6","7","8","9");
-		$time = str_replace($letterArray, "", $moduleData['timeFrame']);
-		$timeLabel = str_replace($numberArray, "", $moduleData['timeFrame']);
+		$time = str_replace($letterArray, "", $lessonData['timeFrame']);
+		$timeLabel = str_replace($numberArray, "", $lessonData['timeFrame']);
 	} else {
 		$time = "2";
 		$timeLabel = "Weeks";
 	}
 	
-	dropDown("time", "time", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25", false, false, false, $time);
-	dropDown("timeLabel", "timeLabel", "Days,Weeks,Months,Years", "Days,Weeks,Months,Years", false, false, false, $timeLabel);
-	echo " from scheduled date</p></blockquote>";
-	directions("Category", true, "The category that this modules covers");
+	indent(dropDown("time", "time", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25", "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25", false, false, false, $time) . 
+	dropDown("timeLabel", "timeLabel", "Days,Weeks,Months,Years", "Days,Weeks,Months,Years", false, false, false, $timeLabel) . 
+	" from scheduled date");
+	directions("Category", true, "The category that this lesson covers");
 	echo "<blockquote><p>";
 	category();
 	echo "</p></blockquote>";

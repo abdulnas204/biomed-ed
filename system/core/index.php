@@ -7,12 +7,10 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
-
-/* 
+ 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 27th, 2010
+Last updated: December 1st, 2010
 
 This script is the core of the system, which contains key 
 infomation and definitions which will be used globally.
@@ -69,8 +67,8 @@ infomation and definitions which will be used globally.
 	
 	$relativeAddress = relativeAddress("system/core");
 	
-//Include additional core scripts
-	$require = array("global.php", "login_management.php", "constructor.php", "includes.php", "layout.php");
+//Include additional core scripts, order is important!
+	$require = array("global.php", "login_management.php", "constructor.php", "includes.php", "layout.php", "processor.php", "library.php");
 	
 	foreach($require as $script) {
 		require_once($relativeAddress . $script);

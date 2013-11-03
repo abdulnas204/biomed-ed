@@ -7,9 +7,7 @@ This script may NOT be used, copied, modified, or
 distributed in any way shape or form under any license:
 open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
-*/
 
-/* 
 Created by: Oliver Spryn
 Created on: Novemeber 28th, 2010
 Last updated: Novemeber 28th, 2010
@@ -20,8 +18,14 @@ or setting its availability.
 */
 
 //Delete a file or directory, and its contents
-	function deleteAll($path) {		
-		if (file_exists($path)) {
+	function deleteAll($path, $requiredPrivilege = false) {
+		if ($requiredPrivilege == true) {
+			$doAction = access($requiredPrivilege);
+		} else {
+			$doAction = true;
+		}
+		
+		if ($doAction == true && file_exists($path)) {
 			if (is_file($path)) {
 				unlink($path);
 				return true;
@@ -48,8 +52,14 @@ or setting its availability.
 	}
 
 //Set an item's avaliability
-	function avaliability($table, $redirect) {
-		if (isset($_POST['id']) && $_POST['action'] == "setAvaliability") {			
+	function avaliability($table, $redirect, $requiredPrivilege = false) {
+		if ($requiredPrivilege == true) {
+			$doAction = access($requiredPrivilege);
+		} else {
+			$doAction = true;
+		}
+		
+		if ($doAction == true && isset($_POST['id']) && $_POST['action'] == "setAvaliability") {			
 			$id = $_POST['id'];
 			
 			if (!$_POST['option']) {
@@ -64,8 +74,14 @@ or setting its availability.
 	}
 	
 //Reorder a list of items
-	function reorder($table, $redirect) {
-		if (isset($_POST['action']) && $_POST['action'] == "modifyPosition" && isset($_POST['id']) && isset($_POST['position']) && isset($_POST['currentPosition'])) {
+	function reorder($table, $redirect, $requiredPrivilege = false) {
+		if ($requiredPrivilege == true) {
+			$doAction = access($requiredPrivilege);
+		} else {
+			$doAction = true;
+		}
+		
+		if ($doAction == true && isset($_POST['action']) && $_POST['action'] == "modifyPosition" && isset($_POST['id']) && isset($_POST['position']) && isset($_POST['currentPosition'])) {
 			$id = $_POST['id'];
 			$newPosition = $_POST['position'];
 			$currentPosition = $_POST['currentPosition'];
@@ -77,7 +93,7 @@ or setting its availability.
 			if ($currentPosition > $newPosition) {
 				query("UPDATE `{$table}` SET `position` = position + 1 WHERE `position` >= '{$newPosition}' AND `position` <= '{$currentPosition}'");
 			} elseif ($currentPosition < $newPosition) {
-				query("UPDATE `{$table}` SET `position` = position - 1 WHERE` position` <= '{$newPosition}' AND `position` >= '{$currentPosition}'");
+				query("UPDATE `{$table}` SET `position` = position - 1 WHERE `position` <= '{$newPosition}' AND `position` >= '{$currentPosition}'");
 			} else {
 				redirect($redirect);
 			}
@@ -88,8 +104,14 @@ or setting its availability.
 	}
 	
 //Delete an item
-	function delete($table, $redirect = false, $reorder = true, $file = false, $directory = false, $extraTables = false) {
-		if (isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
+	function delete($table, $redirect = false, $requiredPrivilege = false, $reorder = true, $file = false, $directory = false, $extraTables = false) {
+		if ($requiredPrivilege == true) {
+			$doAction = access($requiredPrivilege);
+		} else {
+			$doAction = true;
+		}
+		
+		if ($doAction == true && isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['id'])) {
 			if (isset ($_GET['questionID'])) {
 				$deleteItem = $_GET['questionID'];
 			} else {
@@ -114,7 +136,7 @@ or setting its availability.
 			}
 			
 			if ($directory == true) {
-				deleteAll($directory);
+				deleteAll($directory, $requiredPrivilege);
 			}
 			
 			if ($extraTables == true) {

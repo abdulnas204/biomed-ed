@@ -1,6 +1,6 @@
 <?php
 //Header functions
-	require_once('../../system/connections/connDBA.php');
+	require_once('../../system/core/index.php');
 
 //Pull category or employee data for auto-suggestion
 	if ((strstr($_SERVER['REQUEST_URI'], "module_wizard/lesson_settings.php") || strstr($_SERVER['REQUEST_URI'], "/questions/")) && isset($_GET['data']) && $_GET['data'] == "xml") {
