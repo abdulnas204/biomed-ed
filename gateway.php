@@ -1,6 +1,6 @@
 <?php 
 //Header functions
-	require_once('Connections/connDBA.php');
+	require_once('system/connections/connDBA.php');
 	
 //Script to selectively allow access to files
 //If a file extension was handed into the gateway

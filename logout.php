@@ -1,50 +1,24 @@
-<?php require_once('Connections/connDBA.php'); ?>
 <?php
+//Header functions
+	require_once('system/connections/connDBA.php');	
+	headers("Logout");
+	
 //Logout the user
 	session_destroy();
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title("Logout"); ?>
-<?php headers(); ?>
-<?php
+	
+//Title
 	if (isset($_GET['action']) && $_GET['action'] == "relogin") {
-		echo "<meta http-equiv=\"refresh\" content=\"8; url=login.php\">";
+		title("Logout", "Your profile has been updated. Since your role in this site has changed, you must login again.");
+		echo "<div class=\"spacer\">";
+		button("continue", "continue", "Continue", "button", "login.php");
+		echo "</div>";
 	} else {
-		echo "<meta http-equiv=\"refresh\" content=\"3; url=index.php\">";
+		title("Logout", "You have successfully logged out.");
+		echo "<div class=\"spacer\">";
+		button("continue", "continue", "Continue", "button", "index.php");
+		echo "</div>";
 	}
+	
+//Include the footer
+	footer();
 ?>
-<script src="javascripts/common/goToURL.js" type="text/javascript"></script>
-</head>
-<body<?php bodyClass(); ?>>
-<?php topPage("includes/top_menu.php"); ?>
-<h2>Logout</h2>
-<?php
-	if (isset($_GET['action']) && $_GET['action'] == "relogin") {
-		echo "<p align=\"center\">&nbsp;</p>
-		<div align=\"center\">Your profile has been updated. Since your role in this site has changed, you must login again.</div>
-		<br />
-		<div align=\"center\">
-		   <input name=\"continue\" type=\"button\" id=\"continue\" onclick=\"MM_goToURL('parent','login.php');return document.MM_returnValue\" value=\"Continue\" />
-		 </div>
-		 <p align=\"center\">&nbsp;</p>
-		 <p align=\"center\">&nbsp;</p>
-		 <p align=\"center\">&nbsp;</p>
-		 <p>&nbsp;</p>";
-	} else {
-		echo "<p align=\"center\">&nbsp;</p>
-		<div align=\"center\">You have successfully logged out</div>
-		<br />
-		<div align=\"center\">
-		   <input name=\"continue\" type=\"button\" id=\"continue\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Continue\" />
-		 </div>
-		 <p align=\"center\">&nbsp;</p>
-		 <p align=\"center\">&nbsp;</p>
-		 <p align=\"center\">&nbsp;</p>
-		 <p>&nbsp;</p>";
-	}
-?>
-<?php footer("includes/bottom_menu.php"); ?>
-</body>
-</html>

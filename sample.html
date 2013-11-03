@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+<link href="system/styles/common/universal.css" type="text/css" rel="stylesheet" />
+<link href="system/styles/themes/american.css" type="text/css" rel="stylesheet" />
+<script src="javascripts/xpath.js" type="text/javascript"></script>
+<script src="javascripts/SpryData.js" type="text/javascript"></script>
+<script src="javascripts/SpryPagedView.js" type="text/javascript"></script>
+<script type="text/javascript">
+var dsUsers = new Spry.Data.XMLDataSet("sample.xml", "root/user");
+</script>
+
+<script language="JavaScript" type="text/javascript">
+var pvUsers = new Spry.Data.PagedView(dsUsers, { pageSize: 20 });
+var pvUsersPagedInfo = pvUsers.getPagingInfo();
+
+function filterData() {
+	var input = document.getElementById("keywords");
+	if (!input.value) {
+		dsUsers.filter(null);
+		return;
+	}
+
+	var replacementString = input.value;
+	
+	if (!document.getElementById("contains").checked) {
+		replacementString = "^" + replacementString;
+	}
+
+	var replacement = new RegExp(replacementString, "i");
+	var dataSet = document.getElementById("searchBy").value;
+	
+	var filter = function(dataInput, row, rowNumber) {
+		var data = row[dataSet];
+		
+		if (data && data.search(replacement) != -1) {
+			return row;
+		}
+		
+		return null;
+	};
+
+	dsUsers.filter(filter);
+}
+
+function startFilterTimer() {
+	if (startFilterTimer.timerID) {
+		clearTimeout(startFilterTimer.timerID);
+	}
+	
+	startFilterTimer.timerID = setTimeout(
+		function() {
+			startFilterTimer.timerID = null;
+			filterData();
+		}
+	, 100);
+}
+</script>
+
+</head>
+
+<body class="overrideBackground">
+<div>
+<p>
+	Search By:
+	<select name="searchBy" id="searchBy" onchange="filterData();">
+      <option value="name" selected="selected">Name</option>
+      <option value="id">ID</option>
+      <option value="organization">Organization</option>
+    </select>
+
+	Keywords: <input type="text" id="keywords" onkeyup="startFilterTimer();" /> 
+	Contains: <input type="checkbox" id="contains" checked="checked" onchange="filterData();" />
+</p>
+<p>
+	<input type="button" value="First" onclick="pvUsers.firstPage();" />
+	<input type="button" value="Prev" onclick="pvUsers.previousPage();" />
+
+	<input type="button" value="Next" onclick="pvUsers.nextPage();" />
+	<input type="button" value="Last" onclick="pvUsers.lastPage();" />
+	<input type="text" id="pageNumTF" value="1" />
+	<input type="button" value="Go To Page" onclick="pvUsers.goToPage(parseInt(document.getElementById('pageNumTF').value));" />
+	<input type="text" id="pageSizeTF" value="10" />
+	<input type="button" value="Set Page Size" onclick="pvUsers.setPageSize(parseInt(document.getElementById('pageSizeTF').value));" />
+</p>
+</div>
+<hr />
+
+<div class="pagesBox" spry:region="pvUsersPagedInfo dsUsers" spry:if="{ds_UnfilteredRowCount} > 0" spry:repeatchildren="pvUsersPagedInfo">
+	<a spry:if="{ds_CurrentRowNumber} != {ds_RowNumber}" href="#" onclick="pvUsers.goToPage('{ds_PageNumber}'); return false;">{ds_PageNumber}</a>
+	<span spry:if="{ds_CurrentRowNumber} == {ds_RowNumber}" class="currentPage">{ds_PageNumber}</span>
+</div>
+
+<table spry:region="pvUsers dsUsers" spry:if="{ds_UnfilteredRowCount} > 0" class="dataTable">
+  <tr>
+    <th spry:sort="id" class="tableHeader">Id</th>
+    <th spry:sort="name" class="tableHeader">Name</th>
+    <th spry:sort="email" class="tableHeader">Email</th>
+    <th spry:sort="role" class="tableHeader">Role</th>
+    <th spry:sort="organization" class="tableHeader">Organization</th>
+  </tr>
+  
+  <tr spry:repeat="pvUsers" spry:odd="odd" spry:even="even">
+    <td>{pvUsers::id}</td>
+    <td>{pvUsers::name}</td>
+    <td><a href="email.php?id={pvUsers::id}">{pvUsers::email}</a></td>
+    <td>{pvUsers::role}</td>
+    <td>{pvUsers::organization}</td>
+  </tr>
+</table>
+
+<div spry:region="pvUsers" spry:if="{ds_UnfilteredRowCount} == 0" class="noResults">No results found.</div>
+</body>
+</html>

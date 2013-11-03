@@ -1,6 +1,6 @@
 <?php
 //Header functions
-	require_once('Connections/connDBA.php');
+	require_once('system/connections/connDBA.php');
 	login();
 	
 //Pages processor
@@ -13,16 +13,16 @@
 
 	//If no page URL variable is defined, then choose the home page
 	if (!isset ($_GET['page']) || $_GET['page'] == "") { 
-		$pageInfo = mysql_fetch_array(mysql_query("SELECT * FROM pages WHERE position = '1'", $connDBA));
+		$pageInfo = mysql_fetch_array(mysql_query("SELECT * FROM `pages` WHERE `position` = '1'", $connDBA));
 	} else {		
 		$getPageID = $_GET['page'];
-		$pageInfo = mysql_fetch_array(mysql_query("SELECT * FROM pages WHERE id = {$getPageID}", $connDBA));	
+		$pageInfo = mysql_fetch_array(mysql_query("SELECT * FROM `pages` WHERE `id` = {$getPageID}", $connDBA));	
 	}
 	
 //Sidebar processor
-	$sideBarCheck = mysql_query("SELECT * FROM sidebar WHERE visible = 'on'", $connDBA);
+	$sideBarCheck = mysql_query("SELECT * FROM `sidebar` WHERE `visible` = 'on'", $connDBA);
 	if (mysql_fetch_array($sideBarCheck)) {
-		$sideBarDataGrabber = mysql_query("SELECT * FROM sidebar WHERE visible = 'on'", $connDBA);
+		$sideBarDataGrabber = mysql_query("SELECT * FROM `sidebar` WHERE `visible` = 'on'", $connDBA);
 		$sideBarArray = array();
 		
 		while ($sideBarData = mysql_fetch_array($sideBarDataGrabber)) {
@@ -56,7 +56,7 @@
 		}
 	}
 	
-	if ($pageInfo == 0 && $pagesExist == 0) {
+	if (!$pageInfo && $pagesExist == 0) {
 		$title = "Setup Required";
 	} else {
 		if (empty($pageInfo['content'])) {
@@ -70,7 +70,7 @@
 	headers($title, false, false, false, false, true);
 
 //Use the layout control if the page is displaying a sidebar
-	$sideBarLocationGrabber = mysql_query("SELECT * FROM siteprofiles WHERE id = '1'", $connDBA);
+	$sideBarLocationGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
 	$sideBarLocation = mysql_fetch_array($sideBarLocationGrabber);
 		
 	if (isset($sideBarResult)) {

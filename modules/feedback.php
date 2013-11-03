@@ -1,4 +1,4 @@
-<?php require_once('../Connections/connDBA.php'); ?>
+<?php require_once('../system/connections/connDBA.php'); ?>
 <?php loginCheck("Student,Instructor,Organization Administrator,Site Manager,Site Administrator"); ?>
 <?php
 //Select all questions

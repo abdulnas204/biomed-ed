@@ -1,11 +1,8 @@
-<Files ~ "\.(php)$">
+<Files ~ "\.(js)$">
 	order allow,deny
 	allow from all
 </Files>
-<Files ~ "\.(htaccess)$">
-	order deny,allow
-	deny from all
-</Files>
+deny from all
 
 ErrorDocument 403 /biomed-ed/system/deny/index.php?error=403
 ErrorDocument 404 /biomed-ed/system/deny/index.php?error=404

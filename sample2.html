@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+<script src="javascripts/xpath.js" type="text/javascript"></script>
+<script src="javascripts/SpryData.js" type="text/javascript"></script>
+<script type="text/javascript">
+var dsUsers = new Spry.Data.XMLDataSet("sample.xml", "root/user");
+</script>
+</head>
+
+<body>
+<div spry:region="dsUsers">
+  <table>
+    <tr>
+      <th spry:sort="id">Id</th>
+      <th spry:sort="name">Name</th>
+      <th spry:sort="email">Email</th>
+      <th spry:sort="role">Role</th>
+      <th spry:sort="organization">Organization</th>
+    </tr>
+    <tr spry:repeat="dsUsers">
+      <td>{id}</td>
+      <td>{name}</td>
+      <td>{email}</td>
+      <td>{role}</td>
+      <td>{organization}</td>
+    </tr>
+  </table>
+</div>
+<div spry:region="dsUsers">
+  <table>
+    <tr>
+      <th spry:sort="id">Id</th>
+      <th spry:sort="name">Name</th>
+      <th spry:sort="email">Email</th>
+      <th spry:sort="role">Role</th>
+      <th spry:sort="organization">Organization</th>
+    </tr>
+    <tr spry:repeat="dsUsers" spry:odd="odd" spry:even="even">
+      <td>{id}</td>
+      <td>{name}</td>
+      <td>{email}</td>
+      <td>{role}</td>
+      <td>{organization}</td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
