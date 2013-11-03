@@ -8,7 +8,7 @@ var validateName = function () {
 	}
 }
 
-var checkName = function (form, field) {
-	var enteredName = document.getElementById(form).name.value;
-	window.Spry.Utils.updateContent('errorWindow', 'lesson_settings.php?checkName=' + enteredName);
+var checkName = function (field, url) {
+	var enteredName = document.getElementById(field).value;
+	window.Spry.Utils.updateContent('errorWindow', url + '.php?checkName=' + enteredName);
 }

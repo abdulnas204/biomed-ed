@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && isset ($_POST['question']) && isset ($_POST['points'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -60,11 +60,16 @@
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
+			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
+			$link = $_POST['link'];
+			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
+			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
+			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
-			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackInorrect}' WHERE id = '{$update}'";
+			$updateEssayQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}' WHERE id = '{$update}'";
 							
 			$updateEssay = mysql_query($updateEssayQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=essay");
@@ -83,19 +88,24 @@
 			$question = mysql_real_escape_string($_POST['question']);
 			$points = $_POST['points'];
 			$extraCredit = $_POST['extraCredit'];
+			$difficulty = $_POST['difficulty'];
+			$category = mysql_real_escape_string($_SESSION['category']);
+			$link = $_POST['link'];
+			$tags = mysql_real_escape_string($_POST['tags']);
 			$answer = mysql_real_escape_string($_POST['answer']);
 			$feedBackCorrect = mysql_real_escape_string($_POST['feedBackCorrect']);
-			$feedBackInorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
+			$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
+			$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 			
 		
 			$insertEssayQuery = "INSERT INTO moduletest_{$currentTable} (
-							`id`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `totalFiles`, `case`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`
+							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 							) VALUES (
-							NULL, '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '0', '1', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackInorrect}'
+							NULL, '0', '0', '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'
 							)";
 							
 			$insertEssay = mysql_query($insertEssayQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=essay");
 			exit;
 		}
 	}
@@ -103,7 +113,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php title("Module Setup Wizard : Insert Essay Question"); ?>
+<?php title("Module Setup Wizard : Essay"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
 <?php validate(); ?>
@@ -112,9 +122,9 @@
 </head>
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
-    <h2>Module Setup Wizard : Insert Essay Question</h2>
-<p>This will insert an essay question into the test. Essays must be scored manually.</p>
-    <p>&nbsp;</p>
+    <h2>Module Setup Wizard : Essay</h2>
+<p>An essay question is  a question that requires a long, written response. Essays must be scored manually.</p>
+<p>&nbsp;</p>
     <form action="essay.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
@@ -123,7 +133,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question Directions<span class="require">*</span>:</p>
+        <p>Question directions<span class="require">*</span>:</p>
         <blockquote>
           <p><span id="directionsCheck">
           <textarea id="question" name="question" rows="5" cols="45" style="width: 450px"><?php
@@ -133,30 +143,102 @@
 		  ?></textarea>
           <span class="textareaRequiredMsg"></span></span></p>
         </blockquote>
-        <p>&nbsp;</p>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
       <div class="stepContent">
       <blockquote>
-        <p>Question Points<span class="require">*</span>:
+        <p>Question points<span class="require">*</span>:</p>
+        <blockquote>
+        <p>
+        <input name="points" type="text" id="points" size="5" autocomplete="off" maxlength="5" class="validate[required,custom[onlyNumber]]"<?php
+                if (isset ($update)) {
+                    echo " value=\"" . $testData['points'] . "\"";
+                }
+              ?> />
           <label>
-          <input name="points" type="text" id="points" size="5" autocomplete="off" maxlength="5" class="validate[required,custom[onlyNumber]]"<?php
-		  	if (isset ($update)) {
-				echo " value=\"" . $testData['points'] . "\"";
-			}
-		  ?> />
-          </label>
-          <label>
-              <input type="checkbox" name="extraCredit" id="extraCredit"<?php
+            <input type="checkbox" name="extraCredit" id="extraCredit"<?php
 				if (isset ($update)) {
 					if ($testData['extraCredit'] == "on") {
 						echo " checked=\"checked\"";
 					}
 				}
 			  ?> />
-              Extra Credit </label>
+            Extra Credit </label>
         </p>
+        </blockquote>
+        <p>Difficulty:</p>
+        <blockquote>
+          <p>
+            <select name="difficulty" id="difficulty">
+              <option value="Easy"<?php if (isset ($update)) {if ($testData['difficulty'] == "Easy") {echo " selected=\"selected\"";}} else {if ($_SESSION['difficulty'] == "Easy") {echo " selected=\"selected\"";}} ?>>Easy</option>
+              <option value="Average"<?php if (isset ($update)) {if ($testData['difficulty'] == "Average") {echo " selected=\"selected\"";}} else {if ($_SESSION['difficulty'] == "Average") {echo " selected=\"selected\"";}} ?>>Average</option>
+              <option value="Difficult"<?php if (isset ($update)) {if ($testData['difficulty'] == "Difficult") {echo " selected=\"selected\"";}} else {if ($_SESSION['difficulty'] == "Difficult") {echo " selected=\"selected\"";}} ?>>Difficult</option>
+            </select>
+          </p>
+        </blockquote>
+        <p>Link to description:</p>
+        <blockquote>
+          <p>
+            <select name="link" id="link">
+            <?php
+			//Select all of the descriptions in this test
+				$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+				$descriptionCheck = mysql_query("SELECT * FROM `moduletest_{$currentTable}`", $connDBA);
+				
+				if (mysql_fetch_array($descriptionCheck)) {
+					$descriptionGrabber = mysql_query("SELECT * FROM `moduletest_{$currentTable}` ORDER BY `position` ASC", $connDBA);
+					
+					echo "<option value=\"\">- Select -</option>";
+					while ($description = mysql_fetch_array($descriptionGrabber)) {
+						if ($description['type'] == "Description") {
+							echo "<option value=\"" . $description['id'] ."\"";
+							if (isset($update)) {
+								if ($testData['link'] == $description['id']) {
+									echo " selected=\"selected\"";
+								}
+							}
+							echo ">" . $description['position'] . ". " . stripslashes(htmlentities(commentTrim(25, $description['question']))) . "</option>";
+						}
+						
+						if ($description['questionBank'] == "1") {
+							$importID = $description['linkID'];
+							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionBank` WHERE `id` = '{$importID}'", $connDBA);
+							$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
+							
+							if ($descriptionImport['type'] == "Description") {
+								echo "<option value=\"" . $description['id'] ."\"";
+							if (isset($update)) {
+								if ($testData['link'] == $description['id']) {
+									echo " selected=\"selected\"";
+								}
+							}
+							echo ">" . $description['position'] . ". " . stripslashes(htmlentities(commentTrim(25, $descriptionImport['question']))) . "</option>";
+							}
+							
+							unset($importID);
+							unset($descriptionImportGrabber);
+							unset($descriptionImport);
+						}
+					}
+				} else {
+					echo "<option value=\"\">- None -</option>";
+				}
+			?>
+            </select>
+          </p>
+        </blockquote>
+        <p>Tags (Seperate with commas):</p>
+        <blockquote>
+          <p>
+            <input name="tags" type="text" id="tags" size="50" autocomplete="off"<?php 
+			  //If the page is updating an item
+			  		if (isset ($update)) {
+						echo " value=\"" . stripslashes(htmlentities($testData['tags'])) . "\"";
+					}
+			  ?> />
+          </p>
+        </blockquote>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
@@ -177,7 +259,7 @@
       <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
       <div class="stepContent">
       <blockquote>
-        <p>Feedback for Correct Answer: </p>
+        <p>Feedback for correct answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackCorrect" name="feedBackCorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -187,8 +269,17 @@
 		  ?></textarea>
           </p>
         </blockquote>
-        <p>&nbsp;</p>
-        <p>Feedback for Incorrect Answer: </p>
+        <p>Feedback for partially correct answer:</p>
+        <blockquote>
+          <p>
+            <textarea id="feedBackPartial" name="feedBackPartial" rows="5" cols="45" style="width: 450px"><?php
+		  	if (isset ($update)) {
+				echo stripslashes($testData['partialFeedback']);
+			}
+		  ?></textarea>
+          </p>
+        </blockquote>
+        <p>Feedback for incorrect answer: </p>
         <blockquote>
           <p>
           <textarea id="feedBackIncorrect" name="feedBackIncorrect" rows="5" cols="45" style="width: 450px"><?php
@@ -198,22 +289,15 @@
 		  ?></textarea>
           </p>
         </blockquote>
-        <p>&nbsp;</p>
       </blockquote>
       </div>
       <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
-          <label>
           <?php submit("submit", "Submit"); ?>
-          </label>
-          <label>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          </label>
-          <label>
           <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../test_content.php');return document.MM_returnValue" value="Cancel" />
-          </label>
         </p>
       <?php formErrors(); ?>
       </blockquote>

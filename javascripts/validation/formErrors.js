@@ -54,7 +54,7 @@ function errorsOnSubmit(form, spry, upload, forced, extension) {
 		
 		if (jqueryValidate == false) {
 			return errorDisplay('1', '1', '0', '1');
-			return uploadCheck(upload, forced, extension, 'false')
+			return uploadCheck(upload, forced, extension, 'false');
 		}
 	}
 }
@@ -71,11 +71,13 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 			if (fileCheck == "" || fileCheck == false) {					
 				var result = "0";
 			} else {
-				if (extensionInput != "" || extensionInput != false) {
+				if (extensionInput != undefined) {
 					var extensionSplit = extensionInput.split(".");
 					var n;
-					for (n in extensionSplit) {								
-						if (fileCheck.match(extensionSplit[n])) {					
+					for (n in extensionSplit) {
+						var lowerCase = fileCheck.toLowerCase();
+													
+						if (lowerCase.match(extensionSplit[n])) {					
 							var extensionCheck = "1";
 						}
 					}
@@ -125,12 +127,15 @@ function errorDisplay(errorShow, progressClear, errorWinShow, errorReturn) {
 		errorBox.style.width = '410px';
 	}
 	
+	
 	if (progressClear == "1") {
 		progressBox.style.display = 'none';
 	}
 	
 	if (errorWinShow == "1") {
-		errorWindow.style.display = 'block';
+		if (errorWindow) {
+			errorWindow.style.display = 'block';
+		}
 	}
 	
 	if (errorReturn == "1") {
@@ -152,7 +157,9 @@ function successDisplay(errorClear, progressShow, errorWinClear, errorClearRetur
 	}
 	
 	if (errorWinClear == "1") {
-		errorWindow.style.display = 'none';
+		if (errorWindow) {
+			errorWindow.style.display = 'none';
+		}
 	}
 	
 	if (errorClearReturn == "1") {

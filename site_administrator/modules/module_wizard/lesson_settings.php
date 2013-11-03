@@ -222,7 +222,7 @@
           <blockquote>
             <p>
               
-              <input class="validate[required,custom[onlyLetter]] text-input" maxlength="100" autocomplete="off" name="name" type="text" id="name" size="50" onblur="checkName(this.form.id, this.name)"<?php
+              <input class="validate[required,custom[onlyLetter]] text-input" maxlength="100" autocomplete="off" name="name" type="text" id="name" size="50" onblur="checkName(this.name, 'lesson_settings')"<?php
 				//If the module is being edited
 					if (isset($_SESSION['currentModule'])) {
 						echo " value=\"" . stripslashes($moduleData['name']) . "\"";
@@ -398,11 +398,11 @@
         </div>
         <div class="stepContent">
           <blockquote>
-            <p>Lock module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Prevent organizations from customizing these settings for their needs.')" onmouseout="UnTip()" /></p>
+            <p>Lock module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Prevent organizations from customizing these settings for their needs')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
                 <label>
-                  <input type="radio" name="locked" value="1" id="locked_0" class="validate[required] radio"<?php
+                  <input type="radio" name="locked" value="1" id="locked_0"<?php
 				//Select the locked settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['locked'] == "1") {
@@ -412,23 +412,25 @@
 				?> />
                 Yes</label>
                 <label>
-                  <input type="radio" name="locked" value="0" id="locked_1" class="validate[required] radio"<?php
+                  <input type="radio" name="locked" value="0" id="locked_1"<?php
 				//Select the locked settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['locked'] == "0") {
 							echo " checked=\"checked\"";
 						}
+					} else {
+						echo " checked=\"checked\"";
 					}
 				?> />
                 No</label>
                 <br />
               </p>
             </blockquote>
-            <p>Force module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force every user in this system to take this lesson')" onmouseout="UnTip()" /></p>
+            <p>Force module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force every user in this system to take this lesson')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
                 <label>
-                  <input type="radio" name="selected" value="1" id="selected_0" class="validate[required] radio"<?php
+                  <input type="radio" name="selected" value="1" id="selected_0"<?php
 				//Select the selected settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['selected'] == "1") {
@@ -438,48 +440,54 @@
 				?> />
                   Yes</label>
                 <label>
-                  <input type="radio" name="selected" value="0" id="selected_1" class="validate[required] radio"<?php
+                  <input type="radio" name="selected" value="0" id="selected_1"<?php
 				//Select the selected settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['selected'] == "0") {
 							echo " checked=\"checked\"";
 						}
+					} else {
+						echo " checked=\"checked\"";
 					}
 				?> />
                 No</label>
                 <br />
               </p>
             </blockquote>
-            <p>Permit user to skip module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Premit users to skip this module and come back to it later')" onmouseout="UnTip()" /></p>
+            <p>Permit user to skip module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Premit users to skip this module and come back to it later')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
                 <label>
-                  <input type="radio" name="skip" value="1" id="skip_0" class="validate[required] radio"<?php
+                  <input type="radio" name="skip" value="1" id="skip_0"<?php
 				//Select the skip settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['skip'] == "1") {
 							echo " checked=\"checked\"";
 						}
+					} else {
+						echo " checked=\"checked\"";
 					}
 				?> />
                 Yes</label>
                 <label>
-                  <input type="radio" name="skip" value="0" id="skip_1" class="validate[required] radio"<?php
+                  <input type="radio" name="skip" value="0" id="skip_1"<?php
 				//Select the skip settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['skip'] == "0") {
 							echo " checked=\"checked\"";
 						}
+					} else {
+						echo " checked=\"checked\"";
 					}
 				?> />
                 No</label>
               </p>
             </blockquote>
-            <p>Force user to give feedback<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force a user to provide feedback at the end of this module')" onmouseout="UnTip()" /></p>
+            <p>Force user to give feedback: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force a user to provide feedback at the end of this module')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
                 <label>
-                  <input type="radio" name="feedback" value="1" id="feedback_0" class="validate[required] radio"<?php
+                  <input type="radio" name="feedback" value="1" id="feedback_0"<?php
 				//Select the skip settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['feedback'] == "1") {
@@ -489,12 +497,14 @@
 				?> />
                   Yes</label>
                 <label>
-                  <input type="radio" name="feedback" value="0" id="feedback_1" class="validate[required] radio"<?php
+                  <input type="radio" name="feedback" value="0" id="feedback_1"<?php
 				//Select the skip settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['feedback'] == "0") {
 							echo " checked=\"checked\"";
 						}
+					} else {
+						echo " checked=\"checked\"";
 					}
 				?> />
                 No</label>
@@ -532,6 +542,7 @@
         </div>
         <div class="stepContent">
         <blockquote>
+        <p>
           <?php
 		  //Selectively display the buttons
 		  		if (isset ($_SESSION['review'])) {
@@ -545,6 +556,7 @@
 					}
 				}
 		  ?>
+          </p>
           <?php formErrors(); ?>
           </blockquote> 
         </div>

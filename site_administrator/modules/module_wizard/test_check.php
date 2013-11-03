@@ -33,14 +33,21 @@
 		$dataBaseName = str_replace(" ","", $_SESSION['currentModule']);
 		mysql_query("CREATE TABLE IF NOT EXISTS `moduletest_{$dataBaseName}` (
 					  `id` int(255) NOT NULL AUTO_INCREMENT,
+					  `questionBank` int(1) NOT NULL,
+					  `linkID` int(255) NOT NULL,
 					  `position` int(100) NOT NULL,
 					  `type` longtext NOT NULL,
 					  `points` int(3) NOT NULL,
 					  `extraCredit` text NOT NULL,
 					  `partialCredit` int(1) NOT NULL,
+					  `difficulty` longtext NOT NULL,
+					  `category` longtext NOT NULL,
+					  `link` longtext NOT NULL,
+					  `randomize` int(1) NOT NULL,
 					  `totalFiles` int(2) NOT NULL,
 					  `choiceType` text NOT NULL,
 					  `case` int(1) NOT NULL,
+					  `tags` longtext NOT NULL,
 					  `question` longtext NOT NULL,
 					  `questionValue` longtext NOT NULL,
 					  `answer` longtext NOT NULL,
@@ -48,7 +55,7 @@
 					  `fileURL` longtext NOT NULL,
 					  `correctFeedback` longtext NOT NULL,
 					  `incorrectFeedback` longtext NOT NULL,
-					  `partialCorrect` longtext NOT NULL,
+					  `partialFeedback` longtext NOT NULL,
 					  PRIMARY KEY (`id`)
 					)");
 	

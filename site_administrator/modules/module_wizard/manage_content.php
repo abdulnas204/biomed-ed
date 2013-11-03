@@ -119,11 +119,11 @@
 		$location = str_replace(" ", "", $_SESSION['currentModule']);
 		
 		//Now make the directory, if necessary
-		if(!is_dir("../../../modules/{$location}")) {
+		if(!file_exists("../../../modules/{$location}")) {
 			mkdir("../../../modules/{$location}", 0777);
 		}
 		
-		if(!is_dir("../../../modules/{$location}/lesson")) {
+		if(!file_exists("../../../modules/{$location}/lesson")) {
 			mkdir("../../../modules/{$location}/lesson", 0777);
 		}
 		
@@ -372,7 +372,7 @@
 <div class="stepContent">
 <?php errorWindow("extension", "This is an unsupported file type. Supported types have one of the following extensions: \".PDF\", \".DOC\", \".DOCX\", \".XLS\", \".XLSX\", \".PPT\", \".PPTX\", \".TXT\", \".RTF\", \".WAV\", \".MP3\", \".AVI\", \".WMV\", \".FLV\", \".MOV\", \".MP4\", or \".SWF\"."); ?>
   <blockquote>
-    <p>Upload content<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Upload a file containing the lesson content of the module. Accepted file formats are:<br /><br /><strong>PDF</strong> - Adobe&reg; Acrobat Document<br /><strong>DOC or DOCX</strong> - Microsoft&reg; Word Document<br /><strong>XLS or XLSX</strong> - Microsoft&reg; Excel Spreadsheet<br /><strong>PPT or PPTX</strong> - Microsoft&reg; PowerPoint Presentation<br /><strong>TXT or RTF</strong> - Standard Text Documents<br /><strong>WAV or MP3</strong> - Sound Files<br /><strong>AVI, WMV, FLV, MOV, or MP4</strong> - Video Files<br /><strong>SWF</strong> - Adobe&reg; Flash Application<br />')" onmouseout="UnTip()" /></p>
+    <p>Upload content<?php if (!isset($pageData)) {echo "<span class=\"require\">*</span>";} ?>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Upload a file containing the lesson content of the module. Accepted file formats are:<br /><br /><strong>PDF</strong> - Adobe&reg; Acrobat Document<br /><strong>DOC or DOCX</strong> - Microsoft&reg; Word Document<br /><strong>XLS or XLSX</strong> - Microsoft&reg; Excel Spreadsheet<br /><strong>PPT or PPTX</strong> - Microsoft&reg; PowerPoint Presentation<br /><strong>TXT or RTF</strong> - Standard Text Documents<br /><strong>WAV or MP3</strong> - Sound Files<br /><strong>AVI, WMV, FLV, MOV, or MP4</strong> - Video Files<br /><strong>SWF</strong> - Adobe&reg; Flash Application<br />')" onmouseout="UnTip()" /></p>
     <blockquote>
       <?php
 		//First strip any spaces from the session name for use as directory name
@@ -397,8 +397,8 @@
 				}
 			}
 		?>
-      <input name="file" type="file" id="file" size="50"<?php if (!isset($pageData)) {echo " class=\"validate[required]\"";} ?> />
-      <p>Max file size: <?php echo ini_get('upload_max_filesize'); ?> </p>
+      <p><input name="file" type="file" id="file" size="50"<?php if (!isset($pageData)) {echo " class=\"validate[required]\"";} ?> /><br />
+      Max file size: <?php echo ini_get('upload_max_filesize'); ?> </p>
     </blockquote>
   </blockquote>
 </div>

@@ -112,7 +112,7 @@
 		mysql_query("UPDATE modulelesson_{$currentModule} SET position = position-1 WHERE position > '{$position}'", $connDBA);
 		
 	//Delete a file, if it is an embedded content page
-		if ($delete['attachment'] !== "A") {
+		if ($delete['attachment'] !== "") {
 			$file = "../../../modules/" . $currentModule . "/lesson/" . $delete['attachment'];
 			unlink($file);
 			
@@ -159,7 +159,7 @@
 	  $message = "The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['updated']) {
-		  case "custom" : $message .= "custom page"; break;
+		  case "custom" : $message .= "custom content"; break;
 		  case "embedded" : $message .= "embedded content"; break;
 	  }
 	  $message .= "</strong> page was successfully updated<br />";
@@ -169,7 +169,7 @@
 	  $message = "The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['inserted']) {
-		  case "custom" : $message .= "custom page"; break;
+		  case "custom" : $message .= "custom content"; break;
 		  case "embedded" : $message .= "embedded content"; break;
 	  }
 	  $message .= "</strong> page was successfully inserted<br />";
@@ -179,7 +179,7 @@
 	  $message = "The <strong>";
 	  //Detirmine what kind of alert this will be
 	  switch ($_GET['deleted']) {
-		  case "custom" : $message .= "custom page"; break;
+		  case "custom" : $message .= "custom content"; break;
 		  case "embedded" : $message .= "embedded content"; break;
 	  }
 	  $message .= "</strong> page was successfully deleted<br />";
@@ -232,13 +232,13 @@
 								  echo "</select>";
 							  echo "</div></td>";
 						  echo "<td width=\"150\"><div align=\"center\">" . $lessonData['type'] . "</div></td>";
-						  echo "<td width=\"250\" align=\"center\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?id=" . $lessonData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview the <strong>" . stripslashes(htmlentities($lessonData['title'])) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
+						  echo "<td width=\"250\" align=\"center\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?page=" . $lessonData['position'] . "','','status=yes,scrollbars=yes,resizable=yes,width=800,height=600')\" onmouseover=\"Tip('Preview the <strong>" . stripslashes(htmlentities($lessonData['title'])) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
 						  echo "</a></div></td>";
 						  echo "<td align=\"center\"><div align=\"center\">" ;
 						  if ($lessonData['type'] == "Custom Content") {
-							  echo commentTrim(85, $lessonData['content']);
+							  echo commentTrim(55, $lessonData['content']);
 						  } else {
-							  echo commentTrim(85, $lessonData['comments']);
+							  echo commentTrim(55, $lessonData['comments']);
 						  }
 						  echo "</div></td>";
 						  echo "<td width=\"75\"><div align=\"center\">" . "<a href=\"";

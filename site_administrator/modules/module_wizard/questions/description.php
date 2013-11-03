@@ -50,7 +50,7 @@
 		exit;
 	}
 //Process the form
-	if (isset ($_POST['submit']) && isset ($_POST['question'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['question'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
 			$currentModule = $_SESSION['currentModule'];
@@ -58,8 +58,10 @@
 			
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
+			$category = mysql_real_escape_string($_SESSION['category']);
+			$tags = mysql_real_escape_string($_POST['tags']);
 		
-			$updateDescriptionQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}' WHERE id = '{$update}'";
+			$updateDescriptionQuery = "UPDATE moduletest_{$currentTable} SET `question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}' WHERE id = '{$update}'";
 							
 			$updateDescription = mysql_query($updateDescriptionQuery, $connDBA);
 			header ("Location: ../test_content.php?updated=description");
@@ -76,15 +78,17 @@
 			
 		//Get form data values
 			$question = mysql_real_escape_string($_POST['question']);
+			$category = mysql_real_escape_string($_SESSION['category']);
+			$tags = mysql_real_escape_string($_POST['tags']);
 		
 			$insertDescriptionQuery = "INSERT INTO moduletest_{$currentTable} (
-							`id`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `totalFiles`, `case`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`
+							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 							) VALUES (
-							NULL, '{$lastQuestion}', 'Description', '0', 'off', '0', '0', '1', '{$question}', '', '', '', '', '', ''
+							NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''
 							)";
 							
 			$insertDescription = mysql_query($insertDescriptionQuery, $connDBA);
-			header ("Location: ../test_content.php");
+			header ("Location: ../test_content.php?inserted=description");
 			exit;
 		}
 	}
@@ -92,7 +96,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php title("Module Setup Wizard : Insert Description"); ?>
+<?php title("Module Setup Wizard : Description"); ?>
 <?php headers(); ?>
 <?php tinyMCEAdvanced(); ?>
 <?php validate(); ?>
@@ -102,33 +106,47 @@
 <body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
       
-    <h2>Module Setup Wizard : Insert Description</h2>
-    <p>A description is not a question field, however, it allows test creators to  insert text into the test without asking any questions or scoring the  viewer on this content.</p>
+    <h2>Module Setup Wizard : Description</h2>
+    <p>A description is not a question field, however, it allows test creators to insert text into the test without asking any questions or scoring the viewer on this content.</p>
     <p>&nbsp;</p>
     <form action="description.php<?php
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Description Content</div>
+      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
       <div class="stepContent">
       <blockquote>
-        <p>Description Content<span class="require">*</span>: </p>
+        <p>Description content<span class="require">*</span>: </p>
       <blockquote>
             <p align="left"><span id="questionCheck">
-              <label>
               <textarea name="question" id="question" cols="45" rows="5" style="width:640px; height:320px;"><?php 
 			  //If the page is updating an item
 			  		if (isset ($update)) {
 						echo stripslashes($testData['question']);
 					}
 			  ?></textarea>
-              </label>
             <span class="textareaRequiredMsg"></span></span></p>
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Finish</div>
+      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
+      <div class="stepContent">
+        <blockquote>
+         <p>Tags (Seperate with commas):</p>
+        <blockquote>
+          <p>
+            <input name="tags" type="text" id="tags" size="50" autocomplete="off"<?php 
+			  //If the page is updating an item
+			  		if (isset ($update)) {
+						echo " value=\"" . stripslashes(htmlentities($testData['tags'])) . "\"";
+					}
+			  ?> />
+          </p>
+        </blockquote>
+        </blockquote>
+      </div>
+      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

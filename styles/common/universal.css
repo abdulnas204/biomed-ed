@@ -772,6 +772,19 @@ a.ascending:hover, a.ascending:active {
 	background: url(../../images/admin_icons/hidden.png) no-repeat;
 }
 
+.questionBank {
+	background-image:url(../../images/admin_icons/bank.png);
+	background-position:left;
+	background-repeat:no-repeat;
+	height:23px;
+}
+
+.extraCredit {
+	background-image:url(../../images/common/extraCredit.png);
+	background-position:left;
+	background-repeat:no-repeat;
+}
+
 /* Display Info for tables displaying data */
 .dataTable{
 width:100%;

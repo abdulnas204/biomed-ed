@@ -84,6 +84,9 @@
 		
 		$_SESSION['currentModule'] = $sessionSet['name'];
 		$_SESSION['review'] = "review";
+		$_SESSION['difficulty'] = $sessionSet['difficulty'];
+		$_SESSION['category'] = $sessionSet['category'];
+		$_SESSION['testSettings'] = "modify";
 		
 		header ("Location: module_wizard/modify.php");
 		exit;
@@ -127,44 +130,7 @@
 		mysql_query("DROP TABLE `modulelesson_{$tableName}`", $connDBA);
 		
 	//Delete the directories
-		chmod("../../modules/" . $directoryName, 0777);
-		$directory = "../../modules/" . $directoryName;
-		$lesson = $directory . "/lesson";
-
-		while ($directory = readdir(opendir($lesson))) {
-			if ($directory !== "." && $directory !== "..") {
-				$deleteLocation = $lesson . "/" . $directory;
-				unlink($deleteLocation);
-			}
-		}
-		
-		rmdir ($lessonDirectory);
-		
-		if (file_exists($directory . "/test")) {
-			$fileResponseAnswer = $directory . "/test/fileresponse/answer";
-			$fileResponseResponses = $directory . "/test/fileresponse/responses";
-		
-			while ($answers = readdir(opendir($fileResponseAnswer))) {
-				if ($answers !== "." && $answers !== "..") {
-					$answersLocation = $fileResponseAnswer . "/" . $directory;
-					unlink($deleteLocation);
-				}
-			}
-			
-			while ($responses = readdir(opendir($fileResponseResponses))) {
-				if ($responses !== "." && $lessons !== "..") {
-					$responsesLocation = $fileResponseResponses . "/" . $directory;
-					unlink($deleteLocation);
-				}
-			}
-			
-			rmdir ("../../modules/" . $directoryName . "/test/fileresponse/answer");
-			rmdir ("../../modules/" . $directoryName . "/test/fileresponse/responses");
-			rmdir ("../../modules/" . $directoryName . "/test/fileresponse");
-			rmdir ("../../modules/" . $directoryName . "/test/fileresponse");
-		}
-
-		rmdir ($directoryName);
+		deleteAll("../../modules/" . $directoryName);
 		
 		header ("Location: index.php");
 		exit;
@@ -173,9 +139,12 @@
 <?php
 //Unset old sessions
 	unset($_SESSION['currentModule']);
+	unset($_SESSION['difficulty']);
+	unset($_SESSION['category']);
 	unset($_SESSION['review']);
 	unset($_SESSION['step']);
 	unset($_SESSION['testSettings']);
+	unset($_SESSION['bankCategory']);
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -193,10 +162,10 @@
     <h2>Module Administration</h2>
     <p>Modifing the table below will chage the default settings and appearance for instructors.</p>
     <p>&nbsp;</p>
-      <div class="toolBar"><a href="module_wizard/index.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="module_wizard/index.php">Add New Module</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="question_bank/index.php"><img src="../../images/admin_icons/bank.png" alt="Bank" width="18" height="23" /></a> <a href="question_bank/index.php">Create Question Bank</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a> <a href="settings.php">Customize Module Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="feedback/index.php"><img src="../../images/admin_icons/feedback.png" alt="Feedback" width="24" height="24" /></a> <a href="feedback/index.php">Feedback</a>
+      <div class="toolBar"><a href="module_wizard/index.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="module_wizard/index.php">Add New Module</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="question_bank/index.php"><img src="../../images/admin_icons/bank.png" alt="Bank" width="18" height="23" /></a> <a href="question_bank/index.php">Question Bank</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a> <a href="settings.php">Customize Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="feedback/index.php"><img src="../../images/admin_icons/feedback.png" alt="Feedback" width="24" height="24" /></a> <a href="feedback/index.php">Feedback</a>
         <?php
 			if ($modules == "exist") {
-			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"../../modules/index.php\"><img src=\"../../images/admin_icons/search.png\" alt=\"Search\" width=\"24\" height=\"24\" /></a> <a href=\"../../modules/index.php\">Preview the Modules</a>";
+			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"../../modules/index.php\"><img src=\"../../images/admin_icons/search.png\" alt=\"Search\" width=\"24\" height=\"24\" /></a> <a href=\"../../modules/index.php\">Preview Modules</a>";
 			}
 		?>
       </div>

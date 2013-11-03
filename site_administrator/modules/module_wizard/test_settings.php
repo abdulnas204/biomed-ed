@@ -39,17 +39,36 @@
 	$currentModule = $_SESSION['currentModule'];
 	$testNameGrabber = mysql_query ("SELECT * FROM moduledata WHERE name = '{$currentModule}'", $connDBA);
 	$testName = mysql_fetch_array($testNameGrabber);
+	
+//Detect whether or not the question bank has questions in this category
+	$category = $_SESSION['category'];
+	$categoryCheck = mysql_query("SELECT * FROM `questionBank` WHERE `category` = '{$category}'", $connDBA);
+	
+	if (mysql_fetch_array($categoryCheck)) {
+		$categoryResult = "exist";
+	} else {
+		$categoryResult = "empty";
+	}
 ?>
 <?php
 //Process the form
-	if (isset($_POST['submit'])) {
+	if (isset($_POST['submit']) && !empty($_POST['testName']) && !empty($_POST['directions']) && is_numeric($_POST['score']) && !empty($_POST['attempts']) && is_numeric($_POST['delay']) && !empty($_POST['gradingMethod']) && is_numeric($_POST['penalties']) && is_numeric($_POST['reference']) && !empty($_POST['randomizeAll']) && is_numeric($_POST['questionBank'])) {
+	//Do not process if a module with the same name exists
+		$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
+		$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `testName` = '{$name}'", $connDBA);
+		if (mysql_fetch_array($moduleCheck)) {
+			if ($testData['testName'] !== $name) {
+				header("Location:test_settings.php?error=identical");
+				exit;
+			}
+		}
 	//Use the session to find where to insert the test data
 		$currentModule = $_SESSION['currentModule'];
 		
 	//Check to see if the timer is set and if the time does not equal zero
 		if (isset($_POST['timer']) && isset($_POST['timeHours']) && isset($_POST['timeMinutes'])) {
 			if ($_POST['timer'] == "on" && $_POST['timeHours'] == "0" && $_POST['timeMinutes'] == "00") {
-				$timeValue = serialize("1");
+				$timeValue = serialize(array("0", "00"));
 				$timerValue = "0";
 			} else {
 			//Convert the time values to an array	
@@ -59,7 +78,7 @@
 				$timerValue = "on";
 			}
 		} else {
-			$timeValue = serialize("1");
+			$timeValue = serialize(array("0", "00"));
 			$timerValue = "0";
 		}
 		
@@ -84,45 +103,47 @@
 		$attempts = $covertedAttempts;
 		$forceCompletion = $_POST['forceCompletion'];
 		$completionMethod = $_POST['completionMethod'];
+		$reference = $_POST['reference'];
 		$delay = $_POST['delay'];
 		$gradingMethod = $_POST['gradingMethod'];
 		$penalties = $_POST['penalties'];
 		$time = $timeValue;
 		$timer = $timerValue;
 		$randomizeAll = $_POST['randomizeAll'];
-		$randomizeQuestions = $_POST['randomizeQuestions'];
+		$questionBank = $_POST['questionBank'];
 		$display = serialize($_POST['display']);
 		
-		$addToModuleQuery = "UPDATE moduledata SET 
-							testName = '{$testName}',
-							directions = '{$directions}',
-							score = '{$score}',
-							attempts = '{$attempts}',
-							forceCompletion = '{$forceCompletion}',
-							completionMethod = '{$completionMethod}',
-							delay = '{$delay}',
-							gradingMethod = '{$gradingMethod}',
-							penalties = '{$penalties}',
-							time = '{$time}',
-							timer = '{$timer}',
-							randomizeAll = '{$randomizeAll}',
-							randomizeQuestions = '{$randomizeQuestions}',
-							display = '{$display}'
-							WHERE name = '{$currentModule}'";
+		$addToModuleQuery = "UPDATE moduledata SET `testName` = '{$testName}', `directions` = '{$directions}', `score` = '{$score}', `attempts` = '{$attempts}', `forceCompletion` = '{$forceCompletion}', `completionMethod` = '{$completionMethod}', `reference` = '{$reference}', `delay` = '{$delay}', `gradingMethod` = '{$gradingMethod}', `penalties` = '{$penalties}', `time` = '{$time}', `timer` = '{$timer}', `randomizeAll` = '{$randomizeAll}', `questionBank` = '{$questionBank}', `display` = '{$display}' WHERE `name` = '{$currentModule}'";
 		
 		//Execute command on database			
-			mysql_query($addToModuleQuery, $connDBA);
+		mysql_query($addToModuleQuery, $connDBA);
 			
-		//Update the session to manage the steps
-			$_SESSION['step'] = "testContent";	
-			
-		if (isset ($_SESSION['review'])) {
-			header ("Location: modify.php?updated=testSettings");
-			exit;
+		header ("Location: question_merge.php");
+		exit;
+	}
+?>
+<?php
+	if (isset($_GET['checkName'])) {
+		$inputNameSpaces = $_GET['checkName'];
+		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
+		$checkName= mysql_query("SELECT * FROM `moduledata` WHERE `testName` = '{$inputNameSpaces}'", $connDBA);
+		
+		if($name = mysql_fetch_array($checkName)) {					
+			if (isset($_SESSION['currentModule'])) {
+				if ($name['name'] !== $testData['testName']) {
+					echo "<div class=\"error\" id=\"errorWindow\">A test with this name already exists</div>";
+				} else {
+					echo "<p>&nbsp;</p>";
+				}
+			} else {
+				echo "<div class=\"error\" id=\"errorWindow\">A test with this name already exists</div>";
+			}
 		} else {
-			header ("Location: test_content.php");
-			exit;	
+			echo "<p>&nbsp;</p>";
 		}
+		
+		echo "<script type=\"text/javascript\">validateName()</script>";
+		die();
 	}
 ?>
 <?php
@@ -140,6 +161,7 @@
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
 <?php validate(); ?>
+<?php liveError(); ?>
 <script src="../../../javascripts/common/enableDisable.js" type="text/javascript"></script>
 <script src="../../../javascripts/common/showHide.js" type="text/javascript"></script>
 <script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
@@ -149,7 +171,7 @@
 <?php topPage("site_administrator/includes/top_menu.php"); ?>      
     <h2>Module Setup Wizard : Test Settings</h2>
     <p>Setup the test's initial settings, such as the name, directions, and score.</p>
-<p>&nbsp;</p>
+    <?php errorWindow("database", "A test with this name already exists", "error", "identical", "true"); ?>
     <form name="testSettings" action="test_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this, 'true');">
     <div class="catDivider">
     <?php
@@ -158,11 +180,10 @@
     </div>
     <div class="stepContent">
     <blockquote>
-      <p>Test Name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of this test')" onmouseout="UnTip()" /></p>
+      <p>Test name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of this test')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-          <label>
-          <input name="testName" type="text" id="testName" size="50" class="validate[required,custom[onlyLetter]]"<?php
+          <input name="testName" type="text" id="testName" size="50" autocomplete="off" class="validate[required,custom[onlyLetter]]" onblur="checkName(this.name, 'test_settings')"<?php
 			//If the module is being edited
 				if (isset($_SESSION['review'])) {
 					if ($testName['testName'] == "") {
@@ -178,23 +199,19 @@
 					}
 				}
 			?> />
-          </label>
         </p>
       </blockquote>
       <p>Directions<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The directions of this test')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p><span id="directionsCheck">
-          <label>
           <textarea name="directions" id="directions" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif; width:450px;"><?php
 			//If the module is being edited
 				if ($testName['testName'] !== "") {
 					echo stripslashes($testData['directions']);
 				}
 			?></textarea>
-          </label>
         <span class="textareaRequiredMsg"></span></span></p>
       </blockquote>
-      <p>&nbsp;</p>
     </blockquote>
     </div>
     <div class="catDivider">
@@ -204,7 +221,7 @@
     </div>
     <div class="stepContent">
     <blockquote>
-      <p>Passing Score: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The minimum score a student must obtain to pass')" onmouseout="UnTip()" /></p>
+      <p>Passing score: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The minimum score a user must obtain to pass')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
         <?php
@@ -233,7 +250,7 @@
 		?>  
         %</p>
       </blockquote>
-      <p>Number of Attempts: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The number of attempts a student may make on this test')" onmouseout="UnTip()" /></p>
+      <p>Number ofattempts: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The number of attempts a user may make on this test')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
         <select name="attempts" onchange="toggleNumericalDiv(this.value);">
@@ -271,7 +288,7 @@
 			}
 		?>
       >
-      <p>Delay Between Attempts: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('If students are allowed to make multiple attempts on this test, <br />then this will set the amount of time they must wait in order to retry')" onmouseout="UnTip()" /></p>
+      <p>Delay between attempts: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set the amount of time they must wait in order to retry')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
           <select name="delay" id="delay">
@@ -310,24 +327,37 @@
           </select>
         </p>
       </blockquote>
-      <p>Grading Method: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('If students are allowed to make multiple attempts on this test, <br />then this will detirmine how the test will be scored')" onmouseout="UnTip()" /></p>
+      <p>Grading method: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set how the test will be scored')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-          <select name="gradingMethod" id="gradingMethod">
-            <option value="Highest Grade"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Highest Grade") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Highest Grade</option>
-            <option value="Average Grade"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Average Grade") {echo " selected=\"selected\"";}} ?>>Average Grade</option>
-            <option value="First Attempt"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "First Attempt") {echo " selected=\"selected\"";}} ?>>First Attempt</option>
-            <option value="Last Attempt"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Last Attempt") {echo " selected=\"selected\"";}} ?>>Last Attempt</option>
-            </select>
+          <label>
+            <input type="radio" name="gradingMethod" value="Highest Grade" id="gradingMethod_0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Highest Grade") {echo " checked=\"checked\"";}} else {echo " checked=\"checked\"";} ?> />
+            Highest Grade</label>
+          <br />
+          <label>
+            <input type="radio" name="gradingMethod" value="Average Grade" id="gradingMethod_1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Average Grade") {echo " checked=\"checked\"";}} ?> />
+            Average Grade</label>
+          <br />
+          <label>
+            <input type="radio" name="gradingMethod" value="First Attempt" id="gradingMethod_2"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "First Attempt") {echo " checked=\"checked\"";}} ?> />
+            First Attempt</label>
+          <br />
+          <label>
+            <input type="radio" name="gradingMethod" value="Last Attempt" id="gradingMethod_3"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['gradingMethod'] == "Last Attempt") {echo " checked=\"checked\"";}} ?> />
+            Last Attempt</label>
+          <br />
         </p>
       </blockquote>
-      <p>Show Penalties: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('If students are allowed to make multiple attempts on this test, <br />then this will detirmine whether or not previous attempts and scores will display in the gradebook')" onmouseout="UnTip()" /></p>
+      <p>Show penalties: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not previous attempts and scores will display in the gradebook')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-          <select name="penalties" id="penalties">
-            <option value="1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['penalties'] == "1") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Yes</option>
-            <option value="0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['penalties'] == "0") {echo " selected=\"selected\"";}} ?>>No</option>
-          </select>
+          <label>
+            <input type="radio" name="penalties" value="1" id="penalties_0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['penalties'] == "1") {echo " checked=\"checked\"";}} else {echo " checked=\"checked\"";} ?> />
+            Yes</label>
+          <label>
+            <input type="radio" name="penalties" value="0" id="penalties_1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['penalties'] == "0") {echo " checked=\"checked\"";}} ?> />
+            No</label>
+          <br />
         </p>
       </blockquote>
       </div>
@@ -345,7 +375,6 @@
       <blockquote>
         <p>
           Hours:          
-          <label>
           <select name="timeHours" id="timeHours"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
             <option value="0"<?php if ($testData['time'] !== "") {if ($testH == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>0</option>
             <option value="1"<?php if ($testData['time'] !== "") {if ($testH == "1") {echo " selected=\"selected\"";}}?>>1</option>
@@ -354,9 +383,7 @@
             <option value="4"<?php if ($testData['time'] !== "") {if ($testH == "4") {echo " selected=\"selected\"";}}?>>4</option>
             <option value="5"<?php if ($testData['time'] !== "") {if ($testH == "5") {echo " selected=\"selected\"";}}?>>5</option>
           </select>
-          </label>
         Minutes: 
-        <label>
         <select name="timeMinutes" id="timeMinutes"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
           <option value="00"<?php if ($testData['time'] !== "") {if ($testM == "00") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>00</option>
           <option value="05"<?php if ($testData['time'] !== "") {if ($testM == "05") {echo " selected=\"selected\"";}}?>>05</option>
@@ -371,50 +398,71 @@
           <option value="50"<?php if ($testData['time'] !== "") {if ($testM == "50") {echo " selected=\"selected\"";}}?>>50</option>
           <option value="55"<?php if ($testData['time'] !== "") {if ($testM == "55") {echo " selected=\"selected\"";}}?>>55</option>
         </select>
-        </label>
         <label>
         <input name="timer" type="checkbox" id="timer" onclick="flvFTFO1('testSettings','timeHours,t','timeMinutes,t')"<?php if ($testData['testName'] !== "") {if ($testData['timer'] == "on") {echo " checked=\"checked\"";}}?> />
         Enable</label>
 </p>
       </blockquote>
-      <p>Force Completion: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The test must be completed the first time it is opened, otherwise penalties will be applied')" onmouseout="UnTip()" /></p>
+      <p>Force completion: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The test must be completed the first time it is opened, <br />otherwise penalties will be applied')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-        Penalties: 
-        <label>
-        <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
-          <option value="0"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>The test will close</option>
-          <option value="1"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "1") {echo " selected=\"selected\"";}}?>>All answers will reset</option>
-          <option value="10"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "10") {echo " selected=\"selected\"";}}?>>Grade decreases 10%</option>
-          <option value="20"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "20") {echo " selected=\"selected\"";}}?>>Grade decreases 20%</option>
-          <option value="30"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "30") {echo " selected=\"selected\"";}}?>>Grade decreases 30%</option>
-          <option value="40"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "40") {echo " selected=\"selected\"";}}?>>Grade decreases 40%</option>
-        </select>
-        </label>
-        <label>
-        <input name="forceCompletion" type="checkbox" id="forceCompletion" onclick="flvFTFO1('testSettings','completionMethod,t')"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] == "on") {echo " checked=\"checked\"";}}?> /> 
-        Enable</label>
+          Penalties: 
+            <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+              <option value="0"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>The test will close</option>
+              <option value="1"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "1") {echo " selected=\"selected\"";}}?>>All answers will reset</option>
+              <option value="10"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "10") {echo " selected=\"selected\"";}}?>>Grade decreases 10%</option>
+              <option value="20"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "20") {echo " selected=\"selected\"";}}?>>Grade decreases 20%</option>
+              <option value="30"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "30") {echo " selected=\"selected\"";}}?>>Grade decreases 30%</option>
+              <option value="40"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "40") {echo " selected=\"selected\"";}}?>>Grade decreases 40%</option>
+            </select>
+          <label>
+            <input name="forceCompletion" type="checkbox" id="forceCompletion" onclick="flvFTFO1('testSettings','completionMethod,t')"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] == "on") {echo " checked=\"checked\"";}}?> /> 
+          Enable</label>
 </p>
       </blockquote>
-      <p>Randomize Questions: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether questions will display in a pre-defined order, <br/ >or if they will randomize')" onmouseout="UnTip()" /></p>
+      <p>Allow lesson reference: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Allow users to reference the lesson during the test')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-          <select name="randomizeAll" id="randomizeAll">
-            <option value="Sequential Order"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeAll'] == "Sequential Order") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Sequential Order</option>
-            <option value="Randomize"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeAll'] == "Randomize") {echo " selected=\"selected\"";}} ?>>Randomize</option>
-          </select>
+          <label>
+            <input type="radio" name="reference" value="1" id="reference_0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['reference'] == "1") {echo " checked=\"checked\"";}} ?> />
+            Yes</label>
+          <label>
+            <input type="radio" name="reference" value="0" id="reference_1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['reference'] == "0") {echo " checked=\"checked\"";}} else {echo " checked=\"checked\"";} ?> />
+            No</label>
         </p>
       </blockquote>
-      <p>Randomize within Questions: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('If this test includes multiple choice questions, &lt;br/ &gt;then set whether or not the items will display in order or randomized')" onmouseout="UnTip()" /></p>
+      <p>Randomize questions: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether questions will display in a pre-defined order, <br/ >or if they will randomize')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
-          <select name="randomizeQuestions" id="randomizeQuestions">
-            <option value="Sequential Order"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeQuestions'] == "Sequential Order") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>Sequential Order</option>
-            <option value="Randomize"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeQuestions'] == "Randomize") {echo " selected=\"selected\"";}} ?>>Randomize</option>
-          </select>
+          <label>
+            <input type="radio" name="randomizeAll" value="Sequential Order" id="randomizeAll_0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeAll'] == "Sequential Order") {echo " checked=\"checked\"";}} else {echo " checked=\"checked\"";} ?> />
+            Sequential Order</label>
+          <br />
+          <label>
+            <input type="radio" name="randomizeAll" value="Randomize" id="randomizeAll_1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['randomizeAll'] == "Randomize") {echo " checked=\"checked\"";}} ?> />
+            Randomize</label>
         </p>
       </blockquote>
-      <p>After the test is taken: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Overall score of the test<br/><strong>Selected Answers:</strong> The answer(s) the user user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>')" onmouseout="UnTip()" /></p>
+      <p>Automatically pull questions from bank: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Set whether or not questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added')" onmouseout="UnTip()" /></p>
+      <blockquote>
+          <p>
+            <label>
+              <input type="radio" name="questionBank" value="1" id="questionBank_0"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['questionBank'] == "1") {echo " checked=\"checked\"";}} ?> />
+              Yes</label>
+            <label>
+              <input type="radio" name="questionBank" value="0" id="questionBank_1"<?php if (isset($_SESSION['review']) || isset ($_SESSION['testSettings'])) {if ($testData['questionBank'] == "0") {echo " checked=\"checked\"";}} else {echo " checked=\"checked\"";} ?> />
+            No</label><br /><br />
+          <?php
+		  //Display whether or not the question bank has questions in this category
+		  	if ($categoryResult == "exist") {
+				echo "The question bank has test questions for this category.";
+			} else {
+				echo "The question bank does not have test questions for this category.";
+			}
+		  ?>
+          </p>
+       </blockquote>
+      <p>After the test is taken display: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Select what information will be displayed when the test is completed:<br/><br/><strong>Score:</strong> Overall score of the test<br/><strong>Selected Answers:</strong> The answer(s) the user user selected in the test<br/><strong>Correct Answers:</strong> The correct answer(s) for each problem<br/><strong>Feedback:</strong> The comments the user will recieve based off their answer</li>')" onmouseout="UnTip()" /></p>
       <blockquote>
       <?php
 	  //Decompile the serialized array to see what boxes needs to be checked

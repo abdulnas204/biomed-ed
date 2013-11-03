@@ -16,11 +16,11 @@ function toggleNumericalDiv(field) {
 	}
 }
 
-function toggleAlphaDiv(field) {
+function toggleSimpleDiv(field) {
 	if (field && document.getElementById('contentHide')) {
 		switch (field) {
-			case "yes" : document.getElementById('contentHide').className = "contentShow"; break;
-			case "no" : document.getElementById('contentHide').className = "contentHide"; break;
+			case "1" : document.getElementById('contentHide').className = "contentShow"; break;
+			case "0" : document.getElementById('contentHide').className = "contentHide"; break;
 		}
 	}
 }

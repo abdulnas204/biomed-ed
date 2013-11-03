@@ -2,6 +2,7 @@
 session_start();
 ob_start();
 
+
 //Root address for entire site
 	$root = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
 
@@ -367,7 +368,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script>";
+		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script><script type=\"text/javascript\" src=\"" . $root . "tiny_mce/plugins/tinybrowser/tb_tinymce.js.php\">";
 	}
 	
 //Include a form validator
@@ -446,6 +447,14 @@ ob_start();
 		echo "<script src=\"" . $root . "javascripts/liveError/errorCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/liveError/runNameError.js\" type=\"text/javascript\"></script>";
 	}
 	
+//Insert a modal window script
+	function modalWindow() {
+		global $connDBA;
+		global $root;
+		
+		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/common/modalWindow.css\" type=\"text/css\"><script src=\"" . $root . "javascripts/modalWindow/modalWindowCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/modalWindowOptions.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/runModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/animateModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/modalWindow/dragDropModalWindow.js\" type=\"text/javascript\"></script><script src=\"" . $root . "styles/common/modalWindow.css\" type=\"text/javascript\"></script>";
+	}
+	
 //Submit a form and toggle the tinyMCE to save its content
 	function submit($id, $value) {
 		global $connDBA;
@@ -513,10 +522,47 @@ ob_start();
 	
 //A function to check the extension of a file
 	function extension ($targetFile) {
-		$fileName = strtolower($targetFile);
 		$entension = explode(".", $targetFile);
 		$value = count($entension)-1;
 		$entension = $entension[$value];
-		return $entension;
+		$output = strtolower($entension);
+		return $output;
+	}
+	
+//A function to delete a folder and all of its contents
+	function deleteAll($directory, $empty = false) {
+		if(substr($directory,-1) == "/") {
+			$directory = substr($directory,0,-1);
+		}
+	
+		if(!file_exists($directory) || !is_dir($directory)) {
+			return false;
+		} elseif(!is_readable($directory)) {
+			return false;
+		} else {
+			$directoryHandle = opendir($directory);
+			
+			while ($contents = readdir($directoryHandle)) {
+				if($contents != '.' && $contents != '..') {
+					$path = $directory . "/" . $contents;
+					
+					if(is_dir($path)) {
+						deleteAll($path);
+					} else {
+						unlink($path);
+					}
+				}
+			}
+			
+			closedir($directoryHandle);
+	
+			if($empty == false) {
+				if(!rmdir($directory)) {
+					return false;
+				}
+			}
+			
+			return true;
+		}
 	}
 ?>
