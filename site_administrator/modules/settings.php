@@ -1,0 +1,627 @@
+<?php require_once('../../Connections/connDBA.php'); ?>
+<?php loginCheck("Site Administrator"); ?>
+<?php
+//Grab all category data
+	$categoryDataCheckGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
+	$categoryDataCheck = mysql_fetch_array($categoryDataCheckGrabber);
+	
+//Check to see if any categories exist
+	$categoryCheck = $categoryDataCheck['id'];
+	if (!$categoryCheck) {
+		$categories = "empty";
+	} else {
+		$categories = "exist";
+	}
+	
+?>
+<?php
+//Grab all employee data
+	$employeeDataCheckGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
+	$employeeDataCheck = mysql_fetch_array($employeeDataCheckGrabber);
+	
+//Check to see if any employees exist
+	$employeeCheck = $employeeDataCheck['id'];
+	if (!$employeeCheck) {
+		$employees = "empty";
+	} else {
+		$employees = "exist";
+	}
+	
+?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<?php title("Customize Settings"); ?>
+<?php headers(); ?>
+<script type="text/javascript">
+<!--
+function MM_goToURL() { //v3.0
+  var i, args=MM_goToURL.arguments; document.MM_returnValue = false;
+  for (i=0; i<(args.length-1); i+=2) eval(args[i]+".location='"+args[i+1]+"'");
+}
+//-->
+</script>
+</head>
+<body<?php bodyClass(); ?>>
+<?php toolTip(); ?>
+<?php topPage("site_administrator/includes/top_menu.php"); ?>
+<h2>Customize Settings</h2>
+<p>
+  <?php
+	if (!isset ($_GET['type'])) {
+?>Customize settings which will appear in the module setup wizard: <img src="../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('<strong>Category</strong> - A general subject a module is presenting<br /><strong>Employee Type</strong> - A general position for which the module is intended')" onmouseout="UnTip()" /></p>
+<blockquote>
+  <p><a href="settings.php?type=category">Manage Module Categories</a></p>
+      <p><a href="settings.php?type=employee">Manage Employee Types</a></p>
+</blockquote>
+<?php
+	} else {
+		if ($_GET['type'] == "category") {
+?>
+<?php
+    //Reorder the items
+        if (isset($_GET['id']) && isset($_GET['currentPosition']) && $_GET['action'] == "reorder") {
+        //Grab all necessary data
+            //Grab the id of the moving item
+            $id = $_GET['id'];
+            //Grab the new position of the item
+            $newPosition = $_GET['position'];
+            //Grab the old position of the item
+            $currentPosition = $_GET['currentPosition'];
+                
+        //Do not process if item does not exist
+            //Get item name by URL variable
+            $getItemID = $_GET['position'];
+        
+            $itemCheckGrabber = mysql_query("SELECT * FROM modulecategories WHERE position = {$getItemID}", $connDBA);
+            $itemCheckArray = mysql_fetch_array($itemCheckGrabber);
+            $itemCheckResult = $itemCheckArray['position'];
+                 if (isset ($itemCheckResult)) {
+                     $itemCheck = 1;
+                 } else {
+                    $itemCheck = 0;
+                 }
+        
+        //If the item is moved up...
+            if ($currentPosition > $newPosition) {
+            //Update the other items first, by adding a value of 1
+                $otherPostionReorderQuery = "UPDATE modulecategories SET position = position + 1 WHERE position >= '{$newPosition}' AND position <= '{$currentPosition}'";
+                
+            //Update the requested item	
+                $currentItemReorderQuery = "UPDATE modulecategories SET position = '{$newPosition}' WHERE id = '{$id}'";
+                
+            //Execute the queries
+                $otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
+                $currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
+        
+            //No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
+                header ("Location: settings.php?type=category");
+                exit;
+        //If the item is moved down...
+            } elseif ($currentPosition < $newPosition) {
+            //Update the other items first, by subtracting a value of 1
+                $otherPostionReorderQuery = "UPDATE modulecategories SET position = position - 1 WHERE position <= '{$newPosition}' AND position >= '{$currentPosition}'";
+        
+            //Update the requested item		
+                $currentItemReorderQuery = "UPDATE modulecategories SET position = '{$newPosition}' WHERE id = '{$id}'";
+            
+            //Execute the queries
+                $otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
+                $currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
+                
+            //No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
+                header ("Location: settings.php?type=category");
+                exit;
+            }
+        }
+    ?>
+<?php
+//Delete an item 
+	if (isset ($_GET['action']) && $_GET['action'] == "delete") {
+	//Do not process if item does not exist
+	//Get item data by URL variable
+		$getItemID = $_GET['id'];
+		$getItemPosition = $_GET['category'];
+	
+		$itemCheckGrabber = mysql_query("SELECT * FROM modulecategories WHERE id = {$getItemID}", $connDBA);
+		$itemCheckArray = mysql_fetch_array($itemCheckGrabber);
+		$itemCheckResult = $itemCheckArray['id'];
+			 if (isset ($itemCheckResult)) {
+				 $itemCheck = 1;
+			 } else {
+				$itemCheck = 0;
+			 }
+	 
+		if (!isset ($_GET['id']) || $_GET['id'] == 0 || $itemCheck == 0) {
+			header ("Location: settings.php?type=category");
+			exit;
+		} else {
+		//Update the database
+			$deleteItem = $_GET['id'];
+			
+			$itemPositionGrabber = mysql_query("SELECT * FROM modulecategories WHERE id = {$deleteItem}", $connDBA);
+			$itemPositionFetch = mysql_fetch_array($itemPositionGrabber);
+			$itemPosition = $itemPositionFetch['position'];
+			
+			$otherItemsUpdateQuery = "UPDATE modulecategories SET position = position-1 WHERE position > '{$getItemPosition}'";
+			$deleteItemQueryResult = mysql_query($otherItemsUpdateQuery, $connDBA);
+			
+			$deleteItemQuery = "DELETE FROM modulecategories WHERE id = {$deleteItem} LIMIT 1";
+			$deleteItemQueryResult = mysql_query($deleteItemQuery, $connDBA);
+			
+			header ("Location: settings.php?type=category");
+			exit;
+		}
+	}
+?>
+<?php
+			if (!isset ($_GET['action'])) {
+			//Unset unused sessions
+				unset($_SESSION['moduleSettings']);
+?>
+    <p>A category is a general subject a module is presenting.
+    <p>
+    
+<div class="toolBar"><img src="../../images/admin_icons/new.png" alt="New" width="24" height="24" /> <a href="settings.php?type=category&amp;action=insert">Add New Category</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /> <a href="settings.php">Back to Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="../../images/admin_icons/back.gif" width="18" height="15" /> <a href="index.php">Back to Modules</a></div>
+<p>
+    <?php
+	//Display a success message
+		if (isset ($_GET['result']) && $_GET['updateType']) {
+			if ($_GET['result'] == "success") {
+				if ($_GET['updateType'] == "insert") {
+					successMessage("The category was inserted");
+				} elseif ($_GET['updateType'] == "update") {
+					successMessage("The category was updated");
+				}
+			}
+		} else {
+			echo "&nbsp;";
+		}
+	?>
+    </p>
+        <?php
+	  		if ($categories == "exist") {
+				echo "<div align=\"center\">";
+					echo "<table align=\"center\" class=\"dataTable\">";
+					echo "<tbody>";
+						echo "<tr>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Order</strong></th>";
+							echo "<th width=\"250\" class=\"tableHeader\"><strong>Category</strong></th>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Edit</strong></th>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Delete</strong></th>";
+						echo "</tr>";
+					//Select data for the loop
+						$categoryDataGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
+						
+					//Select data for drop down menu
+						$dropDownDataGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
+						while ($categoryData = mysql_fetch_array($categoryDataGrabber)){
+							echo "<tr";
+							if ($categoryData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+							">";
+								echo "<td width=\"25\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"category\"><input type=\"hidden\" name=\"action\" value=\"reorder\"><div align=\"center\">";
+										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
+										$categoryCount = mysql_num_rows($dropDownDataGrabber);
+										for ($count=1; $count <= $categoryCount; $count++) {
+											echo "<option value=\"{$count}\"";
+											if ($categoryData ['position'] == $count) {
+												echo " selected=\"selected\"";
+											}
+											echo ">$count</option>";
+										}
+										echo "</select>";
+									echo "</div>";
+									echo "<input type=\"hidden\" name=\"id\" value=\"";
+									echo $categoryData['id'];
+									echo "\">";
+									echo "<input type=\"hidden\" name=\"currentPosition\" value=\"";
+									echo $categoryData['position'];
+									echo "\"></form></td>";
+										
+								echo "<td width=\"200\" align=\"center\"><div align=\"center\">" . $categoryData['category'] . "</div></td>";
+								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"settings.php?type=category&action=edit&category=" . $categoryData['position'] . "&id=" . $categoryData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" border=\"0\" onmouseover=\"Tip('Edit the <strong> " . $categoryData['category'] . "</strong> category')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
+								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"settings.php?type=category&action=delete&category=" .  $categoryData['position'] . "&id=" .  $categoryData['id'] . "\" onclick=\"return confirm ('Warning: this action may damage data with modules using this category. Continue?');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" border=\"0\" onmouseover=\"Tip('Delete the <strong> " . $categoryData['category'] . "</strong> category')\" onmouseout=\"UnTip()\">" . "</a>";"</div></td>";
+							echo "</tr>";
+						}
+					echo "</tbody>";
+				echo "</table></div><br /></br /><br /></br />";
+			} else {
+				echo "<br /></br /><div align=\"center\">There are no categories.</div><br /></br /><br /></br /><br /></br />";
+			}
+	  ?>
+<?php 
+	} elseif (isset ($_GET['action']) && $_GET['action'] == "edit" || $_GET['action'] == "insert") {
+		if ($_GET['action'] == "insert") {
+			$_SESSION['moduleSettings'] = "insert";
+		} elseif ($_GET['action'] == "edit") {
+			if (!isset ($_GET['category']) || !isset ($_GET['id'])) {
+				header ("Location: settings.php?type=employee");
+				exit;
+			}
+			$_SESSION['moduleSettings'] = "edit";
+		} else {
+			header ("Location: settings.php?type=employee");
+			exit;
+		}
+?>
+<?php
+//Process the form
+	if (isset($_POST['submitCategory'])) {
+		if (isset ($_SESSION['moduleSettings'])) {
+			if ($_SESSION['moduleSettings'] == "insert") {
+				$category = mysql_real_escape_string($_POST['categoryName']);
+				$positionGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position DESC LIMIT 1", $connDBA);
+				$position = mysql_fetch_array($positionGrabber);
+				$newPosition = $position['position']+1;
+				
+				mysql_query ("INSERT INTO modulecategories (position, category) VALUES ('{$newPosition}', '{$category}')", $connDBA);
+				header ("Location: settings.php?type=category&result=success&updateType=insert");
+				exit;
+			} 
+			
+			if ($_SESSION['moduleSettings'] == "edit") {
+				$category = mysql_real_escape_string($_POST['categoryName']);
+				$position = $_POST['position'];
+				$id = $_GET['id'];
+				
+				mysql_query ("UPDATE modulecategories SET `category` = '{$category}' WHERE id = '{$id}'", $connDBA);
+				header ("Location: settings.php?type=category&result=success&updateType=update");
+				exit;
+			}
+		} else {
+			header ("Location: settings.php?type=category");
+			exit;
+		}
+	}
+?>
+</p>
+      <p>Categories can be customized using the form below.<br />
+        <br />
+</p>
+<form action="settings.php?type=category&action=
+<?php
+//Supply a value if the category is being edited
+	if (isset ($_SESSION['moduleSettings'])) {
+		if ($_SESSION['moduleSettings'] == "edit") {
+			$id = $_GET['id'];
+			$category = $_GET['category'];
+			
+			echo "edit&category=" . $category . "&id=" . $id;
+		} elseif ($_SESSION['moduleSettings'] == "insert") {
+			echo "insert";
+		}
+	}
+?>
+" method="post" name="category" id="category">
+  <div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign Category Name</div>
+  <div class="stepContent">
+<blockquote>
+      <p>
+        <label>
+        <input name="categoryName" type="text" id="categoryName" size="50" autocomplete="off"
+        <?php
+		//Supply a value if the category is being edited
+			if (isset ($_SESSION['moduleSettings'])) {
+				if ($_SESSION['moduleSettings'] == "edit") {
+					$id = $_GET['id'];
+					$categoryGrabber = mysql_query("SELECT * FROM modulecategories WHERE id = '{$id}' LIMIT 1", $connDBA);
+					$category = mysql_fetch_array($categoryGrabber);
+					
+					echo " value=\"" . $category['category'] . "\"";
+				}
+			}
+		?>
+         />
+        </label>
+      </p>
+      <p>&nbsp;</p>
+</blockquote>
+</div>
+    <div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Submit</div>
+    <div class="stepContent">
+<blockquote>
+      <p>
+        <label>
+        <input type="submit" name="submitCategory" id="submitCategory" value="Submit" />
+        </label>
+        <label>
+        <input type="reset" name="resetCategory" id="resetCategory" value="Reset" />
+        </label>
+        <label>
+        <input name="cancelCategory" type="button" id="cancelCategory" onclick="MM_goToURL('parent','settings.php?type=category');return document.MM_returnValue" value="Cancel" />
+        </label>
+      </p>
+</blockquote>
+</div>
+</form>
+<p>
+  <?php
+		}
+	} elseif ($_GET['type'] == "employee") {
+?>
+<?php
+//Reorder the items
+	if (isset($_GET['id']) && isset($_GET['currentPosition']) && $_GET['action'] == "reorder") {
+	//Grab all necessary data
+		//Grab the id of the moving item
+		$id = $_GET['id'];
+		//Grab the new position of the item
+		$newPosition = $_GET['position'];
+		//Grab the old position of the item
+		$currentPosition = $_GET['currentPosition'];
+			
+	//Do not process if item does not exist
+		//Get item name by URL variable
+		$getItemID = $_GET['position'];
+	
+		$itemCheckGrabber = mysql_query("SELECT * FROM moduleemployees WHERE position = {$getItemID}", $connDBA);
+		$itemCheckArray = mysql_fetch_array($itemCheckGrabber);
+		$itemCheckResult = $itemCheckArray['position'];
+			 if (isset ($itemCheckResult)) {
+				 $itemCheck = 1;
+			 } else {
+				$itemCheck = 0;
+			 }
+	
+	//If the item is moved up...
+		if ($currentPosition > $newPosition) {
+		//Update the other items first, by adding a value of 1
+			$otherPostionReorderQuery = "UPDATE moduleemployees SET position = position + 1 WHERE position >= '{$newPosition}' AND position <= '{$currentPosition}'";
+			
+		//Update the requested item	
+			$currentItemReorderQuery = "UPDATE moduleemployees SET position = '{$newPosition}' WHERE id = '{$id}'";
+			
+		//Execute the queries
+			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
+			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
+	
+		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
+			header ("Location: settings.php?type=employee");
+			exit;
+	//If the item is moved down...
+		} elseif ($currentPosition < $newPosition) {
+		//Update the other items first, by subtracting a value of 1
+			$otherPostionReorderQuery = "UPDATE moduleemployees SET position = position - 1 WHERE position <= '{$newPosition}' AND position >= '{$currentPosition}'";
+	
+		//Update the requested item		
+			$currentItemReorderQuery = "UPDATE moduleemployees SET position = '{$newPosition}' WHERE id = '{$id}'";
+		
+		//Execute the queries
+			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
+			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
+			
+		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
+			header ("Location: settings.php?type=employee");
+			exit;
+		}
+	}
+?>
+<?php
+//Delete an item 
+	if (isset ($_GET['action']) && $_GET['action'] == "delete") {
+	//Do not process if item does not exist
+	//Get item data by URL variable
+		$getItemID = $_GET['id'];
+		$getItemPosition = $_GET['employee'];
+	
+		$itemCheckGrabber = mysql_query("SELECT * FROM moduleemployees WHERE id = {$getItemID}", $connDBA);
+		$itemCheckArray = mysql_fetch_array($itemCheckGrabber);
+		$itemCheckResult = $itemCheckArray['id'];
+			 if (isset ($itemCheckResult)) {
+				 $itemCheck = 1;
+			 } else {
+				$itemCheck = 0;
+			 }
+	 
+		if (!isset ($_GET['id']) || $_GET['id'] == 0 || $itemCheck == 0) {
+			header ("Location: settings.php?type=employee");
+			exit;
+		} else {
+		//Update the database
+			$deleteItem = $_GET['id'];
+			
+			$itemPositionGrabber = mysql_query("SELECT * FROM moduleemployees WHERE id = {$deleteItem}", $connDBA);
+			$itemPositionFetch = mysql_fetch_array($itemPositionGrabber);
+			$itemPosition = $itemPositionFetch['position'];
+			
+			$otherItemsUpdateQuery = "UPDATE moduleemployees SET position = position-1 WHERE position > '{$getItemPosition}'";
+			$deleteItemQueryResult = mysql_query($otherItemsUpdateQuery, $connDBA);
+			
+			$deleteItemQuery = "DELETE FROM moduleemployees WHERE id = {$deleteItem} LIMIT 1";
+			$deleteItemQueryResult = mysql_query($deleteItemQuery, $connDBA);
+			
+			header ("Location: settings.php?type=employee");
+			exit;
+		}
+	}
+?>
+<?php
+		if (!isset ($_GET['action'])) {
+		//Unset unused sessions
+			unset($_SESSION['moduleSettings']);
+?>
+</p>
+<p> An employee type is general position for which the module is intended.</p>
+<p>&nbsp;</p>
+<div class="toolBar"><img src="../../images/admin_icons/new.png" alt="New" width="24" height="24" /> <a href="settings.php?type=employee&amp;action=insert">Add New Employee Type</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /> <a href="settings.php">Back to Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="../../images/admin_icons/back.gif" alt="Back" width="18" height="15" /> <a href="index.php">Back to Modules</a></div>
+<p>
+    <?php
+	//Display a success message
+		if (isset ($_GET['result']) && $_GET['updateType']) {
+			if ($_GET['result'] == "success") {
+				if ($_GET['updateType'] == "insert") {
+					successMessage("The employee type was inserted");
+				} elseif ($_GET['updateType'] == "update") {
+					successMessage("The employee type was updated");
+				}
+			}
+		} else {
+			echo "&nbsp;";
+		}
+	?>
+    </p>
+      <?php
+	  		if ($employees == "exist") {
+				echo "<div align=\"center\">";
+					echo "<table align=\"center\" class=\"dataTable\">";
+					echo "<tbody>";
+						echo "<tr>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Order</strong></th>";
+							echo "<th width=\"250\" class=\"tableHeader\"><strong>Employee Type</strong></th>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Edit</strong></th>";
+							echo "<th width=\"25\" class=\"tableHeader\"><strong>Delete</strong></th>";
+						echo "</tr>";
+					//Select data for the loop
+						$employeeDataGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
+						
+					//Select data for drop down menu
+						$dropDownDataGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
+						while ($employeeData = mysql_fetch_array($employeeDataGrabber)){
+							echo "<tr";
+							if ($employeeData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+							">";
+								echo "<td width=\"25\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"employee\"><input type=\"hidden\" name=\"action\" value=\"reorder\"><div align=\"center\">";
+										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
+										$employeeCount = mysql_num_rows($dropDownDataGrabber);
+										for ($count=1; $count <= $employeeCount; $count++) {
+											echo "<option value=\"{$count}\"";
+											if ($employeeData ['position'] == $count) {
+												echo " selected=\"selected\"";
+											}
+											echo ">$count</option>";
+										}
+										echo "</select>";
+									echo "</div>";
+									echo "<input type=\"hidden\" name=\"action\" value=\"reorder\">";
+									echo "<input type=\"hidden\" name=\"id\" value=\"";
+									echo $employeeData['id'];
+									echo "\">";
+									echo "<input type=\"hidden\" name=\"currentPosition\" value=\"";
+									echo $employeeData['position'];
+									echo "\"></form></td>";
+										
+								echo "<td width=\"200\" align=\"center\"><div align=\"center\">" . $employeeData['employee'] . "</div></td>";
+								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"settings.php?type=employee&action=edit&employee=" . $employeeData['position'] . "&id=" . $employeeData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" border=\"0\" onmouseover=\"Tip('Edit the <strong> " . $employeeData['employee'] . "</strong> employee type')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
+								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"settings.php?type=employee&action=delete&employee=" .  $employeeData['position'] . "&id=" .  $employeeData['id'] . "\" onclick=\"return confirm ('Warning: this action may damage data with modules using this employee type. Continue?');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" border=\"0\" onmouseover=\"Tip('Delete the <strong> " . $employeeData['employee'] . "</strong> employee type')\" onmouseout=\"UnTip()\">" . "</a>";"</div></td>";
+							echo "</tr>";
+						}
+					echo "</tbody>";
+				echo "</table></div><br /><br />";
+			} else {
+				echo "<br /></br /><div align=\"center\">There are no employee types.</div><br /></br /><br /></br /><br /></br />";
+			}
+	  ?>
+<?php 
+	} elseif (isset ($_GET['action']) && $_GET['action'] == "edit" || $_GET['action'] == "insert") {
+		if ($_GET['action'] == "insert") {
+			$_SESSION['moduleSettings'] = "insert";
+		} elseif ($_GET['action'] == "edit") {
+			if (!isset ($_GET['employee']) || !isset ($_GET['id'])) {
+				header ("Location: settings.php?type=employee");
+				exit;
+			}
+			$_SESSION['moduleSettings'] = "edit";
+		} else {
+			header ("Location: settings.php?type=employee");
+			exit;
+		}
+?>
+      <?php
+//Process the form
+	if (isset($_POST['submitEmployee'])) {
+		if (isset ($_SESSION['moduleSettings'])) {
+			if ($_SESSION['moduleSettings'] == "insert") {
+				$employee = mysql_real_escape_string($_POST['employeeName']);
+				$positionGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position DESC LIMIT 1", $connDBA);
+				$position = mysql_fetch_array($positionGrabber);
+				$newPosition = $position['position']+1;
+				
+				mysql_query ("INSERT INTO moduleemployees (position, employee) VALUES ('{$newPosition}', '{$employee}')", $connDBA);
+				header ("Location: settings.php?type=employee&result=success&updateType=insert");
+				exit;
+			} 
+			
+			if ($_SESSION['moduleSettings'] == "edit") {
+				$employee = mysql_real_escape_string($_POST['employeeName']);
+				$position = $_POST['position'];
+				$id = $_GET['id'];
+				
+				mysql_query ("UPDATE moduleemployees SET `employee` = '{$employee}' WHERE id = '{$id}'", $connDBA);
+				header ("Location: settings.php?type=employee&result=success&updateType=update");
+				exit;
+			}
+		} else {
+			header ("Location: settings.php?type=employee");
+			exit;
+		}
+	}
+?>
+    <p>Employee types can be customized using the form below.</p>
+    <form action="settings.php?type=employee&amp;action=
+<?php
+//Supply a value if the category is being edited
+	if (isset ($_SESSION['moduleSettings'])) {
+		if ($_SESSION['moduleSettings'] == "edit") {
+			$id = $_GET['id'];
+			$employee = $_GET['employee'];
+			
+			echo "edit&employee=" . $employee . "&id=" . $id;
+		} elseif ($_SESSION['moduleSettings'] == "insert") {
+			echo "insert";
+		}
+	}
+?>
+" method="post" name="employee" id="employee">
+      <div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign Employee Type</div>
+      <div class="stepContent">
+      <blockquote>
+        <p>
+          <label>
+          <input name="employeeName" type="text" id="employeeName" size="50" autocomplete="off"
+        <?php
+		//Supply a value if the category is being edited
+			if (isset ($_SESSION['moduleSettings'])) {
+				if ($_SESSION['moduleSettings'] == "edit") {
+					$id = $_GET['id'];
+					$employeeGrabber = mysql_query("SELECT * FROM moduleemployees WHERE id = '{$id}' LIMIT 1", $connDBA);
+					$employee = mysql_fetch_array($employeeGrabber);
+					
+					echo " value=\"" . $employee['employee'] . "\"";
+				}
+			}
+		?>
+         />
+          </label>
+        </p>
+        <p>&nbsp;</p>
+      </blockquote>
+      </div>
+      <div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Submit</div>
+      <div class="stepContent">
+      <blockquote>
+        <p>
+          <label>
+          <input type="submit" name="submitEmployee" id="submitEmployee" value="Submit" />
+          </label>
+          <label>
+          <input type="reset" name="resetEmployee" id="resetEmployee" value="Reset" />
+          </label>
+          <label>
+          <input name="cancelEmployee" type="button" id="cancelEmployee" onclick="MM_goToURL('parent','settings.php?type=employee');return document.MM_returnValue" value="Cancel" />
+          </label>
+        </p>
+      </blockquote>
+      </div>
+</form>
+
+<?php
+		} else {
+			header ("Location: settings.php");
+			exit;
+		}
+	}
+}
+?>
+<?php footer("site_administrator/includes/bottom_menu.php"); ?>
+</body>
+</html>

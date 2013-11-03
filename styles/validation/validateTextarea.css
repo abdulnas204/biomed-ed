@@ -1,0 +1,54 @@
+/**********************************************************************
+Developer enhancements are denoted by a "Developer Enhancement" comment
+**********************************************************************/
+
+/* Copyright (c) 2006. Adobe Systems Incorporated. All rights reserved. */
+
+.textareaRequiredMsg,
+.textareaMinCharsMsg,
+.textareaMaxCharsMsg,
+.textareaValidMsg,
+/*Developer Enhancement*/
+.noFormErrors  {
+	display:none;
+}
+
+.textareaRequiredState .textareaRequiredMsg,
+.textareaMinCharsState .textareaMinCharsMsg,
+.textareaMaxCharsState .textareaMaxCharsMsg {
+	/*Developer Enhancement*/
+	display: inline;
+	background-image:url(../../images/common/balloon.png);
+	overflow:visible;
+	padding-left:191px;
+	padding-bottom:21px;
+}
+
+/*Developer Enhancement*/
+.formPrompt .noFormErrors {
+	display: inline;
+	color: #CC3333;
+	border: 1px solid #CC3333;
+}
+
+.textareaValidState textarea, textarea.textareaValidState {
+	background-color:#B8F5B1;
+}
+
+textarea.textareaRequiredState, .textareaRequiredState textarea, 
+textarea.textareaMinCharsState, .textareaMinCharsState textarea, 
+textarea.textareaMaxCharsState, .textareaMaxCharsState textarea {
+	background-color:#FF9F9F;
+}
+
+.textareaFocusState textarea, textarea.textareaFocusState {
+	background-color:#FFFFCC;
+}
+
+.textareaFlashState textarea, textarea.textareaFlashState{
+	color:red !important;
+}
+
+textarea.textareaHintState, .textareaHintState textarea{
+	/* color: red !important;*/
+}
