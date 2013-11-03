@@ -6,12 +6,12 @@
 		newLang: function() {
 			$.validationEngineLanguage.allRules = 	{"required":{    			// Add your regex rules here, you can take telephone as an example
 						"regex":"none",
-						"alertText":"* This field is required",
-						"alertTextCheckboxMultiple":"* Please select an option",
-						"alertTextCheckboxe":"* This checkbox is required"},
+						"alertText":"* Required (Click to hide)",
+						"alertTextCheckboxMultiple":"* Required (Click to hide)",
+						"alertTextCheckboxe":"* Required (Click to hide)"},
 					"length":{
 						"regex":"none",
-						"alertText":"*Between ",
+						"alertText":"* Between ",
 						"alertText2":" and ",
 						"alertText3": " characters allowed"},
 					"maxCheckbox":{
@@ -19,8 +19,8 @@
 						"alertText":"* Checks allowed Exceeded"},	
 					"minCheckbox":{
 						"regex":"none",
-						"alertText":"* Please select ",
-						"alertText2":" options"},	
+						"alertText":"* Please select at least ",
+						"alertText2":" option"},	
 					"confirm":{
 						"regex":"none",
 						"alertText":"* Your field is not matching"},		
@@ -36,17 +36,20 @@
 					"onlyNumber":{
 						"regex":"/^[0-9\ ]+$/",
 						"alertText":"* Numbers only"},	
-					"noSpecialCaracters":{
+					"noSpecialCharacters":{
+						"regex":"/^[0-9a-zA-Z ]+$/",
+						"alertText":"* No special characters allowed"},	
+					"noSpecialCharactersSpaces":{
 						"regex":"/^[0-9a-zA-Z]+$/",
-						"alertText":"* No special caracters allowed"},	
+						"alertText":"* No special characters allowed"},	
 					"ajaxUser":{
-						"file":"validateUser.php",
+						"file": document.location.href + "?validate=true",
 						"extraData":"name=eric",
 						"alertTextOk":"* This user is available",	
 						"alertTextLoad":"* Loading, please wait",
 						"alertText":"* This user is already taken"},	
 					"ajaxName":{
-						"file":"validateUser.php",
+						"file": document.location.href + "?validate=true",
 						"alertText":"* This name is already taken",
 						"alertTextOk":"* This name is available",	
 						"alertTextLoad":"* Loading, please wait"},		

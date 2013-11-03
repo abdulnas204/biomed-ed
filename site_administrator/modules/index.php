@@ -122,8 +122,8 @@
 
 	//Update the database	
 		$position = $delete['position'];
-		$tableName = str_replace(" ", "", $delete['name']);
-		$directoryName = str_replace(" ", "", $delete['name']);
+		$tableName = strtolower(str_replace(" ", "", $delete['name']));
+		$directoryName = strtolower(str_replace(" ", "", $delete['name']));
 		mysql_query("DELETE FROM moduledata WHERE id = '{$id}' LIMIT 1", $connDBA);
 		mysql_query("UPDATE moduledata SET position = position-1 WHERE position > '{$position}'", $connDBA);
 		mysql_query("DROP TABLE `moduletest_{$tableName}`", $connDBA);
@@ -160,77 +160,85 @@
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <h2>Module Administration</h2>
-    <p>Modifing the table below will chage the default settings and appearance for instructors.</p>
+    <p>Below is a list of all modules.</p>
     <p>&nbsp;</p>
-      <div class="toolBar"><a href="module_wizard/index.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="module_wizard/index.php">Add New Module</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="question_bank/index.php"><img src="../../images/admin_icons/bank.png" alt="Bank" width="18" height="23" /></a> <a href="question_bank/index.php">Question Bank</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a> <a href="settings.php">Customize Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="feedback/index.php"><img src="../../images/admin_icons/feedback.png" alt="Feedback" width="24" height="24" /></a> <a href="feedback/index.php">Feedback</a>
+      <div class="toolBar"><a class="toolBarItem new" href="module_wizard/index.php">Add New Module</a><a class="toolBarItem bank" href="question_bank/index.php">Question Bank</a><a class="toolBarItem settings" href="settings.php">Customize Settings</a><a class="toolBarItem feedback" href="feedback/index.php">Feedback</a>
         <?php
 			if ($modules == "exist") {
-			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"../../modules/index.php\"><img src=\"../../images/admin_icons/search.png\" alt=\"Search\" width=\"24\" height=\"24\" /></a> <a href=\"../../modules/index.php\">Preview Modules</a>";
+			echo "<a class=\"toolBarItem search\" href=\"../../modules/index.php\">Preview Modules</a>";
 			}
 		?>
       </div>
-<br /></br />
+<br />
+</br />
 <?php
-	  		if ($modules == "exist") {
-				echo "<div align=\"center\">";
-					echo "<table align=\"center\" class=\"dataTable\">";
-					echo "<tbody>";
-						echo "<tr>";
-							echo "<th width=\"25\" class=\"tableHeader\"></th>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Order</strong></th>";
-							echo "<th width=\"200\" class=\"tableHeader\"><strong>Module Name</strong></th>";
-							echo "<th class=\"tableHeader\"><strong>Comments</strong></th>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Edit</strong></th>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Delete</strong></th>";
-						echo "</tr>";
-					//Select data for the loop
-						$moduleDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
-						
-					//Select data for drop down menu
-						$dropDownDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
-						
-					//Loop through the items		
-						while ($moduleData = mysql_fetch_array($moduleDataGrabber)){
-							echo "<tr";
-							if ($moduleData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-							">";
-								echo "<td width=\"25\"><div align=\"center\">" . "<form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $moduleData['id'] ."\" class=\"visible"; if ($moduleData['avaliable'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $moduleData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $moduleData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($moduleData['avaliable'] == "on") {echo " checked=\"checked\"";} echo "></div></form>" . "</div></td>";
-							
-								echo "<td width=\"50\"><form name=\"modules\" action=\"index.php\"><div align=\"center\">";
-										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
-										$moduleCount = mysql_num_rows($dropDownDataGrabber);
-										for ($count=1; $count <= $moduleCount; $count++) {
-											echo "<option value=\"{$count}\"";
-											if ($moduleData ['position'] == $count) {
-												echo " selected=\"selected\"";
-											}
-											echo ">$count</option>";
-										}
-										echo "</select>";
-									echo "</div>";
-									echo "<input type=\"hidden\" name=\"action\" value=\"reorder\">";
-									echo "<input type=\"hidden\" name=\"id\" value=\"";
-									echo $moduleData['id'];
-									echo "\">";
-									echo "<input type=\"hidden\" name=\"currentPosition\" value=\"";
-									echo $moduleData['position'];
-									echo "\"></form></td>";
-								
-								echo "<td width=\"200\"><div align=\"center\"><a href=\"../../modules/lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></div></td>";
-								
-								echo "<td align=\"center\"><div align=\"center\">" . commentTrim(60, $moduleData['comments']) . "</div></td>";
-								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"index.php?action=edit&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" onmouseover=\"Tip('Edit the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
-								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "', 'module');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" onmouseover=\"Tip('Delete the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
-							echo "</tr>";
-						}
-					echo "</tbody>";
-				echo "</table></div>";
-			} else {
-				echo "<br /></br /><div align=\"center\">There are no modules. <a href=\"module_wizard/index.php\">Create one now</a>.</div><br /></br /><br /></br /><br /></br />";
-			}
-	  ?>
-      <p>&nbsp;</p>
-<p align="left"></p>    
+	  if ($modules == "exist") {
+		  echo "<table class=\"dataTable\">";
+		  echo "<tbody>";
+			  echo "<tr>";
+				  echo "<th width=\"25\" class=\"tableHeader\"></th>";
+				  echo "<th width=\"50\" class=\"tableHeader\">Order</th>";
+				  echo "<th width=\"200\" class=\"tableHeader\">Module Name</th>";
+				  echo "<th class=\"tableHeader\">Comments</th>";
+				  echo "<th width=\"50\" class=\"tableHeader\">Statistics</th>";
+				  echo "<th width=\"50\" class=\"tableHeader\">Edit</th>";
+				  echo "<th width=\"50\" class=\"tableHeader\">Delete</th>";
+			  echo "</tr>";
+		  //Select data for the loop
+			  $moduleDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
+			  
+		  //Select data for drop down menu
+			  $dropDownDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
+			  
+		  //Loop through the items		
+			  while ($moduleData = mysql_fetch_array($moduleDataGrabber)){
+				  echo "<tr";
+				  if ($moduleData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+				  ">";
+					  $currentLesson = str_replace(" ", "", strtolower($moduleData['name']));
+					  $lessonCheckGrabber = mysql_query("SELECT * FROM `modulelesson_{$currentLesson}`", $connDBA);
+					  $lessonCheck = mysql_num_rows($lessonCheckGrabber);
+					  
+					  if ($lessonCheck < 1) {
+						  echo "<td width=\"25\"><div align=\"center\"><span onmouseover=\"Tip('There isn\'t any lesson content to this module. <br />Please add content before displaying this module.')\" onmouseout=\"UnTip()\" class=\"noShow\"></span></div></td>";
+					  } else {
+						  echo "<td width=\"25\"><div align=\"center\"><form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $moduleData['id'] . "\" class=\"visible"; if ($moduleData['avaliable'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $moduleData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $moduleData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($moduleData['avaliable'] == "on") {echo " checked=\"checked\"";} echo "></div></form></div></td>";
+					  }
+					  
+					  unset($lessonCheck);
+				  
+					  echo "<td width=\"50\"><form name=\"modules\" action=\"index.php\">";
+							  echo "<select name=\"position\" onchange=\"this.form.submit();\">";
+							  $moduleCount = mysql_num_rows($dropDownDataGrabber);
+							  for ($count=1; $count <= $moduleCount; $count++) {
+								  echo "<option value=\"{$count}\"";
+								  if ($moduleData ['position'] == $count) {
+									  echo " selected=\"selected\"";
+								  }
+								  echo ">$count</option>";
+							  }
+							  echo "</select>";
+						  echo "<input type=\"hidden\" name=\"action\" value=\"reorder\">";
+						  echo "<input type=\"hidden\" name=\"id\" value=\"";
+						  echo $moduleData['id'];
+						  echo "\">";
+						  echo "<input type=\"hidden\" name=\"currentPosition\" value=\"";
+						  echo $moduleData['position'];
+						  echo "\"></form></td>";
+					  
+					  echo "<td width=\"200\"><a href=\"../../modules/lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></td>";
+					  
+					  echo "<td>" . commentTrim(60, $moduleData['comments']) . "</td>";
+					  echo "<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=module&period=overall&id=" . $moduleData['id'] . "\" onmouseover=\"Tip('View the <strong>" . $moduleData['name'] . "</strong> module\'s statistics</strong>')\" onmouseout=\"UnTip()\"></a></td>";
+					  echo "<td width=\"50\"><a class=\"action edit\" href=\"index.php?action=edit&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\"></a></td>";
+					  echo "<td width=\"50\"><a class=\"action delete\" href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "', 'module');\" onmouseover=\"Tip('Delete the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\"></a></td>";
+				  echo "</tr>";
+			  }
+		  echo "</tbody></table>";
+	  } else {
+		  echo "<div class=\"noResults\">There are no modules. <a href=\"module_wizard/index.php\">Create one now</a>.</div>";
+	  }
+?> 
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
 </body>
 </html>

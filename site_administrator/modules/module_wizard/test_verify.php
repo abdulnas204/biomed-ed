@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -23,7 +23,7 @@
 <?php
 //Select the module name, to fill in all test data
 	//Use the session to find where to select the test data
-	$currentModule = $_SESSION['currentModule'];
+	$currentModule = strtolower($_SESSION['currentModule']);
 	$currentTable = str_replace(" ","", $currentModule);
 	
 	//Grab the test information
@@ -48,7 +48,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php title("Test"); ?>
+<?php title("Module Setup Wizard : Verify Test Content"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
 <?php validate(); ?>
@@ -60,7 +60,7 @@
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
     <h2>Module Setup Wizard : Verify Test Content</h2>
     <p>Content may be reviewed in the section below. Changes can be made to  the lesson by clicking the &quot;Make Changes&quot; button, and modifying the test.</p>
-<div class="toolBar">
+<div class="toolBar noPadding">
 <b>Test Name</b>: <?php echo $testInfo['testName']; ?><br />
 <b>Directions</b>: <?php $htmlArray = array("<p>", "</p>"); $directions = str_replace($htmlArray, "", $testInfo['directions']); echo $directions; ?>
 <?php
@@ -104,32 +104,22 @@
 		echo "<p>&nbsp;</p>";
 	}
 ?>
-<form name="testVerify" method="post" action="test_verify.php" id="validate" onsubmit="return errorsOnSubmit(this);">
-<?php
-//Grab the test data and display the info
-  if ($testInfo['randomizeAll'] == "Randomize") {
-	  $testDataGrabber = mysql_query ("SELECT * FROM moduletest_{$currentTable} ORDER BY RAND() ASC", $connDBA);
-  } else {
-	  $testDataGrabber = mysql_query ("SELECT * FROM moduletest_{$currentTable} ORDER BY position ASC", $connDBA);
-  }
-  
+<?php  
 //Echo the opening table HTML
 	  echo "<table width=\"100%\" class=\"dataTable\">";
 	  
- //Define a base number to use to list each of the question numbers
+	  $testDataGrabber = mysql_query("SELECT * FROM `moduletest_{$currentTable}`", $connDBA);
 	  $count = 1;
-	  
- //Loop through the items
+//Loop through the items
 	  while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
 	  //Detirmine whether or not this question will come from the question bank, and pull accordingly
 		  if ($testDataLoop['questionBank'] == "1") {
 			  $importID = $testDataLoop['linkID'];
-			  $importQuestion = mysql_query("SELECT * FROM questionBank WHERE `id` = '{$importID}'", $connDBA);
+			  $importQuestion = mysql_query("SELECT * FROM questionbank WHERE `id` = '{$importID}'", $connDBA);
 			  $testData = mysql_fetch_array($importQuestion);
 		  } else {
 			  $testData = $testDataLoop;
 		  }
-		  
 	  //Detirmine what kind of question is being displayed
 		  switch ($testData ['type']) {
 		  //If the question is a description
@@ -140,61 +130,61 @@
 		  //If the question is an essay
 			  case "Essay" : 
 			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the essay content
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><textarea id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\" style=\"width:450px;\"></textarea><br /><br/ ></td></tr>"; break;
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br /><span id=\"checkEssay" . $testDataLoop['id'] . "\"><textarea id=\"" . $testDataLoop['id'] . "\" name=\"" . $testDataLoop['id'] . "\" style=\"width:450px;\"></textarea><span class=\"textareaRequiredMsg\"></span></span><br /><br /></td></tr>"; break;
 				  
 		  //If the question a file response
 			  case "File Response" : 
-			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+			  //Echo the number and point value	
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the file response content	
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br />";
 				  if ($testData['totalFiles'] > 1) {
-					  echo "<table name=\"upload" . $testData['id'] . "\" id=\"upload" . $testData['id'] . "\"><tr><td><input type=\"file\" size=\"50\" id=\"" . $testData['id'] . ".1\" name=\"" . $testData['id'] . ".1\" style=\"width:450px;\"></td></tr>";
+					  echo "<table name=\"upload" . $testDataLoop['id'] . "\" id=\"upload" . $testDataLoop['id'] . "\"><tr><td><input size=\"50\" id=\"" . $testDataLoop['id'] . "1\" name=\"" . $testDataLoop['id'] . "1\" type=\"file\" class=\"validate[required]\"></td></tr>";
 					  
-					  echo "</table><input value=\"Add Another File\" type=\"button\" id=\"button" . $testData['id'] . "\" onclick=\"appendRow('upload" . $testData['id'] . "', '<input name=\'" . $testData['id'] . ".', '\' type=\'file\' size=\'50\' id=\'" . $testData['id'] . ".', '\' style=\'width:450px;\' />', '" . $testData['totalFiles'] . "', 'button" . $testData['id'] . "');\" /><input value=\"Remove Last File\" type=\"button\" onclick=\"deleteLastRow('upload" . $testData['id'] . "', 'button" . $testData['id'] . "');\" /><br />";
+					  echo "</table><input value=\"Add Another File\" type=\"button\" id=\"button" . $testDataLoop['id'] . "\" onclick=\"appendRow('upload" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "', '\' name=\'" . $testDataLoop['id'] . "', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "', 'button" . $testDataLoop['id'] . "');\" /><input value=\"Remove Last File\" type=\"button\" onclick=\"deleteLastRow('upload" . $testDataLoop['id'] . "', 'button" . $testDataLoop['id'] . "');\" /><br />";
 				  } else {
-					  echo "<input type=\"file\" size=\"50\" id=\"" . $testData['id'] . "." . $testData['totalFiles'] . "\" name=\"" . $testData['id'] . "." . $testData['totalFiles'] . "\" style=\"width:450px;\"><br />";
+					  echo "<input size=\"50\" id=\"" . $testDataLoop['id'] . $testData['totalFiles'] . "\" name=\"" . $testDataLoop['id'] . $testData['totalFiles'] . "\" type=\"file\" class=\"validate[required]\"><br />";
 				  }
-				  echo "<br/ ></td></tr>"; break;
+				  echo "<br /></td></tr>"; break;
 				  
 		  //If the question is a fill in the blank
 			  case "Fill in the Blank" : 
 			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the fill in the blank content
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >"; 
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br />"; 
 				  //Grab the necessary data
 				  $blankQuestion = $testData['questionValue'];
 				  $blank = unserialize($blankQuestion);
@@ -207,38 +197,38 @@
 				  //Echo the fill in the blank content content with the last value
 					  while (list($blankKey, $blankArray) = each($blank)) {
 						  $subID = $blankKey+1;						
-						  echo stripslashes($blankArray) . " <input name=\"" . $testData['id'] . "." . $subID . "\" autocomplete=\"off\" type=\"text\" id=\"" . $testData['id'] . "." . $subID . "\" size=\"25\" /> ";
+						  echo stripslashes($blankArray) . " <input id=\"" . $testDataLoop['id'] . $subID . "\" name=\"" . $testDataLoop['id'] . $subID . "\" autocomplete=\"off\" type=\"text\" size=\"25\" class=\"validate[required]\" /> ";
 					  }
 				  } else {
 				  //Echo the fill in the blank content content without the last value
 					  while (list($blankKey, $blankArray) = each($blank)) {						
 						  if ($blankKey !== $lastValue) {
 							  $subID = $blankKey+1;
-							  echo stripslashes($blankArray) . " <input name=\"" . $testData['id'] . "." . $subID . "\" autocomplete=\"off\" type=\"text\" id=\"" . $testData['id'] . "." . $subID . "\" size=\"25\" /> ";
+							  echo stripslashes($blankArray) . " <input id=\"" . $testDataLoop['id'] . $subID . "\" name=\"" . $testDataLoop['id'] . $subID . "\" autocomplete=\"off\" type=\"text\" size=\"25\" class=\"validate[required]\" /> ";
 						  } else {
 							  echo stripslashes($blankArray);
 						  }
 					  }
 				  }
 				  
-				  echo "<br /><br/ ></td></tr>"; break;
+				  echo "<br /><br /></td></tr>"; break;
 			  
 		  //If the question is a matching value
 			  case "Matching" : 
 			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the matching content
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br />";
 				  //Grab the necessary data
 				  $question = unserialize($testData['questionValue']);
 				  $answer = unserialize($testData['answerValue']);
@@ -249,7 +239,7 @@
 				  echo "<table width=\"200\">";
 				  $matchingCount = 1;
 				  while (list($matchingKey, $matchingArray) = each($question)) {
-					  echo "<tr><td width=\"20\"><select name=\"" . $testData['id'] . "\" type=\"select\" id=\"" . $testData['id'] . "." . $matchingCount++ . "\"/><option value=\"\" selected=\"selected\">-</option>"; 
+					  echo "<tr><td width=\"20\"><select id=\"" . $testDataLoop['id'] . $matchingCount . "\" type=\"select\" name=\"" . $testDataLoop['id'] . $matchingCount++ . "\" class=\"validate[required]\"/><option value=\"\" selected=\"selected\">-</option>"; 
 					  for ($value = 1; $value <= $valueNumbers; $value++) {
 						  echo "<option value=\"". $value . "\">" . $value . "</option>";
 					  }
@@ -265,24 +255,24 @@
 				  }
 			  echo "</table>";
 			  echo "</td></tr></table>";
-			  echo"<br /><br/ ></td></tr>"; break;
+			  echo"<br /><br /></td></tr>"; break;
 			  
 		  //If the question is a multiple choice
 			  case "Multiple Choice" : 
 			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the multiple choice content
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br />";
 				  $answers = unserialize($testData['answerValue']);
 				  if ($testData['randomize'] == "1") {
 					  $answersDisplay = shuffle($answers);
@@ -294,62 +284,87 @@
 				  if ($testData['choiceType'] == "radio") {
 					  while (list($answerKey, $answerArray) = each($answers)) {
 						  $labelLink = $answerKey+1;
-						  echo "<label><input type=\"radio\" name=\"" . $testData['id'] . "\" id=\"" . $testData['id'] . "." . $labelLink . "\" value=\"" . $answerArray . "\">" . $answerArray . "</label><br />";
+						  echo "<label><input id=\"" . $testDataLoop['id'] . $labelLink . "\" name=\"" . $testDataLoop['id'] . "\" value=\"" . $answerArray . "\" type=\"radio\" class=\"validate[required] radio\">" . $answerArray . "</label><br />";
 					  }
 				  } else {
 					  while (list($answerKey, $answerArray) = each($answers)) {
 						  $labelLink = $answerKey+1;
-						  echo "<label><input type=\"checkbox\" name=\"" . $testData['id'] . "\" id=\"" . $testData['id'] . "." . $labelLink . "\" value=\"" . $answerArray . "\">" . $answerArray . "</label><br />";
+						  echo "<label><input id=\"" . $testDataLoop['id'] . $labelLink . "\" name=\"" . $testDataLoop['id'] . "\" value=\"" . $answerArray . "\" type=\"checkbox\" class=\"validate[mincheckbox[1]]\">" . $answerArray . "</label><br />";
 					  }
 				  }
-				  echo "<br /><br/ ></td></tr>"; break;
+				  echo "<br /><br /></td></tr>"; break;
 				  
 		  //If the question is a short answer
 			  case "Short Answer" : 
 			  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 			  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 			  //Echo the short answer content	
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><input type=\"text\" size=\"50\" id=\"" . $testData['id'] . "\" name=\"" . $testData['id'] . "\"><br /><br/ ></td></tr>"; break;
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br /><input size=\"50\" id=\"" . $testDataLoop['id'] . "\" name=\"" . $testDataLoop['id'] . "\" type=\"text\" class=\"validate[required]\"><br /><br /></td></tr>"; break;
 				  
 		  //If the question is true or false
 			  case "True False" : 
 				  //Echo the number and point value
-				  echo "<tr><td width=\"100\" valign=\"top\"><p><strong>Question " . $count++ . "</strong><br/><small><strong>" . $testData['points'] . " ";
+				  echo "<tr><td width=\"100\" valign=\"top\"><p><span class=\"questionNumber\">Question " . $count++ . "</span><br /><span class=\"questionPoints\">" . $testData['points'] . " ";
 				  if ($testData['points'] == "1") {
 					  echo "Point";
 				  } else {
 					  echo "Points";
 				  }
-				  echo "</strong></small>";
+				  echo "</span>";
 				  //State whether or not this question is extra credit	
 				  if ($testData['extraCredit'] == "on") {
-					  echo "<br /><br /><span onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"><img src=\"../../../images/common/extraCredit.png\" width=\"16\" height=\"16\"></span>";
+					  echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				  }
 				  //Echo the true or false content	
-				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ ><label><input type=\"radio\" id=\"" . $testData['id'] . "1\" name=\"" . $testData['id'] . "\" value=\"1\">True</label><br /><label><input type=\"radio\" id=\"" . $testData['id'] . "0\" name=\"" . $testData['id'] . "\" value=\"0\">False</label><br /><br/ ></td></tr>"; break;
+				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br /><label><input id=\"" . $testDataLoop['id'] . "1\" name=\"" . $testDataLoop['id'] . "\" value=\"1\" type=\"radio\" class=\"validate[required] radio\">True</label><br /><label><input id=\"" . $testDataLoop['id'] . "0\" name=\"" . $testDataLoop['id'] . "\" value=\"0\" type=\"radio\" class=\"validate[required] radio\">False</label><br /><br /></td></tr>"; break;
 		  }
 	  }
 //Echo the closing table HTML
 	  echo "</table>";
 ?>
-      <blockquote>
-        <p>
-          <input type="submit" name="back" id="back" value="&lt;&lt; Make Changes" />
-          <input type="submit" name="next" id="next" value="Next Step &gt;&gt;" />
-        </p>
-        <?php formErrors(); ?>
-      </blockquote>
-      </form>
+<form action="test_verify.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this);">
+   <blockquote>  
+	  <?php submit("back", "&lt;&lt; Previous Step"); ?>
+	  <?php submit("next", "Next Step &gt;&gt;"); ?>
+   </blockquote>
+</form>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
+<?php
+//Include the inline javascript validator instructions
+	$validatorCheck = mysql_query("SELECT * FROM `moduletest_{$currentTable}` WHERE `type` = 'Essay' OR `questionBank` = '1'", $connDBA);
+	$count = 1;
+	if (mysql_fetch_array($validatorCheck)) {
+		$validatorGrabber = mysql_query("SELECT * FROM `moduletest_{$currentTable}` WHERE `type` = 'Essay' OR `questionBank` = '1' ORDER BY `position` ASC", $connDBA);
+		$count = 1;
+		echo "<script type=\"text/javascript\">";
+		while ($validator = mysql_fetch_array($validatorGrabber)) {
+			if ($validator['questionBank'] == "1") {
+				$linkID = $validator['linkID'];
+				$validatorImportGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$linkID}'", $connDBA);
+				$validatorImport = mysql_fetch_array($validatorImportGrabber);
+				
+				if ($validatorImport['type'] == "Essay") {
+					echo "var sprytextarea" . $count++ . " = new Spry.Widget.ValidationTextarea(\"checkEssay" . $validator['id'] . "\");";
+				}
+			}
+			
+			if ($validator['type'] == "Essay") {
+				echo "var sprytextarea" . $count++ . " = new Spry.Widget.ValidationTextarea(\"checkEssay" . $validator['id'] . "\");";
+			}
+		}
+		
+		echo "</script>";
+	}
+?>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php require_once('../../Connections/connDBA.php'); ?>
+<?php loginCheck("Site Administrator"); ?>
 <?php
-//Grant access to this page an id is defined and the user exists
+//Grant access to this page an it is defined and the user exists
 	if (isset ($_GET['id'])) {
 		$id = $_GET['id'];
 		$userGrabber = mysql_query("SELECT * FROM users WHERE id = '{$id}'", $connDBA);
@@ -28,13 +29,7 @@
 <body>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <h2><?php echo $user['firstName'] . " " . $user['lastName']; ?></h2>
-<?php
-	if ($user['organization'] == "1" && $user['role'] !== "Site Administrator" && $user['role'] !== "Site Manager") {
-		errorMessage($user['firstName'].  " needs assigned to an organization. <a href=\"assign_user.php?id=" . $user['id'] . "\">Assign " . $user['firstName'] . " now</a>.");
-	} else {
-		echo "<p>&nbsp;</p>";
-	}
-?>
+<p>&nbsp;</p>
 <?php 
 	echo "<div class=\"toolBar\">";
 	
@@ -50,7 +45,13 @@
 	
 	echo "</div>";
 ?>
-<br />
+<?php
+	if ($user['organization'] == "1" && $user['role'] !== "Site Administrator" && $user['role'] !== "Site Manager") {
+		errorMessage($user['firstName'].  " needs assigned to an organization. <a href=\"assign_user.php?id=" . $user['id'] . "\">Assign " . $user['firstName'] . " now</a>.");
+	} else {
+		echo "<br />";
+	}
+?>
 <div class="catDivider one">User Information</div>
 <div class="stepContent">
 <table width="100%">
@@ -79,14 +80,14 @@
         <td width="200"><div align="right">
           <?php if ($user['emailAddress2'] == "" && $user['emailAddress3'] == "") {echo "Email Address:";} else {echo "Primary Email Address:";} ?>
       </div></td>
-      <td><?php echo "<a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=1\">" . $user['emailAddress1'] . "</a>"; ?></td>
+      <td><?php echo "<a href=\"../communication/send_email.php?type=user&id=" . $user['id'] . "&address=1\">" . $user['emailAddress1'] . "</a>"; ?></td>
       </tr>
       <?php
       //If a second email address is configured
             if ($user['emailAddress2'] != "") {
                 echo "<tr>
                     <td><div align=\"right\">Secondary Email Address:</div></td>
-                    <td><a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=2\">" . $user['emailAddress2'] . "</a></td>
+                    <td><a href=\"../communication/send_email.php?type=user&id=" . $user['id'] . "&address=2\">" . $user['emailAddress2'] . "</a></td>
                 </tr>";
             }
       ?>
@@ -95,7 +96,7 @@
             if ($user['emailAddress3'] != "") {
                 echo "<tr>
                     <td><div align=\"right\">Tertiary Email Address:</div></td>
-                    <td><a href=\"../communication/email/index.php?id=" . $user['id'] . "&address=3\">" . $user['emailAddress3'] . "</a></td>
+                    <td><a href=\"../communication/send_email.php?type=user&id=" . $user['id'] . "&address=3\">" . $user['emailAddress3'] . "</a></td>
                 </tr>";
             }
       ?>
@@ -141,7 +142,7 @@
 	if ($user['role'] == "Site Administrator" || $user['role'] == "Site Manager") {
 		echo "<div class=\"catDivider three\">Finish</div><div class=\"stepContent\"><blockquote><input name=\"finish\" id=\"finish\" onclick=\"MM_goToURL('parent','index.php');return document.MM_returnValue\" value=\"Finish\" type=\"button\"></blockquote></div>";
 	} else {
-		if ($user['organization'] != "") {
+		if ($user['organization'] != "1") {
 			echo "<div class=\"catDivider three\">Workplace Information</div>
 					<div class=\"stepContent\">
     					<table width=\"100%\">";
@@ -174,9 +175,13 @@
 							  </tr>";
 						}
 						
+						$organizationID = $user['organization'];
+						$organizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
+						$organization = mysql_fetch_array($organizationGrabber);
+						
 						echo "<tr>
 								<td width=\"200\"><div align=\"right\">Assigned Organization:</div></td>
-								<td>" . $user['organization'] . "</td>
+								<td><a href=\"../organizations/profile.php?id=" . $organization['id'] . "\">" . $organization['organization'] . "</a></td>
 							  </tr>
 						</table>
 					</div>
@@ -190,9 +195,7 @@
 ?>
 <div class="catDivider three">Workplace Information</div>
 <div class="stepContent">
-  <blockquote>
-    <p><div align="center">Awaiting information</div> </p>
-  </blockquote>
+  <p><div class="noResults">Awaiting information</div></p>
 </div>
 <div class="catDivider four">Finish</div>
 <div class="stepContent">

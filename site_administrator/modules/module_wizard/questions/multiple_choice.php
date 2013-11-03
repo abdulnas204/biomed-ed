@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -15,7 +15,7 @@
 	} elseif (isset ($_SESSION['review'])) {
 	//Check to see if a test is set to be created, otherwise allow access to this page
 		$name = $_SESSION['currentModule'];
-		$testCheckGrabber = mysql_query("SELECT * FROM moduleData WHERE `name` = '{$name}'", $connDBA);
+		$testCheckGrabber = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
@@ -31,7 +31,7 @@
 //If the page is updating an item
 	if (isset ($_GET['question']) && isset ($_GET['id'])) {
 		$update = $_GET['id'];
-		$currentModule = $_SESSION['currentModule'];
+		$currentModule = strtolower($_SESSION['currentModule']);
 		$currentTable = strtolower(str_replace(" ","", $currentModule));
 		$testDataGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);
 		if ($testDataCheck = mysql_fetch_array($testDataGrabber)) {
@@ -53,7 +53,7 @@
 	if (isset ($_POST['submit']) && !empty($_POST['question']) && is_numeric($_POST['points']) && !empty($_POST['choice']) && !empty($_POST['answer'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
-			$currentModule = $_SESSION['currentModule'];
+			$currentModule = strtolower($_SESSION['currentModule']);
 			$currentTable = strtolower(str_replace(" ","", $currentModule));
 			
 		//Detirmine what kind of user interface this will have, either checkboxes or bullets
@@ -89,7 +89,7 @@
 			exit;
 	//If the page is inserting an item		
 		} else {
-			$currentModule = $_SESSION['currentModule'];
+			$currentModule = strtolower($_SESSION['currentModule']);
 			$currentTable = strtolower(str_replace(" ","", $currentModule));
 			
 		//Get the last test question, and add one to the value for the next test
@@ -158,7 +158,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="choice" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -173,7 +173,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -211,7 +211,7 @@
             <select name="link" id="link">
               <?php
 			//Select all of the descriptions in this test
-				$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+				$currentTable = strtolower(str_replace(" ", "", $_SESSION['currentModule']));
 				$descriptionCheck = mysql_query("SELECT * FROM `moduletest_{$currentTable}`", $connDBA);
 				
 				if (mysql_fetch_array($descriptionCheck)) {
@@ -231,7 +231,7 @@
 						
 						if ($description['questionBank'] == "1") {
 							$importID = $description['linkID'];
-							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionBank` WHERE `id` = '{$importID}'", $connDBA);
+							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
 							$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
 							
 							if ($descriptionImport['type'] == "Description") {
@@ -292,10 +292,10 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Question Content</div>
+      <div class="catDivider three">Question Content</div>
       <div class="stepContent">
       <blockquote>
-      <p>Question content<span class="require">*</span>: <a href="../help.php?tab=4" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a></p>
+      <p>Question content<span class="require">* (Select correct answers)</span>: <a href="../help.php?tab=4" target="_blank"><img src="../../../../images/admin_icons/help.png" alt="Help" width="17" height="17" /></a></p>
       <div>
       <blockquote>
 		<?php
@@ -344,7 +344,7 @@
       </div>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer:</p>
@@ -382,7 +382,7 @@
         >
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

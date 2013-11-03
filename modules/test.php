@@ -9,7 +9,7 @@
 		if (mysql_fetch_array($testCheck)) {
 			$testInfoGrabber = mysql_query ("SELECT * FROM moduledata WHERE id = '{$id}'", $connDBA);
 			$testInfo = mysql_fetch_array($testInfoGrabber);
-			$currentTable = str_replace(" ", "", $testInfo['name']);
+			$currentTable = strtolower(str_replace(" ", "", $testInfo['name']));
 		} else {
 			header ("Location: index.php");
 			exit;
@@ -23,7 +23,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <?php
-	$title = $testInfo['testName'];
+	$title = stripslashes($testInfo['testName']);
 	title($title); 
 ?>
 <?php headers(); ?>
@@ -35,8 +35,8 @@
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <h2><?php echo $title; ?></h2>
-<div class="toolBar">
-<b>Directions</b>: <?php echo commentTrim(100000, $testInfo['directions']); ?>
+<div class="toolBar noPadding">
+<b>Directions</b>: <?php echo strip_tags($testInfo['directions']); ?>
 <?php
 //Display a forced completion alert
 	if ($testInfo['forceCompletion'] == "on") {
@@ -91,7 +91,7 @@
 	  //Detirmine whether or not this question will come from the question bank, and pull accordingly
 		  if ($testDataLoop['questionBank'] == "1") {
 			  $importID = $testDataLoop['linkID'];
-			  $importQuestion = mysql_query("SELECT * FROM questionBank WHERE `id` = '{$importID}'", $connDBA);
+			  $importQuestion = mysql_query("SELECT * FROM questionbank WHERE `id` = '{$importID}'", $connDBA);
 			  $testData = mysql_fetch_array($importQuestion);
 		  } else {
 			  $testData = $testDataLoop;

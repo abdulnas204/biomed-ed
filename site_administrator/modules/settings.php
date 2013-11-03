@@ -156,16 +156,16 @@
     <p>A category is a general subject a module is presenting.</p>
     <p>&nbsp;</p>
     
-<div class="toolBar"><a href="settings.php?type=category&amp;action=insert"><img src="../../images/admin_icons/new.png" alt="New" width="24" height="24" /></a> <a href="settings.php?type=category&amp;action=insert">Add New Category</a></div>
+<div class="toolBar"><a class="toolBarItem new" href="settings.php?type=category&amp;action=insert">Add New Category</a></div>
     <?php
 	//Display a success message
-		if (isset ($_GET['result']) && $_GET['updateType']) {
+		if (isset ($_GET['result']) && isset ($_GET['updateType'])) {
 			if ($_GET['result'] == "success") {
 				if ($_GET['updateType'] == "insert") {
 					successMessage("The category was inserted");
 				} elseif ($_GET['updateType'] == "update") {
 					successMessage("The category was updated");
-				} elseif ($_GET['updateType'] == "delete") {
+				} elseif ($_GET['updateType'] == "deleted") {
 					successMessage("The category was deleted");
 				}
 			}
@@ -194,14 +194,13 @@
   <div class="contentRight">
   <?php
       if ($categories == "exist") {
-          echo "<div align=\"center\">";
-              echo "<table align=\"center\" class=\"dataTable\">";
+           echo "<table class=\"dataTable\">";
               echo "<tbody>";
                   echo "<tr>";
-                      echo "<th width=\"75\" class=\"tableHeader\"><strong>Order</strong></th>";
-                      echo "<th class=\"tableHeader\"><strong>Category</strong></th>";
-                      echo "<th width=\"75\" class=\"tableHeader\"><strong>Edit</strong></th>";
-                      echo "<th width=\"75\" class=\"tableHeader\"><strong>Delete</strong></th>";
+                      echo "<th width=\"75\" class=\"tableHeader\">Order</th>";
+                      echo "<th class=\"tableHeader\">Category</th>";
+                      echo "<th width=\"75\" class=\"tableHeader\">Edit</th>";
+                      echo "<th width=\"75\" class=\"tableHeader\">Delete</th>";
                   echo "</tr>";
               //Select data for the loop
                   $categoryDataGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
@@ -212,7 +211,7 @@
                       echo "<tr";
                       if ($categoryData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
                       ">";
-                          echo "<td width=\"75\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"category\"><input type=\"hidden\" name=\"action\" value=\"reorder\"><div align=\"center\">";
+                          echo "<td width=\"75\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"category\"><input type=\"hidden\" name=\"action\" value=\"reorder\">";
                                   echo "<select name=\"position\" onchange=\"this.form.submit();\">";
                                   $categoryCount = mysql_num_rows($dropDownDataGrabber);
                                   for ($count=1; $count <= $categoryCount; $count++) {
@@ -223,7 +222,6 @@
                                       echo ">$count</option>";
                                   }
                                   echo "</select>";
-                              echo "</div>";
                               echo "<input type=\"hidden\" name=\"id\" value=\"";
                               echo $categoryData['id'];
                               echo "\">";
@@ -231,15 +229,15 @@
                               echo $categoryData['position'];
                               echo "\"></form></td>";
                                   
-                          echo "<td align=\"center\"><div align=\"center\">" . stripslashes(htmlentities($categoryData['category'])) . "</div></td>";
-                          echo "<td width=\"75\"><div align=\"center\">" . "<a href=\"settings.php?type=category&action=edit&category=" . $categoryData['position'] . "&id=" . $categoryData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" onmouseover=\"Tip('Edit the <strong>" . stripslashes(htmlentities($categoryData['category'])) . "</strong> category')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
-                          echo "<td width=\"75\"><div align=\"center\">" . "<a href=\"settings.php?type=category&action=delete&category=" .  $categoryData['position'] . "&id=" .  $categoryData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. If any modules are assigned to this category, they will continue to do so until changed. Continue?');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" onmouseover=\"Tip('Delete the <strong>" . stripslashes(htmlentities($categoryData['category'])) . "</strong> category')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
+                          echo "<td>" . stripslashes(htmlentities($categoryData['category'])) . "</td>";
+                          echo "<td width=\"75\"><a class=\"action edit\" href=\"settings.php?type=category&action=edit&category=" . $categoryData['position'] . "&id=" . $categoryData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . stripslashes(htmlentities($categoryData['category'])) . "</strong> category')\" onmouseout=\"UnTip()\"></a></td>";
+                          echo "<td width=\"75\"><a class=\"action delete\" href=\"settings.php?type=category&action=delete&category=" .  $categoryData['position'] . "&id=" .  $categoryData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. If any modules are assigned to this category, they will have a blank category name until they are changed. Continue?');\" onmouseover=\"Tip('Delete the <strong>" . stripslashes(htmlentities($categoryData['category'])) . "</strong> category')\" onmouseout=\"UnTip()\"></a></td>";
                       echo "</tr>";
                   }
               echo "</tbody>";
-          echo "</table></div><br /></br /><br /></br />";
+          echo "</table>";
       } else {
-          echo "<br /></br /><div align=\"center\">There are no categories.</div><br /></br /><br /></br /><br /></br />";
+          echo "<div class=\"noResults\">There are no categories.</div>";
       }
 	?>
    </div>
@@ -307,7 +305,7 @@
 	}
 ?>
 " method="post" name="category" id="validate" onsubmit="return errorsOnSubmit(this);">
-  <div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign Category Name</div>
+  <div class="catDivider one">Assign Category Name</div>
   <div class="stepContent">
 <blockquote>
       <p>
@@ -326,7 +324,7 @@
       </p>
 </blockquote>
 </div>
-    <div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Submit</div>
+    <div class="catDivider two">Submit</div>
     <div class="stepContent">
 <blockquote>
       <p>
@@ -447,10 +445,10 @@
 </p>
 <p> An employee type is general position for which the module is intended.</p>
 <p>&nbsp;</p>
-<div class="toolBar"><a href="settings.php?type=employee&amp;action=insert"><img src="../../images/admin_icons/new.png" alt="New" width="24" height="24" /></a> <a href="settings.php?type=employee&amp;action=insert">Add New Employee Type</a></div>
+<div class="toolBar"><a class="toolBarItem new" href="settings.php?type=employee&amp;action=insert">Add New Employee Type</a></div>
     <?php
 	//Display a success message
-		if (isset ($_GET['result']) && $_GET['updateType']) {
+		if (isset ($_GET['result']) && isset ($_GET['updateType'])) {
 			if ($_GET['result'] == "success") {
 				if ($_GET['updateType'] == "insert") {
 					successMessage("The employee type was inserted");
@@ -485,14 +483,13 @@
   <div class="contentRight">
       <?php
 	  		if ($employees == "exist") {
-				echo "<div align=\"center\">";
-					echo "<table align=\"center\" class=\"dataTable\">";
+					echo "<table class=\"dataTable\">";
 					echo "<tbody>";
 						echo "<tr>";
-							echo "<th width=\"75\" class=\"tableHeader\"><strong>Order</strong></th>";
-							echo "<th class=\"tableHeader\"><strong>Employee Type</strong></th>";
-							echo "<th width=\"75\" class=\"tableHeader\"><strong>Edit</strong></th>";
-							echo "<th width=\"75\" class=\"tableHeader\"><strong>Delete</strong></th>";
+							echo "<th width=\"75\" class=\"tableHeader\">Order</th>";
+							echo "<th class=\"tableHeader\">Employee Type</th>";
+							echo "<th width=\"75\" class=\"tableHeader\">Edit</th>";
+							echo "<th width=\"75\" class=\"tableHeader\">Delete</th>";
 						echo "</tr>";
 					//Select data for the loop
 						$employeeDataGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
@@ -503,7 +500,7 @@
 							echo "<tr";
 							if ($employeeData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 							">";
-								echo "<td width=\"75\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"employee\"><input type=\"hidden\" name=\"action\" value=\"reorder\"><div align=\"center\">";
+								echo "<td width=\"75\"><form name=\"modules\" action=\"settings.php\"><input type=\"hidden\" name=\"type\" value=\"employee\"><input type=\"hidden\" name=\"action\" value=\"reorder\">";
 										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
 										$employeeCount = mysql_num_rows($dropDownDataGrabber);
 										for ($count=1; $count <= $employeeCount; $count++) {
@@ -514,7 +511,6 @@
 											echo ">$count</option>";
 										}
 										echo "</select>";
-									echo "</div>";
 									echo "<input type=\"hidden\" name=\"action\" value=\"reorder\">";
 									echo "<input type=\"hidden\" name=\"id\" value=\"";
 									echo $employeeData['id'];
@@ -523,15 +519,15 @@
 									echo $employeeData['position'];
 									echo "\"></form></td>";
 										
-								echo "<td align=\"center\"><div align=\"center\">" . stripslashes(htmlentities($employeeData['employee'])) . "</div></td>";
-								echo "<td width=\"75\"><div align=\"center\">" . "<a href=\"settings.php?type=employee&action=edit&employee=" . $employeeData['position'] . "&id=" . $employeeData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" onmouseover=\"Tip('Edit the <strong>" . stripslashes(htmlentities($employeeData['employee'])) . "</strong> employee type')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
-								echo "<td width=\"75\"><div align=\"center\">" . "<a href=\"settings.php?type=employee&action=delete&employee=" .  $employeeData['position'] . "&id=" .  $employeeData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. If any modules are assigned to this employee type, they will continue to do so until changed. Continue?');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" onmouseover=\"Tip('Delete the <strong>" . stripslashes(htmlentities($employeeData['employee'])) . "</strong> employee type')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
+								echo "<td>" . stripslashes(htmlentities($employeeData['employee'])) . "</td>";
+								echo "<td width=\"75\"><a class=\"action edit\" href=\"settings.php?type=employee&action=edit&employee=" . $employeeData['position'] . "&id=" . $employeeData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . stripslashes(htmlentities($employeeData['employee'])) . "</strong> employee type')\" onmouseout=\"UnTip()\"></a></td>";
+								echo "<td width=\"75\"><a class=\"action delete\" href=\"settings.php?type=employee&action=delete&employee=" .  $employeeData['position'] . "&id=" .  $employeeData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. If any modules are assigned to this employee type, they will have a blank employee type until they are changed. Continue?');\" onmouseover=\"Tip('Delete the <strong>" . stripslashes(htmlentities($employeeData['employee'])) . "</strong> employee type')\" onmouseout=\"UnTip()\"></a></td>";
 							echo "</tr>";
 						}
 					echo "</tbody>";
-				echo "</table></div><br /><br />";
+				echo "</table>";
 			} else {
-				echo "<br /></br /><div align=\"center\">There are no employee types.</div><br /></br /><br /></br /><br /></br />";
+				echo "<div class=\"noResults\">There are no employee types.</div>";
 			}
 	  ?>
   </div>
@@ -598,7 +594,7 @@
 	}
 ?>
 " method="post" name="employee" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../images/numbering/1.gif" alt="1." width="22" height="22" /> Assign Employee Type</div>
+      <div class="catDivider one">Assign Employee Type</div>
       <div class="stepContent">
       <blockquote>
         <p>
@@ -617,7 +613,7 @@
         </p>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../images/numbering/2.gif" alt="2." width="22" height="22" /> Submit</div>
+      <div class="catDivider two">Submit</div>
       <div class="stepContent">
       <blockquote>
         <p>

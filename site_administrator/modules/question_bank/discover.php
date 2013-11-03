@@ -14,7 +14,7 @@
 				$testDataGrabber = mysql_query("SELECT * FROM `moduledata`");
 				
 				while ($testData = mysql_fetch_array($testDataGrabber)) {
-					$testName = str_replace(" ", "", $testData['name']);
+					$testName = strtolower(str_replace(" ", "", $testData['name']));
 					$testInfoGrabber = mysql_query("SELECT * FROM `moduletest_{$testName}` WHERE `linkID` = '{$linkID}'", $connDBA);
 					
 					if ($testInfo = mysql_fetch_array($testInfoGrabber)) {
@@ -24,9 +24,9 @@
 				
 				$location .= "</ul></fieldset>";
 				$title = "Results for the " . $questionData['type'] . " Question";
+			} else {
+				$title = "No Results Found";
 			}
-			
-			$title = "No Results Found";
 		} else {
 			$title = "No Results Found";
 		}
@@ -40,7 +40,6 @@
 <head>
 <?php title($title); ?>
 <?php headers(); ?>
-<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 
 <body<?php bodyClass(); ?>>
@@ -57,7 +56,7 @@
 ?>
 <blockquote>
 	<p>
-		<input name="finish" id="finish" onclick="MM_goToURL('parent','index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Finish" type="button">
+		<input name="finish" id="finish" onclick="history.go(-1)" value="Finish" type="button">
 	</p>
 </blockquote>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>

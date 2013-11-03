@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -21,7 +21,7 @@
 ?>
 <?php	
 //Check to see if any lesson content data exists
-	$currentTable = str_replace(" ","", $_SESSION['currentModule']);
+	$currentTable = strtolower(str_replace(" ","", $_SESSION['currentModule']));
 	$lessonDataCheckGrabber = mysql_query ("SELECT * FROM modulelesson_{$currentTable}", $connDBA);
 	
 	if ($lessonDataCheck = mysql_fetch_array($lessonDataCheckGrabber)) {
@@ -45,7 +45,7 @@
 		//Grab the old position of the item
 		$currentPosition = $_GET['currentPosition'];
 		//Assign the module name
-		$currentModule = str_replace(" ","", $_SESSION['currentModule']);
+		$currentModule = strtolower(str_replace(" ","", $_SESSION['currentModule']));
 			
 	//Do not process if item does not exist
 		//Get item name by URL variable
@@ -97,7 +97,7 @@
 //Delete a page
 	if (isset ($_GET['id']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
 		$id = $_GET['id'];
-		$currentModule= str_replace(" ","", $_SESSION['currentModule']);
+		$currentModule= strtolower(str_replace(" ","", $_SESSION['currentModule']));
 		$deleteGrabber = mysql_query("SELECT * FROM modulelesson_{$currentModule} WHERE id = '{$id}'", $connDBA);
 		$delete = mysql_fetch_array($deleteGrabber);
 		if (!$delete) {
@@ -191,12 +191,12 @@
 	  
 	  successMessage($message);
   } else {
-	  echo "&nbsp;";
+	  echo "<br />";
   }
 ?>
 <?php
 	  if ($lesson == "exist") {
-		  echo "<table align=\"center\" class=\"dataTable\">";
+		  echo "<table class=\"dataTable\">";
 			  echo "<tbody>";
 				  echo "<tr>";
 					  echo "<th width=\"75\" class=\"tableHeader\">Order</th>";
@@ -223,7 +223,7 @@
 						  echo "<input type=\"hidden\" name=\"currentPosition\" value=\"" . $lessonData['position'] . "\" />";
 						  echo "<input type=\"hidden\" name=\"id\" value=\"" . $lessonData['id'] . "\" />";
 						  echo "<input type=\"hidden\" name=\"action\" value=\"reorder\" />";
-						  echo "<td width=\"75\"><div align=\"center\">";
+						  echo "<td width=\"75\">";
 								  echo "<select name=\"position\" onchange=\"this.form.submit();\">";
 								  $lessonCount = mysql_num_rows($dropDownDataGrabber);
 								  for ($count=1; $count <= $lessonCount; $count++) {
@@ -234,7 +234,7 @@
 									  echo ">$count</option>";
 								  }
 								  echo "</select>";
-							  echo "</div></td>";
+							  echo "</td>";
 						  echo "<td width=\"150\">" . $lessonData['type'] . "</td>";
 						  echo "<td width=\"250\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview_page.php?page=" . $lessonData['position'] . "','','status=yes,scrollbars=yes,resizable=yes,width=800,height=600')\" onmouseover=\"Tip('Preview the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">" . stripslashes($lessonData['title']);
 						  echo "</a></td>";
@@ -250,8 +250,8 @@
 							  case "Custom Content" : echo "manage_content.php?type=custom"; break;
 							  case "Embedded Content" : echo "manage_content.php?type=embedded"; break;
 						  }
-						  echo "&id=" .  $lessonData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\">&nbsp;</a></td>";
-						  echo "<td width=\"75\"><a class=\"action delete\" href=\"lesson_content.php?id=" .  $lessonData['id'] . "&action=delete\" onclick=\"return confirm ('This action cannot be undone. Continue?');\">&nbsp;</a></td>";
+						  echo "&id=" .  $lessonData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\"></a></td>";
+						  echo "<td width=\"75\"><a class=\"action delete\" href=\"lesson_content.php?id=" .  $lessonData['id'] . "&action=delete\" onmouseover=\"Tip('Delete the <strong>" . htmlentities($lessonData['title']) . "</strong> page')\" onmouseout=\"UnTip()\" onclick=\"return confirm ('This action cannot be undone. Continue?');\"></a></td>";
 					  echo "</form>";
 					  echo "</tr>";
 				  }
@@ -259,7 +259,7 @@
 		  echo "</table>";
 		  echo "<br />";
 	  } else {
-		  echo "<br /></br /><br /></br /><div align=\"center\">There are no pages in this lesson. <a href=\"manage_content.php\">Create a new page now</a>.</div><br /></br /><br /></br /><br /></br />";
+		  echo "<div class=\"noResults\">There are no pages in this lesson. <a href=\"manage_content.php\">Create a new page now</a>.</div>";
 	  }
 ?>
 <blockquote>
@@ -267,8 +267,10 @@
     <?php
       //Selectively display the buttons
             if (isset ($_SESSION['review'])) {
-                submit("submit", "Modify Content");
-                echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','modify.php');return document.MM_returnValue\" />";
+				if ($lesson !== "empty") {
+					submit("submit", "Modify Content");
+					echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','modify.php');return document.MM_returnValue\" />";
+				}
             } else {
 				submit("back", "&lt;&lt; Previous Step");
 				if ($lesson !== "empty") {

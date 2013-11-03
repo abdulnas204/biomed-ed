@@ -1,6 +1,16 @@
 <?php require_once('../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
+//Check for users
+	$usersCheck = mysql_query("SELECT * FROM `users`", $connDBA);
+	
+	if (mysql_fetch_array($usersCheck)) {
+		$users = "exist";
+	} else {
+		$users = "empty";
+	}
+?>
+<?php
 //Delete a user
 	if (isset ($_GET['action']) && isset ($_GET['id']) && $_GET['action'] == "delete") {
 		$id = $_GET['id'];
@@ -9,7 +19,7 @@
 			if ($user['userName'] !== $_SESSION['MM_Username']) {
 				mysql_query("DELETE FROM `users` WHERE `id` = '{$id}'", $connDBA);
 				
-				header ("Location: index.php?message=userDeleted");
+				header ("Location: index.php");
 				exit;
 			} else {
 				header ("Location: index.php");
@@ -66,9 +76,10 @@
 			if ($updatedOrganization = mysql_fetch_array($orgIDCheck)) {
 				$firstName = $updatedUser['firstName'];
 				$lastName = $updatedUser['lastName'];
+				$organizationID = $updatedOrganization['id'];
 				$organizationName = $updatedOrganization['organization'];
 				
-				if ($updatedUser['organization'] == $organizationName) {
+				if ($updatedUser['organization'] == $organizationID) {
 					successMessage("<strong>" . $firstName . " " . $lastName . "</strong> was assigned to <strong>" . $organizationName . "</strong>.");
 				} else {
 					header ("Location: index.php");
@@ -88,9 +99,6 @@
 //A user was edited
 	} elseif (isset($_GET['message']) && $_GET['message'] == "userEdited") {
 		successMessage("The user was modified");	
-//A user was deleted
-	} elseif (isset($_GET['message']) && $_GET['message'] == "userDeleted") {
-		successMessage("The user was deleted");
 //If a site administrator tries to change their role, and there aren't any other site administrators
 	} elseif (isset($_GET['message']) && $_GET['message'] == "noAdmin") {
 		errorMessage("Your profile was not updated, since you tried to change your role, and thus would have left this site without a site administrator.");
@@ -317,7 +325,7 @@
 		$userGrabber = mysql_query("SELECT * FROM users{$sort}", $connDBA);
 	}
 	
-	if (isset($navigation)) {
+	if (isset($navigation) && $users != "empty") {
 		echo $navigation;
 	}
 	
@@ -332,7 +340,7 @@
 <?php
 //If no users exist	
 	if (isset ($users) && $users == "empty") {
-		centerDiv("No users exist on this system");
+		echo "<div class=\"noResults\">No organizations exist on this system</div>";
 	} else {
 //If users exist
 		echo "<table class=\"dataTable\">
@@ -394,8 +402,9 @@
 			//Alternate the color of each row.
 			if ($number++ & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 			echo "<td width=\"200\"><a href=\"profile.php?id=" . $userData['id'] . "\">" . $userData['lastName'] . ", " . $userData['firstName'] . "</a></td>" . 
-			"<td width=\"150\"><a href=\"../communication/email/index.php?id=" . $userData['id'] . "\">" . $userData['emailAddress1'] . "</a></td>" . 
+			"<td width=\"150\"><a href=\"../communication/send_email.php?type=user&id=" . $userData['id'] . "\">" . $userData['emailAddress1'] . "</a></td>" . 
 			"<td width=\"175\">" . $userData['role'] . "</td>";
+			
 			if (!$userData['organization'] || $userData['organization'] == "1") {
 				if ($userData['role'] !== "Site Administrator" && $userData['role'] !== "Site Manager") {
 					$organization = "<span class=\"alertNotAssigned\">None</span>";
@@ -403,17 +412,21 @@
 					$organization = "<span class=\"notAssigned\">None</span>";
 				}
 			} else {
-				$organization = $userData['organization'];
+				$organizationID = $userData['organization'];
+				$organizationDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
+				$organizationData = mysql_fetch_array($organizationDataGrabber);
+				
+				$organization = "<a href=\"../organizations/profile.php?id=" . $organizationData['id'] . "\">" . $organizationData['organization'] . "</a>";
 			}
-			 
-			echo "<td>" . $organization . "</td>" . 
-			"<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=user&period=overall&id=" . $userData['id'] . "\" onmouseover=\"Tip('View <strong>" . $userData['firstName'] . " " . $userData['lastName'] . "\'s</strong> statistics</strong>')\" onmouseout=\"UnTip()\"></a></td>" . 
+			
+			echo "<td>" . $organization . "</td>"; 
+			echo "<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=user&period=overall&id=" . $userData['id'] . "\" onmouseover=\"Tip('View <strong>" . $userData['firstName'] . " " . $userData['lastName'] . "\'s</strong> statistics')\" onmouseout=\"UnTip()\"></a></td>" . 
 			"<td width=\"50\"><a class=\"action edit\" href=\"manage_user.php?id=" . $userData['id'] . "\" onmouseover=\"Tip('Edit <strong>" .  $userData['firstName'] . " " . $userData['lastName'] . "</strong>')\" onmouseout=\"UnTip()\"></a>
 			</td>" . "<td width=\"50\">";
 			if ($userData['userName'] !== $_SESSION['MM_Username']) {
 				echo "<a class=\"action delete\" href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&id=" . $userData['id'] . "', 'user')\" onmouseover=\"Tip('Delete <strong>" . $userData['firstName'] . " " .  $userData['lastName'] . "</strong>')\" onmouseout=\"UnTip()\"></a>";
 			} else {
-				echo "<span class=\"action noDelete\" onmouseover=\"Tip('You may not delete yourself')\" onmouseout=\"UnTip()\"></a>";
+				echo "<span class=\"action noDelete\" onmouseover=\"Tip('You may not delete yourself')\" onmouseout=\"UnTip()\"></span>";
 			}
 			echo "</td></tr>";
 		}
@@ -422,7 +435,7 @@
 	}
 ?>
 <?php
-	if (isset($navigation)) {
+	if (isset($navigation) && $users != "empty") {
 		echo "<br />" . $navigation;
 	}
 ?>

@@ -4,10 +4,10 @@
 <html>
 <head>
 <?php title("Login"); ?>
-<?php if (!isset($_GET['action'])) { headers();} ?>
+<?php headers(); ?>
 </head>
 <body<?php bodyClass(); ?>>
-<?php if (!isset($_GET['action'])) { topPage("includes/top_menu.php");} ?>
+<?php topPage("includes/top_menu.php"); ?>
       <form method="post" action="login.php<?php if (isset($_GET['accesscheck'])) {echo "?accesscheck=" .  urlencode($_GET['accesscheck']);} ?>" name="login" id="login">
         <h1>Login</h1>
         <p> Login with your username and password to access your account. </p>
@@ -35,13 +35,9 @@
               </div>
                 </label></td>
           </tr>
-          <?php
-			  if (!isset($_GET['action'])) {
-				  echo "<tr><td width=\"30%\">&nbsp;</td><td width=\"70%\"><p><a href=\"forgot_password.php\">Forgot your password?</a><br /><a href=\"register.php\">Register</a></p></td></tr>";
-			  }
-		  ?>
+          <tr><td width="30%">&nbsp;</td><td width="70%"><p><a href="forgot_password.php">Forgot your password?</a><br /><a href="register.php">Register</a></p></td></tr>
         </table>
 </form>
-<?php if (!isset($_GET['action'])) { footer("includes/bottom_menu.php");} ?>
+<?php footer("includes/bottom_menu.php"); ?>
 </body>
 </html>

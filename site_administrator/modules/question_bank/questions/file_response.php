@@ -9,15 +9,15 @@
 			if ($testDataCheck['type'] == "File Response") {
 				$testData = $testDataCheck;
 			} else {
-				header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
+				header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
 				exit;
 			}
 		} else {
-			header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
+			header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
 			exit;
 		}
 	} elseif (isset ($_GET['question']) || isset ($_GET['id'])) {
-		header ("Location: ../index.php?category=" . $_SESSION['bankCategory']);
+		header ("Location: ../index.php?id=" . $_SESSION['bankCategory']);
 		exit;
 	}
 //Process the form
@@ -50,7 +50,21 @@
 			//Grab the uploaded file
 				$tempFile = $_FILES['answer'] ['tmp_name'];
 				$tempFileName = basename($_FILES['answer'] ['name']);
+				extension($tempFileName);
 				$uploadDir = "../../../../modules/{$location}/test/fileresponse/answer";
+				
+				$fileNameArray = explode(".", $tempFileName);
+				$tempFileName = "";
+				
+				for ($count = 0; $count <= sizeof($fileNameArray) - 1; $count++) {
+					if ($count == sizeof($fileNameArray) - 2) {
+						$tempFileName .= $fileNameArray[$count] . " " . randomValue(10, "alphanum") . ".";
+					} elseif($count == sizeof($fileNameArray) - 1) {
+						$tempFileName .= $fileNameArray[$count];
+					} else {
+						$tempFileName .= $fileNameArray[$count] . ".";
+					}
+				}
 			
 			//Strip any underscores in the filename and replace it with a space to eliminate display errors
 				$targetFile = str_replace("_"," ", $tempFileName);
@@ -96,7 +110,7 @@
 			}
 			
 			$updateFile = mysql_query($updateFileQuery, $connDBA);
-			header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&updated=file");
+			header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&updated=file");
 			exit;
 	//If the page is inserting an item		
 		} else {
@@ -121,7 +135,21 @@
 		//Grab the uploaded file
 			$tempFile = $_FILES['answer'] ['tmp_name'];
 			$tempFileName = basename($_FILES['answer'] ['name']);
+			extension($tempFileName);
 			$uploadDir = "../../../../modules/{$location}/test/fileresponse/answer";
+			
+			$fileNameArray = explode(".", $tempFileName);
+			$tempFileName = "";
+			
+			for ($count = 0; $count <= sizeof($fileNameArray) - 1; $count++) {
+				if ($count == sizeof($fileNameArray) - 2) {
+					$tempFileName .= $fileNameArray[$count] . " " . randomValue(10, "alphanum") . ".";
+				} elseif($count == sizeof($fileNameArray) - 1) {
+					$tempFileName .= $fileNameArray[$count];
+				} else {
+					$tempFileName .= $fileNameArray[$count] . ".";
+				}
+			}
 		
 		//Strip any underscores in the filename and replace it with a space to eliminate display errors
 			$targetFile = str_replace("_"," ", $tempFileName);
@@ -166,7 +194,7 @@
 				
 				while ($questionBankInsert = mysql_fetch_array($questionBankInsertGrabber)) {
 					if ($questionBankInsert['questionBank'] == "1") {
-						$currentTable = str_replace(" ", "", $questionBankInsert['name']);
+						$currentTable = strtolower(str_replace(" ", "", $questionBankInsert['name']));
 						$lastQuestionGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} ORDER BY position DESC LIMIT 1");
 						$lastQuestionArray = mysql_fetch_array($lastQuestionGrabber);
 						$lastQuestion = $lastQuestionArray['position']+1;
@@ -181,10 +209,10 @@
 					}
 				}
 				
-				header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=essay&export=true&exportID=" . $linkID);
+				header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&inserted=file&export=true&exportID=" . $linkID);
 				exit;
 			} else {
-				header ("Location: ../index.php?category=" . $_SESSION['bankCategory'] . "&inserted=file");
+				header ("Location: ../index.php?id=" . $_SESSION['bankCategory'] . "&inserted=file");
 				exit;
 			}
 		}
@@ -197,7 +225,6 @@
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
 <?php validate(); ?>
-<script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
 </head>
 <body onload="MM_showHideLayers('progress','','hide')"<?php bodyClass(); ?>>
@@ -210,7 +237,7 @@
 			echo "?id=" . $testData['id'];
 		}
     ?>" method="post" enctype="multipart/form-data" name="fileResponse" onsubmit="return errorsOnSubmit(this, 'true', 'answer', 'false');" id="validate">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -225,7 +252,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Question Settings</div>
+      <div class="catDivider two">Question Settings</div>
       <div class="stepContent">
       <blockquote>
         <p>Question points<span class="require">*</span>:</p>
@@ -257,9 +284,9 @@
                 if (isset($update)) {
                     echo "<option value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" .  stripslashes(htmlentities($category['category'])) . "\"";
+                        echo "<option value=\"" .  $category['id'] . "\"";
                         
-                        if ($category['category'] == $testData['category']) {
+                        if ($category['id'] == $testData['category']) {
                             echo " selected=\"selected\"";
                         }
                         
@@ -268,9 +295,9 @@
                 } else {
                     echo "<option selected=\"selected\" value=\"\">- Select -</option>";
                     while ($category = mysql_fetch_array($categoryGrabber)) {
-                        echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
+                        echo "<option value=\"" . $category['id'] . "\"";
 						
-						if ($category['category'] == urldecode($_SESSION['bankCategory'])) {
+						if ($category['id'] == $_SESSION['bankCategory']) {
 							echo " selected=\"selected\"";
 						}
 						
@@ -278,7 +305,7 @@
                     }
                 }
             ?>
-          </select>
+            </select>
         </blockquote>
         <p>Difficulty:</p>
         <blockquote>
@@ -316,7 +343,7 @@
 						
 						if ($description['questionBank'] == "1") {
 							$importID = $description['linkID'];
-							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionBank` WHERE `id` = '{$importID}'", $connDBA);
+							$descriptionImportGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
 							$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
 							
 							if ($descriptionImport['type'] == "Description") {
@@ -371,12 +398,11 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Answer</div>
+      <div class="catDivider three">Answer</div>
       <div class="stepContent">
       <blockquote>
-        <p>Provide an exmaple of a correct answer: </p>
+        <p>Provide an example of a correct answer: </p>
         <blockquote>
-        <p>
         <?php
 		//Display current file if it exists
 			if (isset ($update)) {
@@ -396,13 +422,12 @@
 						//Leave out the "." and the ".."
 						if (($module != ".") && ($module != "..") && ($module != "Resource id #3") && ($module == $file)) {
 							echo "<br/>";
-								echo "Current file: <a href=\"../../../../modules/{$location}/test/fileresponse/answer/" . $module . "\" target=\"_blank\">" . $module . "</a>";
+								echo "Current file: <a href=\"../../../../gateway.php/modules/{$location}/test/fileresponse/answer/" . $module . "\" target=\"_blank\">" . $module . "</a>";
 						} 
 					} 
 				}
 			}
 		?>
-        </p>
         <p>
           <input name="answer" type="file" id="answer" size="50" />
           <br />Max file size: <?php echo ini_get('upload_max_filesize'); ?>
@@ -410,7 +435,7 @@
       </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/4.gif" alt="4." width="22" height="22" /> Feedback</div>
+      <div class="catDivider four">Feedback</div>
       <div class="stepContent">
       <blockquote>
         <p>Feedback for correct answer: </p>
@@ -446,7 +471,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/5.gif" alt="5." width="22" height="22" /> Finish</div>
+      <div class="catDivider five">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>
@@ -454,7 +479,7 @@
           	  submit("submit", "Submit");
 		  ?>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-          <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php?category=<?php echo $_SESSION['bankCategory'];?>');return document.MM_returnValue" value="Cancel" />
+          <input name="cancel" type="button" id="cancel" onclick="history.go(-1)" value="Cancel" />
         </p>
         <?php formErrors(); ?>
       </blockquote>

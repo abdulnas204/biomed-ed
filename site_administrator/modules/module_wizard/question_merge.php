@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -31,7 +31,7 @@
 //Check to see if questions from the question bank need to be merged
 	if (!isset($_GET['type'])) {
 		$name = $_SESSION['currentModule'];
-		$currentModule = str_replace(" ", "", $_SESSION['currentModule']);
+		$currentModule = strtolower(str_replace(" ", "", $_SESSION['currentModule']));
 		$importCheckGrabber = mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$name}'", $connDBA);
 		$importCheck = mysql_fetch_array($importCheckGrabber);
 		$statusCheckGrabber = mysql_query("SELECT * FROM `moduletest_{$currentModule}` WHERE `questionBank` = '1'", $connDBA);
@@ -45,7 +45,7 @@
 				$importQuestionsGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `category` = '{$category}'", $connDBA);	
 				
 			//Import the questions into the test
-				$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+				$currentTable = strtolower(str_replace(" ", "", $_SESSION['currentModule']));
 				$lastQuestionGrabber = mysql_query("SELECT * FROM `moduletest_{$currentModule}` ORDER BY position DESC", $connDBA);
 				$lastQuestionFetch = mysql_fetch_array($lastQuestionGrabber);
 				if ($lastQuestionFetch['position'] == "") {
@@ -90,8 +90,17 @@
 		
 		
 		if (isset ($_SESSION['review'])) {
-			header ("Location: modify.php?updated=testSettings");
-			exit;
+			$testCheckGrabber = mysql_query("SELECT * FROM `moduletest_{$currentModule}`", $connDBA);
+			$testCheck = mysql_num_rows($testCheckGrabber);
+			
+			if ($testCheckGrabber && $testCheck >= 1) {
+				header ("Location: modify.php?updated=testSettings");
+				exit;
+			} else {
+				$_SESSION['step'] = "testContent";
+				header ("Location: test_content.php");
+				exit;
+			}
 		} else {	
 			$_SESSION['step'] = "testContent";
 			header ("Location: test_content.php");
@@ -103,7 +112,7 @@
 	if (isset($_GET['type']) && $_GET['type'] == "import" && isset($_GET['questionID']) && isset($_GET['bankID'])) {
 		$bankID = $_GET['bankID'];
 		$questionID = $_GET['questionID'];
-		$currentTable = str_replace(" ", "", $_SESSION['currentModule']);
+		$currentTable = strtolower(str_replace(" ", "", $_SESSION['currentModule']));
 		$importQuestionsGrabber = mysql_query("SELECT * FROM questionbank WHERE `id` = '{$bankID}'", $connDBA);
 		$importQuestions = mysql_fetch_array($importQuestionsGrabber);
 		
@@ -119,14 +128,14 @@
 		$choiceType = $importQuestions['choiceType'];
 		$case = $importQuestions['case'];
 		$tags = $importQuestions['tags'];
-		$question = $importQuestions['question'];
-		$questionValue = $importQuestions['questionValue'];
-		$answer = $importQuestions['answer'];
-		$answerValue = $importQuestions['answerValue'];
+		$question = mysql_real_escape_string(stripslashes($importQuestions['question']));
+		$questionValue = mysql_real_escape_string(stripslashes($importQuestions['questionValue']));
+		$answer = mysql_real_escape_string(stripslashes($importQuestions['answer']));
+		$answerValue = mysql_real_escape_string(stripslashes($importQuestions['answerValue']));
 		$fileURL = $importQuestions['fileURL'];
-		$correctFeedback = $importQuestions['correctFeedback'];
-		$incorrectFeedback = $importQuestions['incorrectFeedback'];
-		$partialFeedback = $importQuestions['partialFeedback'];
+		$correctFeedback = mysql_real_escape_string(stripslashes($importQuestions['correctFeedback']));
+		$incorrectFeedback = mysql_real_escape_string(stripslashes($importQuestions['incorrectFeedback']));
+		$partialFeedback = mysql_real_escape_string(stripslashes($importQuestions['partialFeedback']));
 		
 		$insertQuestionQuery = "UPDATE moduletest_{$currentTable} SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE id = '{$questionID}'";
 							

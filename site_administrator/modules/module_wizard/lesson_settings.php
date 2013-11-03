@@ -1,7 +1,7 @@
 <?php require_once('../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step']) && !isset ($_SESSION['review'])) {
 		switch ($_SESSION['step']) {
 			//case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -22,12 +22,12 @@
 <?php
 //If the settings are being updated
 	if (isset($_SESSION['currentModule'])) {
-		$currentModule = $_SESSION['currentModule'];
+		$currentModule = strtolower($_SESSION['currentModule']);
 		$moduleDataGrabber = mysql_query("SELECT * FROM moduledata WHERE name = '{$currentModule}'", $connDBA);
 		$moduleData = mysql_fetch_array($moduleDataGrabber);
 		
 	//Process the form
-		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && is_numeric($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
@@ -70,14 +70,14 @@
 			$testCheck = mysql_fetch_array($testCheckGrabber);
 			
 			if ($testCheck['test'] == "1") {
-				$oldTableName = $testCheck['testName'];
-				$newTableName = str_replace(" ", "", $name);
+				$oldTableName = strtolower($testCheck['testName']);
+				$newTableName = strtolower(str_replace(" ", "", $name));
 				mysql_query("ALTER TABLE moduletest_{$oldTableName} RENAME TO moduletest_{$newTableName}", $connDBA);
 			}
 			
 		//Update the lesson table
-			$oldTableName = str_replace(" ", "", $_SESSION['currentModule']);;
-			$newTableName = str_replace(" ", "", $name);
+			$oldTableName = strtolower(str_replace(" ", "", $_SESSION['currentModule']));
+			$newTableName = strtolower(str_replace(" ", "", $name));
 			mysql_query("ALTER TABLE modulelesson_{$oldTableName} RENAME TO modulelesson_{$newTableName}", $connDBA);
 			
 		//Update the directory name, if it exists
@@ -88,6 +88,11 @@
 				$oldDirectory = str_replace(" ", "" , $directoryCheck['name']);
 				$newDirectory = str_replace(" ", "", $name);
 				rename("../../../modules/{$oldDirectory}", "../../../modules/{$newDirectory}");
+			}
+			
+		//Update the category types for the test
+			if ($testCheck['test'] == "1") {
+				mysql_query("UPDATE moduletest_{$newTableName} SET `category` = '{$category}' WHERE `category` != ''", $connDBA);
 			}
 			
 		//Reset the session name
@@ -109,7 +114,7 @@
 //If the settings are being inserted	
 	} else {
 	//Process the form
-		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && is_numeric($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
@@ -179,11 +184,11 @@
 	if (isset($_GET['checkName'])) {
 		$inputNameSpaces = $_GET['checkName'];
 		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-		$checkName= mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$inputNameSpaces}'", $connDBA);
+		$checkName = mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$inputNameSpaces}'", $connDBA);
 		
-		if($name = mysql_fetch_array($checkName)) {					
+		if ($name = mysql_fetch_array($checkName)) {					
 			if (isset($_SESSION['currentModule'])) {
-				if (strtolower($name['name']) !== strtolower($_SESSION['currentModule'])) {
+				if (strtolower($name['name']) != strtolower($_SESSION['currentModule'])) {
 					echo "<div class=\"error\" id=\"errorWindow\">A module with this name already exists</div>";
 				} else {
 					echo "<p>&nbsp;</p>";
@@ -267,7 +272,7 @@
 					}
 					echo "</select>";
 					
-					echo "<select name=\"timeLabel\" id=\"timeLabel\">
+					echo "&nbsp;<select name=\"timeLabel\" id=\"timeLabel\">
 						<option value=\"Days\""; if ($timeLabel == "Days") {echo " selected=\"selected\"";} echo ">Days</option>
 						<option value=\"Weeks\""; if ($timeLabel == "Weeks") {echo " selected=\"selected\"";} echo ">Weeks</option>
 						<option value=\"Months\""; if ($timeLabel == "Months") {echo " selected=\"selected\"";} echo ">Months</option>
@@ -284,7 +289,7 @@
 					}
 					echo "</select>";
 					
-					echo "<select name=\"timeLabel\" id=\"timeLabel\">
+					echo "&nbsp;<select name=\"timeLabel\" id=\"timeLabel\">
 						<option value=\"Days\">Days</option>
 						<option value=\"Weeks\" selected=\"selected\">Weeks</option>
 						<option value=\"Months\">Months</option>
@@ -308,9 +313,9 @@
 					if (isset($_SESSION['currentModule'])) {
 						echo "<option value=\"\">- Select -</option>";
 						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
+							echo "<option value=\"" . $category['id'] . "\"";
 							
-							if ($category['category'] == $moduleData['category']) {
+							if ($category['id'] == $moduleData['category']) {
 								echo " selected=\"selected\"";
 							}
 							
@@ -319,7 +324,7 @@
 					} else {
 						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
 						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\">" . stripslashes(htmlentities($category['category'])) . "</option>";
+							echo "<option value=\"" . $category['id'] . "\">" . stripslashes(htmlentities($category['category'])) . "</option>";
 						}
 					}
 				?>
@@ -338,9 +343,9 @@
 					if (isset($_SESSION['currentModule'])) {
 						echo "<option value=\"\">- Select -</option>";
 						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\"";
+							echo "<option value=\"" . $employee['id'] . "\"";
 							
-							if ($employee['employee'] == $moduleData['employee']) {
+							if ($employee['id'] == $moduleData['employee']) {
 								echo " selected=\"selected\"";
 							}
 							
@@ -349,7 +354,7 @@
 					} else {
 						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
 						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
+							echo "<option value=\"" . $employee['id'] . "\">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
 						}
 					}
 

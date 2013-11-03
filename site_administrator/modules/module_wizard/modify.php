@@ -14,9 +14,20 @@
 	$testCheck = mysql_fetch_array($testCheckGrabber);
 ?>
 <?php
-//Ensure that the test generator cannot be access if any required variables to not fulfilled
-	if ($testCheck['test'] == "0" || $testCheck['testName'] == "T" || $testCheck['directions'] == "D") {
-		mysql_query("UPDATE moduledata SET `test` = '0', `testName` = 'T', `directions` = 'D' WHERE `name` = '{$name}'", $connDBA);
+//Ensure that the test generator cannot be accessed if any required variables to not fulfilled
+	if ($testCheck['test'] == "0" || $testCheck['testName'] == "" || $testCheck['directions'] == "") {
+		mysql_query("UPDATE moduledata SET `test` = '0' WHERE `name` = '{$name}'", $connDBA);
+	}
+	
+	$currentTable = strtolower($_SESSION['currentModule']);
+	$valuesCountGrabber = mysql_query("SELECT COUNT(*) FROM `moduletest_{$currentTable}`", $connDBA);
+	
+	if($valuesCountGrabber) {
+		$valuesCount = mysql_fetch_array($valuesCountGrabber);
+		
+		if ($valuesCount['COUNT(*)'] == "0") {
+			mysql_query("UPDATE moduledata SET `test` = '0'", $connDBA);
+		}
 	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -43,17 +54,17 @@
 		echo "<p>&nbsp;</p>";
 	}
 ?>
-<div class="catDivider"><img src="../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Modify Module</div>
+<div class="catDivider one">Modify Module</div>
 <div class="stepContent">
 <blockquote>
   <p><a href="lesson_settings.php">Module Settings</a><br/ >
   <a href="lesson_content.php">Module Content</a></p>
 </blockquote>
 </div>
-<div class="catDivider"><img src="../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Modify Test</div>
+<div class="catDivider two">Modify Test</div>
 <div class="stepContent">
 <blockquote>
-    <?php
+  <?php
   //Selectively display the test settings
   		if ($testCheck['test'] == "1") {
 			echo "<p><a href=\"test_settings.php\">Test Settings</a><br/ >
@@ -64,7 +75,7 @@
   ?>
 </blockquote>
 </div>
-<div class="catDivider"><img src="../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
+<div class="catDivider three">Finish</div>
 <div class="stepContent">
   <p>
     <blockquote>

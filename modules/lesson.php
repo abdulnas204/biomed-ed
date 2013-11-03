@@ -1,5 +1,4 @@
 <?php require_once('../Connections/connDBA.php'); ?>
-<?php loginCheck("Student,Instructor,Organization Administrator,Site Manager,Site Administrator"); ?>
 <?php
 //Grab all module data
 	if (isset ($_GET['id'])) {
@@ -24,7 +23,7 @@
 		$next = $_GET['page']+1;
 		$moduleInfoGrabber = mysql_query("SELECT * FROM moduledata WHERE id = '{$id}' LIMIT 1", $connDBA);
 		$moduleInfo = mysql_fetch_array($moduleInfoGrabber);
-		$currentLesson = str_replace(" ", "", $moduleInfo['name']);
+		$currentLesson = strtolower(str_replace(" ", "", $moduleInfo['name']));
 		$lessonGrabber = mysql_query("SELECT * FROM `modulelesson_{$currentLesson}` WHERE `position` = '{$page}'", $connDBA);
 		
 		if ($lesson = mysql_fetch_array($lessonGrabber)) {
@@ -64,6 +63,7 @@
 	title($title); 
 ?>
 <?php headers(); ?>
+<?php meta($moduleInfo['directions'], $moduleInfo['tags']); ?>
 <script src="../javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 
@@ -72,15 +72,25 @@
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
 <?php	
 	if (!isset($_GET['page'])) {
+	//Convert the IDs into names
+		$categoryID = $moduleInfo['category'];
+		$categoryGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$categoryID}'", $connDBA);
+		$category = mysql_fetch_array($categoryGrabber);
+		$employeeID = $moduleInfo['employee'];
+		$employeeGrabber = mysql_query("SELECT * FROM `moduleemployees` WHERE `id` = '{$employeeID}'", $connDBA);
+		$employee = mysql_fetch_array($employeeGrabber);
+		
 	//Display the due date
 		$letterArray = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
-		$numberArray = array("0","1","2","3","4","5","6","7","8","9");						
+		$numberArray = array("0","1","2","3","4","5","6","7","8","9");
 		$time = str_replace($letterArray, "", $moduleInfo['timeFrame']);
 		$timeLabel = str_replace($numberArray, "", $moduleInfo['timeFrame']);
 		
-	//Display the module information	
-		echo "<h2>" . $title . "</h2><div class=\"toolBar\"><strong>Due Date:</strong> " . $time . " " .$timeLabel . "<br /><strong>Category:</strong> " . $moduleInfo['category'] . "<br /><strong>Intended Employee Type:</strong> " . $moduleInfo['employee'] . "<br /><strong>Difficulty:</strong> " . $moduleInfo['difficulty'] . "</div>";
+	//Display the module information
+		echo "<h2>" . stripslashes($title) . "</h2><div class=\"toolBar noPadding\"><strong>Due Date:</strong> " . $time . " " .$timeLabel . "<br /><strong>Category:</strong> " . stripslashes($category['category']) . "<br /><strong>Intended Employee Type:</strong> " . stripslashes($employee['employee']) . "<br /><strong>Difficulty:</strong> " . $moduleInfo['difficulty'] . "</div>";
 	} else {
+		loginCheck("Student,Instructor,Organization Administrator,Site Manager,Site Administrator");
+		
 		echo "<h2>" . $title . "</h2>";
 	}
 	
@@ -122,43 +132,41 @@
 			
 		//Prepare the directory string for future use
 			$location = $currentLesson;
-			$file = "{$location}/lesson/" . $lesson['attachment'];
-		
-			if (file_exists($file)) {						
-				$fileType = extension($file);
-				switch ($fileType) {
-				//If it is a PDF
-					case "pdf" : echo "<iframe src=\"" . $file . "\" width=\"100%\" height=\"700\" frameborder=\"0\"></iframe>"; break;
-				//If it is a Word Document
-					case "doc" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/word2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-					case "docx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/word2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-				//If it is a PowerPoint Presentation
-					case "ppt" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/powerPoint2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-					case "pptx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/powerPoint2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-				//If it is an Excel Spreadsheet
-					case "xls" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/excel2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-					case "xlsx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/excel2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-				//If it is a Standard Text Document
-					case "txt" : echo "<iframe src=\"" . $file . "\" width=\"100%\" height=\"700\" frameborder=\"0\"></iframe>"; break;
-					case "rtf" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/text.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
-				//If it is a WAV audio file
-					case "wav" : echo "<object width=\"640\" height=\"16\" classid=\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\" codebase=\"http://www.apple.com/qtactivex/qtplugin.cab\"><param name=\"src\" value=\"" . $file . "\"><param name=\"autoplay\" value=\"true\"><param name=\"controller\" value=\"true\"><embed src=\"" . $file . "\" width=\"640\" height=\"16\" autoplay=\"true\" controller=\"true\" pluginspage=\"http://www.apple.com/quicktime/download/\"></embed></object>"; break;
-				//If it is an MP3 audio file
-					case "mp3" : echo "<embed type=\"application/x-shockwave-flash\" src=\"../player/player.swf\" style=\"\" id=\"player\" name=\"player\" quality=\"high\" allowfullscreen=\"true\" allowscriptaccess=\"always\" wmode=\"opaque\" flashvars=\"file=../modules/{$location}/lesson/" . $lesson['attachment'] . "&amp;autostart=true\" width=\"640\" height=\"16\"></embed>"; break;
-				//If it is an AVI video file
-					case "avi" : echo "<object id=\"MediaPlayer\" width=\"640\" height=\"480\" classid=\"CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95\" standby=\"Loading Windows Media Player components...\" type=\"application/x-oleobject\"><param name=\"FileName\" value=\"" . $file . "\"><param name=\"autostart\" value=\"true\"><param name=\"ShowControls\" value=\"true\"><param name=\"ShowStatusBar\" value=\"true\"><param name=\"ShowDisplay\" value=\"false\"><embed type=\"application/x-mplayer2\" src=\"" . $file . "\" name=\"MediaPlayer\"width=\"640\" height=\"480\" showcontrols=\"1\" showstatusBar=\"1\" showdisplay=\"0\" autostart=\"1\"></embed></object>"; break;
-				//If it is an WMV video file
-					case "wmv" : echo "<object id=\"MediaPlayer\" width=\"640\" height=\"480\" classid=\"CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95\" standby=\"Loading Windows Media Player components...\" type=\"application/x-oleobject\"><param name=\"FileName\" value=\"" . $file . "\"><param name=\"autostart\" value=\"true\"><param name=\"ShowControls\" value=\"true\"><param name=\"ShowStatusBar\" value=\"true\"><param name=\"ShowDisplay\" value=\"false\"><embed type=\"application/x-mplayer2\" src=\"" . $file . "\" name=\"MediaPlayer\"width=\"640\" height=\"480\" showcontrols=\"1\" showstatusBar=\"1\" showdisplay=\"0\" autostart=\"1\"></embed></object>"; break;
-				//If it is an FLV file
-					case "flv" : echo "<embed type=\"application/x-shockwave-flash\" src=\"../player/player.swf\" style=\"\" id=\"player\" name=\"player\" quality=\"high\" allowfullscreen=\"true\" allowscriptaccess=\"always\" wmode=\"opaque\" flashvars=\"file=../modules/{$location}/lesson/" . $lesson['attachment'] . "&amp;autostart=true\" width=\"640\" height=\"480\"></embed>"; break;
-				//If it is an MOV video file
-					case "mov" : echo "<object width=\"640\" height=\"480\" classid=\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\" codebase=\"http://www.apple.com/qtactivex/qtplugin.cab\"><param name=\"src\" value=\"" . $file . "\"><param name=\"autoplay\" value=\"true\"><param name=\"controller\" value=\"true\"><embed src=\"" . $file . "\" width=\"640\" height=\"480\" autoplay=\"true\" controller=\"true\" pluginspage=\"http://www.apple.com/quicktime/download/\"></embed></object>"; break;
-				//If it is an MP4 video file
-					case "mp4" : echo "<embed type=\"application/x-shockwave-flash\" src=\"../player/player.swf\" style=\"\" id=\"player\" name=\"player\" quality=\"high\" allowfullscreen=\"true\" allowscriptaccess=\"always\" wmode=\"opaque\" flashvars=\"file=../modules/{$location}/lesson/" . $lesson['attachment'] . "&amp;autostart=true\" width=\"640\" height=\"480\"></embed>"; break;
-				//If it is a SWF video file
-					case "swf" : echo "<object width=\"640\" height=\"480\" data=\"" . $file . "\" type=\"application/x-shockwave-flash\">
-	<param name=\"src\" value=\"" . $file . "\" /></object>"; break;
-				}
+			$file = $root . "gateway.php/modules/{$location}/lesson/" . $lesson['attachment'];
+			$fileType = extension($file);
+			
+			switch ($fileType) {
+			//If it is a PDF
+				case "pdf" : echo "<iframe src=\"" . $file . "\" width=\"100%\" height=\"700\" frameborder=\"0\"></iframe>"; break;
+			//If it is a Word Document
+				case "doc" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/word2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+				case "docx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/word2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+			//If it is a PowerPoint Presentation
+				case "ppt" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/powerPoint2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+				case "pptx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/powerPoint2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+			//If it is an Excel Spreadsheet
+				case "xls" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/excel2003.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+				case "xlsx" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/excel2007.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+			//If it is a Standard Text Document
+				case "txt" : echo "<iframe src=\"" . $file . "\" width=\"100%\" height=\"700\" frameborder=\"0\"></iframe>"; break;
+				case "rtf" : echo "<a href=\"" . $file . "\" target=\"_blank\"><img src=\"../images/programIcons/text.png\" alt=\"icon\" width=\"52\" height=\"52\" border=\"0\" style=\"vertical-align:middle;\" /></a>&nbsp;&nbsp;&nbsp;<a href=\"" . $file . "\" target=\"_blank\">Click to download this file</a>"; break;
+			//If it is a WAV audio file
+				case "wav" : echo "<object width=\"640\" height=\"16\" classid=\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\" codebase=\"http://www.apple.com/qtactivex/qtplugin.cab\"><param name=\"src\" value=\"" . $file . "\"><param name=\"autoplay\" value=\"true\"><param name=\"controller\" value=\"true\"><embed src=\"" . $file . "\" width=\"640\" height=\"16\" autoplay=\"true\" controller=\"true\" pluginspage=\"http://www.apple.com/quicktime/download/\"></embed></object>"; break;
+			//If it is an MP3 audio file
+				case "mp3" : echo "<object id=\"player\" width=\"640\" height=\"30\" data=\"../player/player.swf\" type=\"application/x-shockwave-flash\"><param name=\"movie\" value=\"../player/player.swf\" /><param name=\"allowfullscreen\" value=\"true\" /><param name=\"flashvars\" value='config={\"clip\":\"" . $file . "\", \"plugins\":{\"controls\":{\"autoHide\":false}}}' /></object>"; break;
+			//If it is an AVI video file
+				case "avi" : echo "<object id=\"MediaPlayer\" width=\"640\" height=\"480\" classid=\"CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95\" standby=\"Loading Windows Media Player components...\" type=\"application/x-oleobject\"><param name=\"FileName\" value=\"" . $file . "\"><param name=\"autostart\" value=\"true\"><param name=\"ShowControls\" value=\"true\"><param name=\"ShowStatusBar\" value=\"true\"><param name=\"ShowDisplay\" value=\"false\"><embed type=\"application/x-mplayer2\" src=\"" . $file . "\" name=\"MediaPlayer\"width=\"640\" height=\"480\" showcontrols=\"1\" showstatusBar=\"1\" showdisplay=\"0\" autostart=\"1\"></embed></object>"; break;
+			//If it is an WMV video file
+				case "wmv" : echo "<object id=\"MediaPlayer\" width=\"640\" height=\"480\" classid=\"CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95\" standby=\"Loading Windows Media Player components...\" type=\"application/x-oleobject\"><param name=\"FileName\" value=\"" . $file . "\"><param name=\"autostart\" value=\"true\"><param name=\"ShowControls\" value=\"true\"><param name=\"ShowStatusBar\" value=\"true\"><param name=\"ShowDisplay\" value=\"false\"><embed type=\"application/x-mplayer2\" src=\"" . $file . "\" name=\"MediaPlayer\"width=\"640\" height=\"480\" showcontrols=\"1\" showstatusBar=\"1\" showdisplay=\"0\" autostart=\"1\"></embed></object>"; break;
+			//If it is an FLV file
+				case "flv" : echo "<object id=\"player\" width=\"640\" height=\"480\" data=\"../player/player.swf\" type=\"application/x-shockwave-flash\"><param name=\"movie\" value=\"../player/player.swf\" /><param name=\"allowfullscreen\" value=\"true\" /><param name=\"flashvars\" value='config={\"clip\":\"" . $file . "\"}' /></object>"; break;
+			//If it is an MOV video file
+				case "mov" : echo "<object width=\"640\" height=\"480\" classid=\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\" codebase=\"http://www.apple.com/qtactivex/qtplugin.cab\"><param name=\"src\" value=\"" . $file . "\"><param name=\"autoplay\" value=\"true\"><param name=\"controller\" value=\"true\"><embed src=\"" . $file . "\" width=\"640\" height=\"480\" autoplay=\"true\" controller=\"true\" pluginspage=\"http://www.apple.com/quicktime/download/\"></embed></object>"; break;
+			//If it is an MP4 video file			
+				case "mp4" : echo "<object id=\"player\" width=\"640\" height=\"480\" data=\"../player/player.swf\" type=\"application/x-shockwave-flash\"><param name=\"movie\" value=\"../player/player.swf\" /><param name=\"allowfullscreen\" value=\"true\" /><param name=\"flashvars\" value='config={\"clip\":\"" . $file . "\"}' /></object>"; break;
+			//If it is a SWF video file
+				case "swf" : echo "<object width=\"640\" height=\"480\" data=\"" . $file . "\" type=\"application/x-shockwave-flash\">
+<param name=\"src\" value=\"" . $file . "\" /></object>"; break;
 			}
 			
 			echo "</div>";

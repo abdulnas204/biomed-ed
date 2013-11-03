@@ -1,7 +1,7 @@
 <?php require_once('../../../../Connections/connDBA.php'); ?>
 <?php loginCheck("Site Administrator"); ?>
 <?php
-//Restrict access to this page, if this is not has not yet been reached in the module setup
+//Restrict access to this page, if this step has not yet been reached in the module setup
 	if (isset ($_SESSION['step'])) {
 		switch ($_SESSION['step']) {
 			case "lessonSettings" : header ("Location: lesson_settings.php"); exit; break;
@@ -15,7 +15,7 @@
 	} elseif (isset ($_SESSION['review'])) {
 	//Check to see if a test is set to be created, otherwise allow access to this page
 		$name = $_SESSION['currentModule'];
-		$testCheckGrabber = mysql_query("SELECT * FROM moduleData WHERE `name` = '{$name}'", $connDBA);
+		$testCheckGrabber = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
 		$testCheckArray = mysql_fetch_array($testCheckGrabber);
 		
 		if ($testCheckArray['test'] == "0") {
@@ -31,7 +31,7 @@
 //If the page is updating an item
 	if (isset ($_GET['question']) && isset ($_GET['id'])) {
 		$update = $_GET['id'];
-		$currentModule = $_SESSION['currentModule'];
+		$currentModule = strtolower($_SESSION['currentModule']);
 		$currentTable = strtolower(str_replace(" ","", $currentModule));
 		$testDataGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} WHERE id = '{$update}'", $connDBA);
 		if ($testDataCheck = mysql_fetch_array($testDataGrabber)) {
@@ -53,7 +53,7 @@
 	if (isset ($_POST['submit']) && !empty($_POST['question'])) {
 	//If the page is updating an item
 		if (isset ($update)) {
-			$currentModule = $_SESSION['currentModule'];
+			$currentModule = strtolower($_SESSION['currentModule']);
 			$currentTable = strtolower(str_replace(" ","", $currentModule));
 			
 		//Get form data values
@@ -68,7 +68,7 @@
 			exit;
 	//If the page is inserting an item		
 		} else {
-			$currentModule = $_SESSION['currentModule'];
+			$currentModule = strtolower($_SESSION['currentModule']);
 			$currentTable = strtolower(str_replace(" ","", $currentModule));
 			
 			//Get the last test question, and add one to the value for the next test
@@ -114,7 +114,7 @@
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
     ?>" method="post" name="description" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Content</div>
+      <div class="catDivider one">Content</div>
       <div class="stepContent">
       <blockquote>
         <p>Description content<span class="require">*</span>: </p>
@@ -130,7 +130,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Settings</div>
+      <div class="catDivider two">Settings</div>
       <div class="stepContent">
         <blockquote>
          <p>Tags (Seperate with commas):</p>
@@ -146,7 +146,7 @@
         </blockquote>
         </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/3.gif" alt="3." width="22" height="22" /> Finish</div>
+      <div class="catDivider three">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

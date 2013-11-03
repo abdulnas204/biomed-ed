@@ -124,7 +124,7 @@ function errorDisplay(errorShow, progressClear, errorWinShow, errorReturn) {
 		errorBox.style.display = 'block';
 		errorBox.style.border = '1px solid #CC3333';
 		errorBox.style.color = '#CC3333';
-		errorBox.style.width = '398px';
+		errorBox.style.width = '405px';
 	}
 	
 	

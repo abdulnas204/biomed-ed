@@ -75,7 +75,7 @@
 			echo "?id=" . $testData['id'];
 		}
     ?>" method="post" name="shortAnswer" id="validate" onsubmit="return errorsOnSubmit(this);">
-      <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
+      <div class="catDivider one">Question</div>
       <div class="stepContent">
       <blockquote>
         <p>Question directions<span class="require">*</span>:</p>
@@ -90,7 +90,7 @@
         </blockquote>
       </blockquote>
       </div>
-      <div class="catDivider"><img src="../../../../images/numbering/2.gif" alt="2." width="22" height="22" /> Finish</div>
+      <div class="catDivider two">Finish</div>
       <div class="stepContent">
       <blockquote>
         <p>

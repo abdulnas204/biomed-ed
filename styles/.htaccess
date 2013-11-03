@@ -1,0 +1,8 @@
+<Files ~ "\.(css)$">
+	order allow,deny
+	allow from all
+</Files>
+deny from all
+
+ErrorDocument 403 /biomed-ed/includes/access_deny.php
+ErrorDocument 404 /biomed-ed/includes/access_deny.php
