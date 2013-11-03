@@ -150,31 +150,31 @@
     <h2>Module Setup Wizard : Test Settings</h2>
     <p>Setup the test's initial settings, such as the name, directions, and score.</p>
 <p>&nbsp;</p>
-    <form name="testSettings" action="test_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this);">
+    <form name="testSettings" action="test_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this, 'true');">
     <div class="catDivider">
     <?php
-		step("8", "Test Information", "1" , "Test Information")
+		step("6", "Test Information", "1" , "Test Information")
 	?>
     </div>
     <div class="stepContent">
     <blockquote>
-      <p>Test Name: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of this test')" onmouseout="UnTip()" /></p>
+      <p>Test Name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of this test')" onmouseout="UnTip()" /></p>
       <blockquote>
         <p>
           <label>
           <input name="testName" type="text" id="testName" size="50" class="validate[required,custom[onlyLetter]]"<?php
 			//If the module is being edited
 				if (isset($_SESSION['review'])) {
-					if ($testName['testName'] == "T") {
-						echo " value=\"" . stripslashes($testName['name']) . "\"";
+					if ($testName['testName'] == "") {
+						echo " value=\"" . stripslashes(htmlentities($testName['name'])) . "\"";
 					} else {
-						echo " value=\"" . stripslashes($testName['testName']) . "\"";
+						echo " value=\"" . stripslashes(htmlentities($testName['testName'])) . "\"";
 					}
 				} else {
-					if ($testName['testName'] == "T") {
-						echo " value=\"" . stripslashes($testName['name']) . "\"";
+					if ($testName['testName'] == "") {
+						echo " value=\"" . stripslashes(htmlentities($testName['name'])) . "\"";
 					} else {
-						echo " value=\"" . stripslashes($testName['testName']) . "\"";
+						echo " value=\"" . stripslashes(htmlentities($testName['testName'])) . "\"";
 					}
 				}
 			?> />
@@ -187,7 +187,7 @@
           <label>
           <textarea name="directions" id="directions" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif; width:450px;"><?php
 			//If the module is being edited
-				if ($testName['testName'] !== "T") {
+				if ($testName['testName'] !== "") {
 					echo stripslashes($testData['directions']);
 				}
 			?></textarea>
@@ -199,7 +199,7 @@
     </div>
     <div class="catDivider">
     <?php
-		step("9", "Test settings", "2" , "Test Settings")
+		step("7", "Test settings", "2" , "Test Settings")
 	?>
     </div>
     <div class="stepContent">
@@ -209,7 +209,7 @@
         <p>
         <?php
 		//Dispay the score drop-down menu
-			if ($testData['testName'] == "T") {
+			if ($testData['testName'] == "") {
 				echo "<select name=\"score\">";
 				for ($count = 0; $count <= 100; $count++) {
 					echo "<option value=\"" . $count . "\"";
@@ -237,17 +237,17 @@
       <blockquote>
         <p>
         <select name="attempts" onchange="toggleNumericalDiv(this.value);">
-        	<option value="unlimited"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "999") {echo " selected=\"selected\"";}} ?>>Unlimited</option>
-            <option value="one"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "1") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>1</option>
-            <option value="two"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "2") {echo " selected=\"selected\"";}} ?>>2</option>
-            <option value="three"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "3") {echo " selected=\"selected\"";}} ?>>3</option>
-            <option value="four"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "4") {echo " selected=\"selected\"";}} ?>>4</option>
-            <option value="five"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "5") {echo " selected=\"selected\"";}} ?>>5</option>
-            <option value="six"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "6") {echo " selected=\"selected\"";}} ?>>6</option>
-            <option value="seven"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "7") {echo " selected=\"selected\"";}} ?>>7</option>
-            <option value="eight"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "8") {echo " selected=\"selected\"";}} ?>>8</option>
-            <option value="nine"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "9") {echo " selected=\"selected\"";}} ?>>9</option>
-            <option value="ten"<?php if ($testData['testName'] !== "T") {if ($testData ['attempts'] == "10") {echo " selected=\"selected\"";}} ?>>10</option>
+        	<option value="unlimited"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "999") {echo " selected=\"selected\"";}} ?>>Unlimited</option>
+            <option value="one"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "1") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";} ?>>1</option>
+            <option value="two"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "2") {echo " selected=\"selected\"";}} ?>>2</option>
+            <option value="three"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "3") {echo " selected=\"selected\"";}} ?>>3</option>
+            <option value="four"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "4") {echo " selected=\"selected\"";}} ?>>4</option>
+            <option value="five"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "5") {echo " selected=\"selected\"";}} ?>>5</option>
+            <option value="six"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "6") {echo " selected=\"selected\"";}} ?>>6</option>
+            <option value="seven"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "7") {echo " selected=\"selected\"";}} ?>>7</option>
+            <option value="eight"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "8") {echo " selected=\"selected\"";}} ?>>8</option>
+            <option value="nine"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "9") {echo " selected=\"selected\"";}} ?>>9</option>
+            <option value="ten"<?php if ($testData['testName'] !== "") {if ($testData ['attempts'] == "10") {echo " selected=\"selected\"";}} ?>>10</option>
         </select> 
         </p>
       </blockquote>
@@ -334,9 +334,9 @@
       <p>Timer: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Sets a timer, which will only allow the test to be open for a set duration')" onmouseout="UnTip()" /></p>
       <?php
 	  //Split the time value located in the database into hours and minutes
-		if ($testData['testName'] !== "T") {
+		if ($testData['testName'] !== "") {
 			$time = unserialize($testData['time']);
-			if ($testData['time'] !== 's:1:"1";') {
+			if ($testData['time'] !== "") {
 				$testH = $time['0'];
 				$testM = $time['1'];
 			}
@@ -346,34 +346,34 @@
         <p>
           Hours:          
           <label>
-          <select name="timeHours" id="timeHours"<?php if ($testData['testName'] !== "T") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
-            <option value="0"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>0</option>
-            <option value="1"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "1") {echo " selected=\"selected\"";}}?>>1</option>
-            <option value="2"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "2") {echo " selected=\"selected\"";}}?>>2</option>
-            <option value="3"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "3") {echo " selected=\"selected\"";}}?>>3</option>
-            <option value="4"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "4") {echo " selected=\"selected\"";}}?>>4</option>
-            <option value="5"<?php if ($testData['time'] !== 's:1:"1";') {if ($testH == "5") {echo " selected=\"selected\"";}}?>>5</option>
+          <select name="timeHours" id="timeHours"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+            <option value="0"<?php if ($testData['time'] !== "") {if ($testH == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>0</option>
+            <option value="1"<?php if ($testData['time'] !== "") {if ($testH == "1") {echo " selected=\"selected\"";}}?>>1</option>
+            <option value="2"<?php if ($testData['time'] !== "") {if ($testH == "2") {echo " selected=\"selected\"";}}?>>2</option>
+            <option value="3"<?php if ($testData['time'] !== "") {if ($testH == "3") {echo " selected=\"selected\"";}}?>>3</option>
+            <option value="4"<?php if ($testData['time'] !== "") {if ($testH == "4") {echo " selected=\"selected\"";}}?>>4</option>
+            <option value="5"<?php if ($testData['time'] !== "") {if ($testH == "5") {echo " selected=\"selected\"";}}?>>5</option>
           </select>
           </label>
         Minutes: 
         <label>
-        <select name="timeMinutes" id="timeMinutes"<?php if ($testData['testName'] !== "T") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
-          <option value="00"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "00") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>00</option>
-          <option value="05"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "05") {echo " selected=\"selected\"";}}?>>05</option>
-          <option value="10"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "10") {echo " selected=\"selected\"";}}?>>10</option>
-          <option value="15"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "15") {echo " selected=\"selected\"";}}?>>15</option>
-          <option value="20"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "20") {echo " selected=\"selected\"";}}?>>20</option>
-          <option value="25"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "25") {echo " selected=\"selected\"";}}?>>25</option>
-          <option value="30"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "30") {echo " selected=\"selected\"";}}?>>30</option>
-          <option value="35"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "35") {echo " selected=\"selected\"";}}?>>35</option>
-          <option value="40"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "40") {echo " selected=\"selected\"";}}?>>40</option>
-          <option value="45"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "45") {echo " selected=\"selected\"";}}?>>45</option>
-          <option value="50"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "50") {echo " selected=\"selected\"";}}?>>50</option>
-          <option value="55"<?php if ($testData['time'] !== 's:1:"1";') {if ($testM == "55") {echo " selected=\"selected\"";}}?>>55</option>
+        <select name="timeMinutes" id="timeMinutes"<?php if ($testData['testName'] !== "") {if ($testData['timer'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+          <option value="00"<?php if ($testData['time'] !== "") {if ($testM == "00") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>00</option>
+          <option value="05"<?php if ($testData['time'] !== "") {if ($testM == "05") {echo " selected=\"selected\"";}}?>>05</option>
+          <option value="10"<?php if ($testData['time'] !== "") {if ($testM == "10") {echo " selected=\"selected\"";}}?>>10</option>
+          <option value="15"<?php if ($testData['time'] !== "") {if ($testM == "15") {echo " selected=\"selected\"";}}?>>15</option>
+          <option value="20"<?php if ($testData['time'] !== "") {if ($testM == "20") {echo " selected=\"selected\"";}}?>>20</option>
+          <option value="25"<?php if ($testData['time'] !== "") {if ($testM == "25") {echo " selected=\"selected\"";}}?>>25</option>
+          <option value="30"<?php if ($testData['time'] !== "") {if ($testM == "30") {echo " selected=\"selected\"";}}?>>30</option>
+          <option value="35"<?php if ($testData['time'] !== "") {if ($testM == "35") {echo " selected=\"selected\"";}}?>>35</option>
+          <option value="40"<?php if ($testData['time'] !== "") {if ($testM == "40") {echo " selected=\"selected\"";}}?>>40</option>
+          <option value="45"<?php if ($testData['time'] !== "") {if ($testM == "45") {echo " selected=\"selected\"";}}?>>45</option>
+          <option value="50"<?php if ($testData['time'] !== "") {if ($testM == "50") {echo " selected=\"selected\"";}}?>>50</option>
+          <option value="55"<?php if ($testData['time'] !== "") {if ($testM == "55") {echo " selected=\"selected\"";}}?>>55</option>
         </select>
         </label>
         <label>
-        <input name="timer" type="checkbox" id="timer" onclick="flvFTFO1('testSettings','timeHours,t','timeMinutes,t')"<?php if ($testData['testName'] !== "T") {if ($testData['timer'] == "on") {echo " checked=\"checked\"";}}?> />
+        <input name="timer" type="checkbox" id="timer" onclick="flvFTFO1('testSettings','timeHours,t','timeMinutes,t')"<?php if ($testData['testName'] !== "") {if ($testData['timer'] == "on") {echo " checked=\"checked\"";}}?> />
         Enable</label>
 </p>
       </blockquote>
@@ -382,17 +382,17 @@
         <p>
         Penalties: 
         <label>
-        <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "T") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
-          <option value="0"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>The test will close</option>
-          <option value="1"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "1") {echo " selected=\"selected\"";}}?>>All answers will reset</option>
-          <option value="10"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "10") {echo " selected=\"selected\"";}}?>>Grade decreases 10%</option>
-          <option value="20"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "20") {echo " selected=\"selected\"";}}?>>Grade decreases 20%</option>
-          <option value="30"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "30") {echo " selected=\"selected\"";}}?>>Grade decreases 30%</option>
-          <option value="40"<?php if ($testData['testName'] !== "T") {if ($testData['completionMethod'] == "40") {echo " selected=\"selected\"";}}?>>Grade decreases 40%</option>
+        <select name="completionMethod" id="completionMethod"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] !== "on") {echo " disabled=\"diabled\"";}} else {echo " disabled=\"diabled\"";}?>>
+          <option value="0"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "0") {echo " selected=\"selected\"";}} else {echo " selected=\"selected\"";}?>>The test will close</option>
+          <option value="1"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "1") {echo " selected=\"selected\"";}}?>>All answers will reset</option>
+          <option value="10"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "10") {echo " selected=\"selected\"";}}?>>Grade decreases 10%</option>
+          <option value="20"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "20") {echo " selected=\"selected\"";}}?>>Grade decreases 20%</option>
+          <option value="30"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "30") {echo " selected=\"selected\"";}}?>>Grade decreases 30%</option>
+          <option value="40"<?php if ($testData['testName'] !== "") {if ($testData['completionMethod'] == "40") {echo " selected=\"selected\"";}}?>>Grade decreases 40%</option>
         </select>
         </label>
         <label>
-        <input name="forceCompletion" type="checkbox" id="forceCompletion" onclick="flvFTFO1('testSettings','completionMethod,t')"<?php if ($testData['testName'] !== "T") {if ($testData['forceCompletion'] == "on") {echo " checked=\"checked\"";}}?> /> 
+        <input name="forceCompletion" type="checkbox" id="forceCompletion" onclick="flvFTFO1('testSettings','completionMethod,t')"<?php if ($testData['testName'] !== "") {if ($testData['forceCompletion'] == "on") {echo " checked=\"checked\"";}}?> /> 
         Enable</label>
 </p>
       </blockquote>
@@ -538,7 +538,7 @@
     </div>
     <div class="catDivider">
     <?php
-		step("10", "Submit", "3" , "Submit")
+		step("8", "Submit", "3" , "Submit")
 	?>
     </div>
     <div class="stepContent">

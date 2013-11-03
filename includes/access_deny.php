@@ -16,13 +16,13 @@
 			case "Site Administrator": $topPage = "site_administrator/includes/top_menu.php"; break;
 		}
 	} else {
-		$topPage = "includes/top_menu.php\">";
+		$topPage = "includes/top_menu.php";
 	}
 ?>
 <?php topPage($topPage); ?>
 <h2>Access Denied</h2>
 <?php
-	errorMessage("You are not allowed to access this content");
+	errorMessage("You do not have premission to access this content");
 ?>
 <p align="center">
   <input type="button" name="continue" id="continue" value="Continue" onclick="history.go(-1)" />
@@ -36,7 +36,7 @@
 			case "Site Administrator": $bottomPage = "site_administrator/includes/bottom_menu.php"; break;
 		}
 	} else {
-		$bottomPage = "includes/bottom_menu.php\">";
+		$bottomPage = "includes/bottom_menu.php";
 	}
 ?>
 <?php footer($bottomPage); ?>

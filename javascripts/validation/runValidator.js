@@ -188,7 +188,7 @@ $.validationEngine = {
 		/* VALIDATION FUNCTIONS */
 		function _required(caller,rules){   // VALIDATE BLANK FIELD
 			callerType = $(caller).attr("type");
-			if (callerType == "text" || callerType == "password" || callerType == "textarea"){
+			if (callerType == "text" || callerType == "password" || callerType == "textarea" || callerType == "file"){
 								
 				if(!$(caller).val()){
 					$.validationEngine.isError = true;

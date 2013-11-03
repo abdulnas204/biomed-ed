@@ -191,11 +191,7 @@
 			  //Echo the multiple choice content
 				  echo "</p></td><td valign=\"top\">" . stripslashes($testData['question']) . "<br /><br/ >";
 				  $answers = unserialize($testData['answerValue']);
-				  if ($testInfo['randomizeQuestions'] == "Randomize") {
-					  $answersDisplay = shuffle($answers);
-				  } else {
-					  $answersDisplay = $answers;
-				  }
+				  $answersDisplay = $answers;
 				  
 				  $start = sizeof ($answers);
 				  if ($testData['choiceType'] == "radio") {

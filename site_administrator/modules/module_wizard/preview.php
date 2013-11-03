@@ -8,6 +8,9 @@
 		
 		$questionCheck = mysql_query("SELECT * FROM `moduletest_{$currentTable}` WHERE `id` = '{$id}' LIMIT 1", $connDBA);
 		if (mysql_fetch_array($questionCheck)) {
+			$currentModule = $_SESSION['currentModule'];
+			$testInfoGrabber = mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$currentModule}' LIMIT 1", $connDBA);
+			$testInfo = mysql_fetch_array($testInfoGrabber);
 		} else {
 			die("The test question does not exist.");
 		}

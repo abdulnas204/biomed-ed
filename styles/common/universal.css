@@ -740,6 +740,38 @@ a.ascending:hover, a.ascending:active {
 	padding-right:12px;
 }
 
+.checked {
+	background: url(../../images/common/checkmark.png) no-repeat;
+	height: 16px;
+	display: block;
+	padding: 1px 0px 0px;
+	color: #666666;
+	text-decoration: none;
+	width: 16px;
+	font: 12px Tahoma, Arial, Helvetica, sans-serif;
+	outline: none;
+	cursor:default;
+}
+.unchecked {
+	background: url(../../images/common/x.png) no-repeat;
+}
+
+.visible {
+	background: url(../../images/admin_icons/visible.png) no-repeat;
+	height: 16px;
+	display: block;
+	padding: 1px 0px 0px;
+	color: #666666;
+	text-decoration: none;
+	width: 16px;
+	font: 12px Tahoma, Arial, Helvetica, sans-serif;
+	outline: none;
+	cursor:default;
+}
+.hidden {
+	background: url(../../images/admin_icons/hidden.png) no-repeat;
+}
+
 /* Display Info for tables displaying data */
 .dataTable{
 width:100%;

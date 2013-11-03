@@ -221,6 +221,7 @@
                     <option value="questions/multiple_choice.php">Multiple Choice</option>
                     <option value="questions/short_answer.php">Short Answer</option>
                     <option value="questions/true_false.php">True or False</option>
+                    <option value="questions/question_bank.php">Import from Question Bank</option>
                   </select>
                   <?php formErrors(); ?>
                   <input type="button" onclick="location=document.jump.menu.options[document.jump.menu.selectedIndex].value;" value="Go" />
@@ -228,101 +229,101 @@
          </form>
 </div>
 <p>
-      <?php
-	  //If an updated alert is shown
-	  	if (isset ($_GET['updated'])) {
-			echo "<br/ ><div align=\"center\"><div class=\"success\">The <strong>";
-			//Detirmine what kind of alert this will be
-			switch ($_GET['updated']) {
-				case "description" : echo "description"; break;
-				case "essay" : echo "essay"; break;
-				case "file" : echo "file response"; break;
-				case "blank" : echo "fill in the blank"; break;
-				case "matching" : echo "matching"; break;
-				case "choice" : echo "multiple choice"; break;
-				case "answer" : echo "short answer"; break;
-				case "truefalse" : echo "true false"; break;
-			}
-			echo "</strong> question was successfully updated.</div></div><br />";
-		} else {
-			echo "&nbsp;";
-		}
-	  ?>
-      </p>
-      <p>
-        <?php
-	  		if ($test == "exist") {
-				echo "<div align=\"center\">";
-					echo "<table align=\"center\" class=\"dataTable\">";
-					echo "<tbody>";
-						echo "<tr>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Order</strong></th>";
-							echo "<th width=\"150\" class=\"tableHeader\"><strong>Type</strong></th>";
-							echo "<th width=\"100\" class=\"tableHeader\"><strong>Point Value</strong></th>";
-							echo "<th class=\"tableHeader\"><strong>Question</strong></th>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Edit</strong></th>";
-							echo "<th width=\"50\" class=\"tableHeader\"><strong>Delete</strong></th>";
-						echo "</tr>";
-					//Select the module name, to fill in all test data
-						$currentModule = $_SESSION['currentModule'];
-						$currentTable = str_replace(" ","", $currentModule);
-					
-						$testDataGrabber = mysql_query ("SELECT * FROM moduletest_{$currentTable} ORDER BY position ASC", $connDBA);	
-						
-					//Select data for drop down menu
-						$dropDownDataGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} ORDER BY position ASC", $connDBA);
-						
-						while ($testData = mysql_fetch_array($testDataGrabber)){
-							echo "<tr";
-							if ($testData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-							">";
-								echo "<form action=\"test_content.php\">";
-								echo "<input type=\"hidden\" name=\"currentPosition\" value=\"" . $testData['position'] . "\" />";
-								echo "<input type=\"hidden\" name=\"id\" value=\"" . $testData['id'] . "\" />";
-								echo "<td width=\"50\"><div align=\"center\">";
-										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
-										$testCount = mysql_num_rows($dropDownDataGrabber);
-										for ($count=1; $count <= $testCount; $count++) {
-											echo "<option value=\"{$count}\"";
-											if ($testData ['position'] == $count) {
-												echo " selected=\"selected\"";
-											}
-											echo ">$count</option>";
-										}
-										echo "</select>";
-									echo "</div></td>";
-								echo "<td width=\"150\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $testData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $testData['type'] . "</a></div></td>";
-								echo "<td width=\"100\" align=\"center\"><div align=\"center\">" . $testData['points'];
-								if ($testData['points'] == "1") {
-									echo " Point";
-								} else {
-									echo " Points";
-								}
-								echo "</div></td>";
-								echo "<td align=\"center\"><div align=\"center\">" . commentTrim(85, $testData['question']) . "</div></td>";
-								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"";
-								switch ($testData['type']) {
-									case "Description" : echo "questions/description.php"; break;
-									case "Essay" : echo "questions/essay.php"; break;
-									case "File Response" : echo "questions/file_response.php"; break;
-									case "Fill in the Blank" : echo "questions/blank.php"; break;
-									case "Matching" : echo "questions/matching.php"; break;
-									case "Multiple Choice" : echo "questions/multiple_choice.php"; break;
-									case "Short Answer" : echo "questions/short_answer.php"; break;
-									case "True False" : echo "questions/true_false.php"; break;
-								}
-								echo "?question=" . $testData['position'] . "&id=" .  $testData['id'] . "\">" . "<img src=\"../../../images/admin_icons/edit.png\" alt=\"Edit\" border=\"0\" onmouseover=\"Tip('Edit this <strong>" . $testData['type'] . "</strong> question.')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
-								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"test_content.php?question=" .  $testData['position'] . "&id=" .  $testData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\">" . "<img src=\"../../../images/admin_icons/delete.png\" alt=\"Delete\" border=\"0\" onmouseover=\"Tip('Delete this <strong>" . $testData['type'] . "</strong> question.')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
-							echo "</form>";
-							echo "</tr>";
-						}
-					echo "</tbody>";
-				echo "</table></div>";
-				echo "<br />";
-			} else {
-				echo "<br /></br /><div align=\"center\">There are no test questions. Questions can be created by selecting a question type from the drop down menu above, and pressing \"Go\".</div><br /></br /><br /></br /><br /></br />";
-			}
-	  ?>
+<?php
+//If an updated alert is shown
+  if (isset ($_GET['updated'])) {
+	  echo "<br/ ><div align=\"center\"><div class=\"success\">The <strong>";
+	  //Detirmine what kind of alert this will be
+	  switch ($_GET['updated']) {
+		  case "description" : echo "description"; break;
+		  case "essay" : echo "essay"; break;
+		  case "file" : echo "file response"; break;
+		  case "blank" : echo "fill in the blank"; break;
+		  case "matching" : echo "matching"; break;
+		  case "choice" : echo "multiple choice"; break;
+		  case "answer" : echo "short answer"; break;
+		  case "truefalse" : echo "true false"; break;
+	  }
+	  echo "</strong> question was successfully updated.</div></div><br />";
+  } else {
+	  echo "&nbsp;";
+  }
+?>
+</p>
+<p>
+  <?php
+	  if ($test == "exist") {
+		  echo "<div align=\"center\">";
+			  echo "<table align=\"center\" class=\"dataTable\">";
+			  echo "<tbody>";
+				  echo "<tr>";
+					  echo "<th width=\"50\" class=\"tableHeader\"><strong>Order</strong></th>";
+					  echo "<th width=\"150\" class=\"tableHeader\"><strong>Type</strong></th>";
+					  echo "<th width=\"100\" class=\"tableHeader\"><strong>Point Value</strong></th>";
+					  echo "<th class=\"tableHeader\"><strong>Question</strong></th>";
+					  echo "<th width=\"50\" class=\"tableHeader\"><strong>Edit</strong></th>";
+					  echo "<th width=\"50\" class=\"tableHeader\"><strong>Delete</strong></th>";
+				  echo "</tr>";
+			  //Select the module name, to fill in all test data
+				  $currentModule = $_SESSION['currentModule'];
+				  $currentTable = str_replace(" ","", $currentModule);
+			  
+				  $testDataGrabber = mysql_query ("SELECT * FROM moduletest_{$currentTable} ORDER BY position ASC", $connDBA);	
+				  
+			  //Select data for drop down menu
+				  $dropDownDataGrabber = mysql_query("SELECT * FROM moduletest_{$currentTable} ORDER BY position ASC", $connDBA);
+				  
+				  while ($testData = mysql_fetch_array($testDataGrabber)){
+					  echo "<tr";
+					  if ($testData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+					  ">";
+						  echo "<form action=\"test_content.php\">";
+						  echo "<input type=\"hidden\" name=\"currentPosition\" value=\"" . $testData['position'] . "\" />";
+						  echo "<input type=\"hidden\" name=\"id\" value=\"" . $testData['id'] . "\" />";
+						  echo "<td width=\"50\"><div align=\"center\">";
+								  echo "<select name=\"position\" onchange=\"this.form.submit();\">";
+								  $testCount = mysql_num_rows($dropDownDataGrabber);
+								  for ($count=1; $count <= $testCount; $count++) {
+									  echo "<option value=\"{$count}\"";
+									  if ($testData ['position'] == $count) {
+										  echo " selected=\"selected\"";
+									  }
+									  echo ">$count</option>";
+								  }
+								  echo "</select>";
+							  echo "</div></td>";
+						  echo "<td width=\"150\"><div align=\"center\"><a href=\"javascript:void\" onclick=\"MM_openBrWindow('preview.php?id=" . $testData['id'] . "','','status=yes,scrollbars=yes,resizable=yes,width=640,height=480')\" onmouseover=\"Tip('Preview this <strong>" . $testData['type'] . "</strong> question')\" onmouseout=\"UnTip()\">" . $testData['type'] . "</a></div></td>";
+						  echo "<td width=\"100\" align=\"center\"><div align=\"center\">" . $testData['points'];
+						  if ($testData['points'] == "1") {
+							  echo " Point";
+						  } else {
+							  echo " Points";
+						  }
+						  echo "</div></td>";
+						  echo "<td align=\"center\"><div align=\"center\">" . commentTrim(85, $testData['question']) . "</div></td>";
+						  echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"";
+						  switch ($testData['type']) {
+							  case "Description" : echo "questions/description.php"; break;
+							  case "Essay" : echo "questions/essay.php"; break;
+							  case "File Response" : echo "questions/file_response.php"; break;
+							  case "Fill in the Blank" : echo "questions/blank.php"; break;
+							  case "Matching" : echo "questions/matching.php"; break;
+							  case "Multiple Choice" : echo "questions/multiple_choice.php"; break;
+							  case "Short Answer" : echo "questions/short_answer.php"; break;
+							  case "True False" : echo "questions/true_false.php"; break;
+						  }
+						  echo "?question=" . $testData['position'] . "&id=" .  $testData['id'] . "\">" . "<img src=\"../../../images/admin_icons/edit.png\" alt=\"Edit\" border=\"0\" onmouseover=\"Tip('Edit this <strong>" . $testData['type'] . "</strong> question.')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
+						  echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"test_content.php?question=" .  $testData['position'] . "&id=" .  $testData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\">" . "<img src=\"../../../images/admin_icons/delete.png\" alt=\"Delete\" border=\"0\" onmouseover=\"Tip('Delete this <strong>" . $testData['type'] . "</strong> question.')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
+					  echo "</form>";
+					  echo "</tr>";
+				  }
+			  echo "</tbody>";
+		  echo "</table></div>";
+		  echo "<br />";
+	  } else {
+		  echo "<br /></br /><div align=\"center\">There are no test questions. Questions can be created by selecting a question type from the drop down menu above, and pressing \"Go\".</div><br /></br /><br /></br /><br /></br />";
+	  }
+?>
  </p>
  <form action="test_content.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this);">
       <blockquote>

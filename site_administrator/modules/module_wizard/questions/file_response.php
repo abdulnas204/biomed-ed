@@ -164,10 +164,9 @@
 <?php title("Module Setup Wizard : Insert File Response Question"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
+<?php validate(); ?>
 <script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
-<script src="../../../../javascripts/common/loaderProgress.js" type="text/javascript"></script>
-<?php validate(); ?>
 </head>
 <body onload="MM_showHideLayers('progress','','hide')"<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
@@ -178,7 +177,7 @@
 		if (isset ($update)) {
 			echo "?question=" . $testData['position'] . "&id=" . $testData['id'];
 		}
-    ?>" method="post" enctype="multipart/form-data" name="fileResponse" onsubmit="MM_showHideLayers('progress','','show'); return errorsOnSubmit(this);" id="validate">
+    ?>" method="post" enctype="multipart/form-data" name="fileResponse" onsubmit="return errorsOnSubmit(this);" id="validate">
       <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
@@ -305,7 +304,9 @@
       <blockquote>
         <p>
           <label>
-          <?php submit("submit", "Submit"); ?>
+          <?php
+          	  fileSubmit("submit", "Submit", "'fileResponse', 'answer'");
+		  ?>
           </label>
           <label>
           <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
@@ -314,7 +315,7 @@
           <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../test_content.php');return document.MM_returnValue" value="Cancel" />
           </label>
         </p>
-        <div id="progress">
+        <div id="progress" style="display:none;">
           <p><span class="require">Uploading in progress... </span><img src="../../../../images/common/loading.gif" alt="Uploading" width="16" height="16" /></p>
         </div>
         <?php formErrors(); ?>

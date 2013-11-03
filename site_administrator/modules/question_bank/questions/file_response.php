@@ -120,21 +120,20 @@
 <?php title("Question Bank : File Response Question"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
+<?php validate(); ?>
 <script src="../../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
-<script src="../../../../javascripts/common/loaderProgress.js" type="text/javascript"></script>
-<?php validate(); ?>
 </head>
-<body onload="MM_showHideLayers('progress','','hide')"<?php bodyClass(); ?>>
+<body<?php bodyClass(); ?>>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
     <h2>Question Bank : File Response Question</h2>
-<p>A file response is a question that must be responded to in the form of an uploaded file, such as a video or a PDF. Files responses must be scored manually.</p>
+<p>A file response is a question which must be responded to in the form of an uploaded file, such as a video or a PDF. These questions must be scored manually.</p>
     <p>&nbsp;</p>
     <form action="file_response.php<?php
 		if (isset ($update)) {
 			echo "?id=" . $testData['id'];
 		}
-    ?>" method="post" enctype="multipart/form-data" name="fileResponse" onsubmit="MM_showHideLayers('progress','','show'); return errorsOnSubmit(this);" id="validate">
+    ?>" method="post" enctype="multipart/form-data" name="fileResponse" onsubmit="return errorsOnSubmit(this, 'answer', 'false');" id="validate">
       <div class="catDivider"><img src="../../../../images/numbering/1.gif" alt="1." width="22" height="22" /> Question</div>
       <div class="stepContent">
       <blockquote>
@@ -170,7 +169,7 @@
 					}
 				}
 			  ?> />
-              Extra Credit </label>
+              Extra Credit</label>
         </p>
         <p>
         Category<span class="require">*</span>: 
@@ -259,7 +258,7 @@
         </p>
         <p>
           <label>
-          <input name="answer" type="file" id="answer" size="50" onchange="validateField(this)" />
+          <input name="answer" type="file" id="answer" size="50" />
           </label>
           <br />Max file size: <?php echo ini_get('upload_max_filesize'); ?>
         </p>
@@ -307,7 +306,7 @@
           <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','../index.php<?php if (isset ($_SESSION['category'])) {echo "?category=" . urldecode($_SESSION['category']);} ?>');return document.MM_returnValue" value="Cancel" />
           </label>
         </p>
-        <div id="progress">
+        <div id="progress" style="display:none;">
           <p><span class="require">Uploading in progress... </span><img src="../../../../images/common/loading.gif" alt="Uploading" width="16" height="16" /></p>
         </div>
         <?php formErrors(); ?>

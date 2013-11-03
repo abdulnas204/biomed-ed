@@ -73,7 +73,7 @@
 ?>
 <?php
 //Forward to editor
-	if (isset ($_GET['id']) && isset($_GET['module']) && $_GET['action'] == "edit") {
+	if (isset ($_GET['id']) && $_GET['action'] == "edit") {
 		$id = $_GET['id'];
 		$sessionSetGrabber = mysql_query("SELECT * FROM moduledata WHERE id = '{$id}'", $connDBA);
 		$sessionSet = mysql_fetch_array($sessionSetGrabber);
@@ -91,9 +91,13 @@
 ?>
 <?php
 //Set module avaliability
-	if (isset($_POST['id']) && isset($_POST['option']) && $_POST['action'] == "setAvaliability") {
+	if (isset($_POST['id']) && $_POST['action'] == "setAvaliability") {
 		$id = $_POST['id'];
-		$option = $_POST['option'];
+		if (!$_POST['option']) {
+			$option = "";
+		} else {
+			$option = $_POST['option'];
+		}
 		
 		$setAvaliability = "UPDATE moduledata SET `avaliable` = '{$option}' WHERE id = '{$id}'";
 		mysql_query($setAvaliability, $connDBA);
@@ -120,8 +124,10 @@
 		mysql_query("DELETE FROM moduledata WHERE id = '{$id}' LIMIT 1", $connDBA);
 		mysql_query("UPDATE moduledata SET position = position-1 WHERE position > '{$position}'", $connDBA);
 		mysql_query("DROP TABLE `moduletest_{$tableName}`", $connDBA);
+		mysql_query("DROP TABLE `modulelesson_{$tableName}`", $connDBA);
 		
 	//Delete the directories
+		chmod("../../modules/" . $directoryName, 0777);
 		$directory = "../../modules/" . $directoryName;
 		$lesson = $directory . "/lesson";
 
@@ -132,40 +138,36 @@
 			}
 		}
 		
+		rmdir ($lessonDirectory);
+		
 		if (file_exists($directory . "/test")) {
 			$fileResponseAnswer = $directory . "/test/fileresponse/answer";
 			$fileResponseResponses = $directory . "/test/fileresponse/responses";
 		
-			while ($directory = readdir(opendir($fileResponseAnswer))) {
-				if ($directory !== "." && $directory !== "..") {
-					$deleteLocation = $fileResponseAnswer . "/" . $directory;
+			while ($answers = readdir(opendir($fileResponseAnswer))) {
+				if ($answers !== "." && $answers !== "..") {
+					$answersLocation = $fileResponseAnswer . "/" . $directory;
 					unlink($deleteLocation);
 				}
 			}
 			
-			while ($directory = readdir(opendir($fileResponseResponses))) {
-				if ($directory !== "." && $directory !== "..") {
-					$deleteLocation = $fileResponseResponses . "/" . $directory;
+			while ($responses = readdir(opendir($fileResponseResponses))) {
+				if ($responses !== "." && $lessons !== "..") {
+					$responsesLocation = $fileResponseResponses . "/" . $directory;
 					unlink($deleteLocation);
 				}
 			}
 			
-			$directory = readdir(opendir("../../modules/" . $directoryName . "/test/fileresponse"));
-				rmdir ($directory . "/answer");
-				rmdir ($directory . "/responses");
-				
-			$directory = readdir(opendir("../../modules/" . $directoryName));
-				rmdir ($directory . "/test");
+			rmdir ("../../modules/" . $directoryName . "/test/fileresponse/answer");
+			rmdir ("../../modules/" . $directoryName . "/test/fileresponse/responses");
+			rmdir ("../../modules/" . $directoryName . "/test/fileresponse");
+			rmdir ("../../modules/" . $directoryName . "/test/fileresponse");
 		}
+
+		rmdir ($directoryName);
 		
-		$directory = readdir(opendir("../../modules/" . $directoryName));
-			rmdir ($directory . "/lesson");
-			
-		$directory = readdir(opendir("../../modules/"));
-			rmdir ($directoryName);
-		
-		//header ("Location: index.php");
-		//exit;
+		header ("Location: index.php");
+		exit;
 	}
 ?>
 <?php
@@ -180,6 +182,9 @@
 <head>
 <?php title("Module Administration"); ?>
 <?php headers(); ?>
+<?php liveSubmit(); ?>
+<?php customCheckbox("visible"); ?>
+<script type="text/javascript" src="../../javascripts/common/warningDelete.js"></script>
 </head>
 <body<?php bodyClass(); ?>>
 <?php toolTip(); ?>
@@ -188,8 +193,7 @@
     <h2>Module Administration</h2>
     <p>Modifing the table below will chage the default settings and appearance for instructors.</p>
     <p>&nbsp;</p>
-      <div class="toolBar"><a href="module_wizard/index.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="module_wizard/index.php">Add New Module</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="question_bank/index.php"><img src="../../images/admin_icons/bank.png" alt="Bank" width="18" height="23" /></a> <a href="question_bank/index.php">Create Question Bank</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a>
-        <a href="settings.php">Customize Module Settings</a>     
+      <div class="toolBar"><a href="module_wizard/index.php"><img src="../../images/admin_icons/new.png" alt="Add" width="24" height="24" /></a> <a href="module_wizard/index.php">Add New Module</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="question_bank/index.php"><img src="../../images/admin_icons/bank.png" alt="Bank" width="18" height="23" /></a> <a href="question_bank/index.php">Create Question Bank</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="settings.php"><img src="../../images/admin_icons/settings.png" alt="Settings" width="24" height="24" /></a> <a href="settings.php">Customize Module Settings</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="feedback/index.php"><img src="../../images/admin_icons/feedback.png" alt="Feedback" width="24" height="24" /></a> <a href="feedback/index.php">Feedback</a>
         <?php
 			if ($modules == "exist") {
 			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"../../modules/index.php\"><img src=\"../../images/admin_icons/search.png\" alt=\"Search\" width=\"24\" height=\"24\" /></a> <a href=\"../../modules/index.php\">Preview the Modules</a>";
@@ -197,18 +201,18 @@
 		?>
       </div>
 <br /></br />
-      <?php
+<?php
 	  		if ($modules == "exist") {
 				echo "<div align=\"center\">";
 					echo "<table align=\"center\" class=\"dataTable\">";
 					echo "<tbody>";
 						echo "<tr>";
-							echo "<th width=\"25\" class=\"tableHeader\"><strong>Order</strong></th>";
-							echo "<th width=\"25\" class=\"tableHeader\"><strong>Avaliable</strong></th>";
-							echo "<th width=\"100\" class=\"tableHeader\"><strong>Module Name</strong></th>";
-							echo "<th width=\"200\" class=\"tableHeader\"><strong>Comments</strong></th>";
-							echo "<th width=\"25\" class=\"tableHeader\"><strong>Edit</strong></th>";
-							echo "<th width=\"25\" class=\"tableHeader\"><strong>Delete</strong></th>";
+							echo "<th width=\"25\" class=\"tableHeader\"></th>";
+							echo "<th width=\"50\" class=\"tableHeader\"><strong>Order</strong></th>";
+							echo "<th width=\"200\" class=\"tableHeader\"><strong>Module Name</strong></th>";
+							echo "<th class=\"tableHeader\"><strong>Comments</strong></th>";
+							echo "<th width=\"50\" class=\"tableHeader\"><strong>Edit</strong></th>";
+							echo "<th width=\"50\" class=\"tableHeader\"><strong>Delete</strong></th>";
 						echo "</tr>";
 					//Select data for the loop
 						$moduleDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
@@ -221,7 +225,9 @@
 							echo "<tr";
 							if ($moduleData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 							">";
-								echo "<td width=\"25\"><form name=\"modules\" action=\"index.php\"><div align=\"center\">";
+								echo "<td width=\"25\"><div align=\"center\">" . "<form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $moduleData['id'] ."\" class=\"visible"; if ($moduleData['avaliable'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $moduleData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $moduleData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($moduleData['avaliable'] == "on") {echo " checked=\"checked\"";} echo "></div></form>" . "</div></td>";
+							
+								echo "<td width=\"50\"><form name=\"modules\" action=\"index.php\"><div align=\"center\">";
 										echo "<select name=\"position\" onchange=\"this.form.submit();\">";
 										$moduleCount = mysql_num_rows($dropDownDataGrabber);
 										for ($count=1; $count <= $moduleCount; $count++) {
@@ -241,12 +247,11 @@
 									echo $moduleData['position'];
 									echo "\"></form></td>";
 								
-								echo "<td width=\"25\"><div align=\"center\">" . "<form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><input type=\"hidden\" name=\"id\" value=\"" . $moduleData['id'] . "\"><select name=\"option\" onchange=\"this.form.submit();\">" . "<option value=\"1\""; if ($moduleData['avaliable'] == 1) {echo " selected=\"selected\"";} echo ">" . "Avaliable" . "</option>" . "<option value=\"0\""; if ($moduleData['avaliable'] == 0) {echo " selected=\"selected\"";} echo ">" . "Not Avaliable" . "</option>" . "</select></form>" . "</div></td>";
-								echo "<td width=\"100\"><div align=\"center\"><a href=\"../../modules/index.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong> " . $moduleData['name'] . " </strong>module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></div></td>";
+								echo "<td width=\"200\"><div align=\"center\"><a href=\"../../modules/index.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong> " . $moduleData['name'] . " </strong>module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></div></td>";
 								
-								echo "<td width=\"200\" align=\"center\"><div align=\"center\">" . commentTrim(60, $moduleData['comments']) . "</div></td>";
-								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"index.php?action=edit&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" onmouseover=\"Tip('Edit the <strong> " . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
-								echo "<td width=\"25\"><div align=\"center\">" . "<a href=\"index.php?action=delete&module=" .  $moduleData['position'] . "&id=" .  $moduleData['id'] . "\" onclick=\"return confirm ('Warning: this action will delete the lesson, the test, and any files students have uploaded regarding this module. Statistics and grades for students that have taken this module will not be deleted. Continue?');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" onmouseover=\"Tip('Delete the <strong> " . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a>";"</div></td>";
+								echo "<td align=\"center\"><div align=\"center\">" . commentTrim(60, $moduleData['comments']) . "</div></td>";
+								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"index.php?action=edit&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "\">" . "<img src=\"../../images/admin_icons/edit.png\" alt=\"Edit\" onmouseover=\"Tip('Edit the <strong> " . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a>" . "</div></td>";
+								echo "<td width=\"50\"><div align=\"center\">" . "<a href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "', 'module');\">" . "<img src=\"../../images/admin_icons/delete.png\" alt=\"Delete\" onmouseover=\"Tip('Delete the <strong> " . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . "</a></div></td>";
 							echo "</tr>";
 						}
 					echo "</tbody>";

@@ -37,6 +37,8 @@ ob_start();
 //Call site title
 	function title($title) {
 		global $connDBA;
+		global $root;
+		
 		$strippedTitle = stripslashes($title);
 		$siteNameGrabber = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 		$siteName = stripslashes($siteNameGrabber['siteName']);
@@ -47,55 +49,65 @@ ob_start();
 //Universal information
 	//Include a stylesheet and basic javascripts
 	function headers() {
+		global $connDBA;
+		global $root;
+		
 		$requestURL = $_SERVER['REQUEST_URI'];
 		if (strstr($requestURL, "enable_javascript.php")) {
 		} else {
-			echo "<noscript><meta http-equiv=\"refresh\" content=\"0; url=http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/enable_javascript.php\"></noscript>";
+			echo "<noscript><meta http-equiv=\"refresh\" content=\"0; url=" . $root . "enable_javascript.php\"></noscript>";
 		}
 		$requestURL = $_SERVER['REQUEST_URI'];
 		if (strstr($requestURL, "enable_javascript.php")) {
 			echo "<script type=\"text/javascript\">window.location = \"index.php\"</script>
 ";
 		}
-		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "gateway.php?file=styles/common/universal.css\" /><link type=\"image/x-icon\" rel=\"shortcut icon\" href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/images/icon.ico\" /><script src=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/common/hoverEffect.js\" type=\"text/javascript\"></script>";
+		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "styles/common/universal.css\" /><link type=\"image/x-icon\" rel=\"shortcut icon\" href=\"" . $root . "images/icon.ico\" /><script src=\"" . $root . "javascripts/common/hoverEffect.js\" type=\"text/javascript\"></script>";
 		
-		global $connDBA;
 		$siteStyleGrabber = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 		$siteStyle = $siteStyleGrabber['style'];
-		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/styles/themes/" . $siteStyle . "\" />";
+		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "styles/themes/" . $siteStyle . "\" />";
 	}
 	
 	//Include the body class
 	function bodyClass() {
+		global $connDBA;
+		global $root;
+		
 		echo " class=\"theme course-1 dir-ltr lang-en_utf8\"";
 	}
 
 	//Include a tooltip	
 	function tooltip() {
-		echo "<script src=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/common/tooltip.js\" type=\"text/javascript\"></script>";
+		global $connDBA;
+		global $root;
+		
+		echo "<script src=\"" . $root . "javascripts/common/tooltip.js\" type=\"text/javascript\"></script>";
 	}
 	
 	//Include user login status
 	function loginStatus() {
-		$authenticationURL = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
-	
+		global $connDBA;
+		global $root;
+			
 		if (isset ($_SESSION['MM_Username'])) {
-			global $connDBA;
 			$userName = $_SESSION['MM_Username'];
 			$nameGrabber = mysql_query ("SELECT * FROM users WHERE userName = '{$userName}'", $connDBA);
 			$name = mysql_fetch_array($nameGrabber);
 			$firstName = $name['firstName'];
 			$lastName = $name['lastName'];
 			
-			echo "You are logged in as " . $firstName . " " . $lastName . " <a href=\"" . $authenticationURL . "logout.php\">(Logout)</a>";
+			echo "You are logged in as " . $firstName . " " . $lastName . " <a href=\"" . $root . "logout.php\">(Logout)</a>";
 		} else {
-			echo "You are not logged in. <a href=\"" . $authenticationURL . "login.php\">(Login)</a>";
+			echo "You are not logged in. <a href=\"" . $root . "login.php\">(Login)</a>";
 		}
 	}
 	
 	//Include the logo
 	function logo() {
 		global $connDBA;
+		global $root;
+		
 		$imagePaddingGrabber = mysql_query("SELECT * FROM siteprofiles", $connDBA);	
 		$imagePaddingArray = mysql_fetch_array($imagePaddingGrabber);
 		$imagePaddingTop = $imagePaddingArray['paddingTop'];
@@ -105,30 +117,33 @@ ob_start();
 		$imageWidth = $imagePaddingArray['width'];
 		$imageHeight = $imagePaddingArray['height'];
 	
-	echo "<div style=\"padding-top:" . $imagePaddingTop . "px; padding-bottom:" . $imagePaddingBottom . "px; padding-left:" .  $imagePaddingLeft . "px; padding-right:" . $imagePaddingRight . "px;\">";
+		echo "<div style=\"padding-top:" . $imagePaddingTop . "px; padding-bottom:" . $imagePaddingBottom . "px; padding-left:" .  $imagePaddingLeft . "px; padding-right:" . $imagePaddingRight . "px;\">";
 		if (isset ($_SESSION['MM_UserGroup'])) {
 			switch($_SESSION['MM_UserGroup']) {
-				case "Student": echo "<a href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/student/index.php\">"; break;
+				case "Student": echo "<a href=\"" . $root . "student/index.php\">"; break;
 				case "Instructor": echo "<a href=\"http://\"" . $_SERVER['HTTP_HOST'] . "/biomed-ed/instructor/index.php\">"; break;
-				case "Organization Administrator": echo "<a href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/administrator/index.php\">"; break;
-				case "Site Administrator": echo "<a href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/site_administrator/index.php\">"; break;
-				case "Advertiser": echo "<a href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/advertiser/index.php\">"; break;
+				case "Organization Administrator": echo "<a href=\"" . $root . "administrator/index.php\">"; break;
+				case "Site Administrator": echo "<a href=\"" . $root . "site_administrator/index.php\">"; break;
+				case "Advertiser": echo "<a href=\"" . $root . "advertiser/index.php\">"; break;
 			}
 		} else {
-			echo "<a href=\"http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/index.php\">";
+			echo "<a href=\"" . $root . "index.php\">";
 		}
 		
-	echo "<img src=\"" . "http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/images/banner.png\"";
-	if ($imagePaddingArray['auto'] !== "on") {
+		echo "<img src=\"" . "" . $root . "images/banner.png\"";
+		if ($imagePaddingArray['auto'] !== "on") {
 			echo " width=\"" . $imageWidth . "\" height=\"" . $imageHeight . "\"";
 		} 
 		
-	echo " alt=\"" . $imagePaddingArray['siteName'] . "\" onmouseover=\"MM_effectAppearFade(this, 1000, 80, 100, false)\"></a></div>";
+		echo " alt=\"" . $imagePaddingArray['siteName'] . "\" onmouseover=\"MM_effectAppearFade(this, 1000, 80, 100, false)\"></a></div>";
 	}
 
 	//Include a navigation bar
 	function navigation($URL) {
-		$include = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/" . $URL;
+		global $connDBA;
+		global $root;
+		
+		$include = $root . $URL;
 		echo "<div id=\"navbar_bg\"><div class=\"navbar clearfix\"><div class=\"breadcrumb\">";
 		require_once($include);
 		echo "</div></div></div>";
@@ -137,6 +152,8 @@ ob_start();
 	//Include all top-page items
 	function topPage($URL) {
 		global $connDBA;
+		global $root;
+		
 		$siteAssist = mysql_fetch_array(mysql_query("SELECT * FROM siteprofiles", $connDBA));
 		
 		if ($siteAssist['assist'] == "no") {
@@ -167,9 +184,12 @@ ob_start();
 	
 	//Include a footer
 	function footer($URL) {
+		global $connDBA;
+		global $root;
+		
 		echo "</div></div>";
-		$include = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/" . $URL;
-		$footer = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/includes/footer.php";
+		$include = "" . $root . "" . $URL;
+		$footer = "" . $root . "includes/footer.php";
 		echo "<div id=\"footer\"><div>&nbsp;</div><div class=\"breadcrumb\">";
 		require_once ($include);
 		echo "</div><div align=\"right\">";
@@ -181,6 +201,7 @@ ob_start();
 	function login() {
 		global $connDBA;
 		global $root;
+		
 
 		if (!function_exists("GetSQLValueString")) {
 		function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "") 
@@ -210,10 +231,6 @@ ob_start();
 		  return $theValue;
 		}
 		}
-		// *** Validate request to login to this site.
-		if (!isset($_SESSION)) {
-		  session_start();
-		}
 		
 		$loginFormAction = $_SERVER['PHP_SELF'];
 		if (isset($_GET['accesscheck'])) {
@@ -224,8 +241,30 @@ ob_start();
 		  $loginUsername=$_POST['username'];
 		  $password=$_POST['password'];
 		  $MM_fldUserAuthorization = "role";
-		  $MM_redirectLoginSuccess = "index.php?switch";
-		  $MM_redirectLoginFailed = "index.php?alert";
+			
+			$userRoleGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$loginUsername}' AND `passWord` = '{$password}'");
+			if ($userRole = mysql_fetch_array($userRoleGrabber)) {
+				$success = "";
+				$failure = "";
+				
+				if (isset($_GET['accesscheck'])) {
+					$returnAddressStrip = "http://" . $_SERVER['HTTP_HOST'] . "/" . $_GET['accesscheck'];
+					$success .= str_replace($root, "", $returnAddressStrip);
+				} else {
+					switch ($userRole['role']) {
+						case "Student": $success .= "instructor/index.php"; break;
+						case "Instructor": $success .= "Location: instructor/index.php"; break;
+						case "Organization Administrator": $success .= "Location: admin/index.php"; break;
+						case "Site Administrator": $success .= "Location: site_administrator/index.php"; break;
+					}
+				}
+			} else {
+				$success = "";
+				$failure = "login.php?alert";
+			}
+		  
+		  $MM_redirectLoginSuccess = $success;
+		  $MM_redirectLoginFailed = $failure;
 		  $MM_redirecttoReferrer = false;
 		  mysql_select_db($database_connDBA, $connDBA);
 			
@@ -245,16 +284,19 @@ ob_start();
 			if (isset($_SESSION['PrevUrl']) && false) {
 			  $MM_redirectLoginSuccess = $_SESSION['PrevUrl'];	
 			}
-			header("Location: " . $MM_redirectLoginSuccess );
+			header("Location: " . $root . $MM_redirectLoginSuccess );
 		  }
 		  else {
-			header("Location: ". $MM_redirectLoginFailed );
+			header("Location: " . $root . $MM_redirectLoginFailed );
 		  }
 		}
 	}
 	
 //Maintain login status
 	function loginCheck($role) {
+		global $connDBA;
+		global $root;
+		
 		$MM_authorizedUsers = $role;
 		$MM_donotCheckaccess = "false";
 		
@@ -284,7 +326,7 @@ ob_start();
 		  return $isValid; 
 		}
 		
-		$MM_restrictGoTo = "http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/login.php";
+		$MM_restrictGoTo = "" . $root . "login.php";
 		if (!((isset($_SESSION['MM_Username'])) && (isAuthorized("",$MM_authorizedUsers, $_SESSION['MM_Username'], $_SESSION['MM_UserGroup'])))) {   
 		  $MM_qsChar = "?";
 		  $MM_referrer = $_SERVER['PHP_SELF'];
@@ -300,6 +342,8 @@ ob_start();
 //Meta information
 	function meta() {
 		global $connDBA;
+		global $root;
+		
 		$meta = mysql_fetch_array(mysql_query ("SELECT * FROM siteprofiles", $connDBA));
 	
 		echo "<meta name=\"author\" content=\"" . stripslashes($meta['author']) . "\" />
@@ -312,46 +356,121 @@ ob_start();
 	
 //Include the tiny_mce simple widget
 	function tinyMCESimple () {
-		echo "<script type=\"text/javascript\" src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/common/tiny_mce_simple.js\"></script>";
+		global $connDBA;
+		global $root;
+		
+		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_simple.js\"></script>";
 	}
 	
 //Include the tiny_mce advanced widget
 	function tinyMCEAdvanced () {
-		echo "<script type=\"text/javascript\" src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/common/tiny_mce_advanced.js\"></script>";
+		global $connDBA;
+		global $root;
+		
+		echo "<script type=\"text/javascript\" src=\"" . $root . "tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "javascripts/common/tiny_mce_advanced.js\"></script>";
 	}
 	
 //Include a form validator
 	function validate () {
-		echo "<link rel=\"stylesheet\" href=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/styles/validation/validatorStyle.css\" type=\"text/css\">";
-		echo "<link rel=\"stylesheet\" href=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/styles/validation/validateTextarea.css\" type=\"text/css\">";
-		echo "<script src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/validation/validatorCore.js\" type=\"text/javascript\"></script>";
-		echo "<script src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/validation/validatorOptions.js\" type=\"text/javascript\"></script>";
-		echo "<script src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/validation/runValidator.js\" type=\"text/javascript\"></script>";
-		echo "<script src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/validation/validateTextarea.js\" type=\"text/javascript\"></script>";
-		echo "<script src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/javascripts/validation/formErrors.js\" type=\"text/javascript\"></script>";
+		global $connDBA;
+		global $root;
+		
+		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/validation/validatorStyle.css\" type=\"text/css\">";
+		echo "<link rel=\"stylesheet\" href=\"" . $root . "styles/validation/validateTextarea.css\" type=\"text/css\">";
+		echo "<script src=\"" . $root . "javascripts/validation/validatorCore.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "javascripts/validation/validatorOptions.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "javascripts/validation/runValidator.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "javascripts/validation/validateTextarea.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "javascripts/validation/formErrors.js\" type=\"text/javascript\"></script>";
 	}
 	
-//Insert a form errors box
+//Insert a form errors box, which will report any form errors on submit
 	function formErrors () {
-		echo "<div id=\"errorBox\" style=\"display:none;\">Some fields are incomplete, please scroll up to correct them.</div>";
+		global $connDBA;
+		global $root;
+		
+		echo "<div id=\"errorBox\" style=\"display:none;\">Some fields are incomplete, please scroll up to correct them.</div><div id=\"progress\" style=\"display:none;\"><p><span class=\"require\">Uploading in progress... </span><img src=\"" . $root . "images/common/loading.gif\" alt=\"Uploading\" width=\"16\" height=\"16\" /></p></div>";
+	}
+	
+//Insert an error window, which will report errors live
+	function errorWindow($type, $message, $phpGet = false, $phpError = false, $liveError = false) {
+		if ($type == "database") {
+			if ($liveError == true) {
+				if (isset($_GET[$phpGet]) && $_GET[$phpGet] == $phpError) {
+						echo "<div align=\"center\" id=\"errorWindow\">" . errorMessage($message) . "</div>";
+				} else {
+					echo "<div align=\"center\" id=\"errorWindow\"><p>&nbsp;</p></div>";
+				}
+			} else {
+				if ($_GET[$phpGet] == $phpError) {
+						echo errorMessage($message);
+				} else {
+					echo "<p>&nbsp;</p>";
+				}
+			}
+		}
+		
+		if ($type == "extension") {
+			echo "<div align=\"center\"><div id=\"errorWindow\" class=\"error\" style=\"display:none;\">" .$message . "</div></div>";
+		}
+	}
+	
+	
+//Include a life updater script
+	function liveSubmit() {
+		global $connDBA;
+		global $root;
+		
+		echo "<script src=\"" . $root . "javascripts/liveSubmit/submitterCore.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "javascripts/liveSubmit/runSubmitter.js\" type=\"text/javascript\"></script>";
+	}
+	
+//Include the custom checkbox script
+	function customCheckbox($type) {
+		global $connDBA;
+		global $root;
+		
+		echo "<script src=\"" . $root . "javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script>";
+		if ($type == "checkbox") {
+			echo "<script src=\"" . $root . "javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
+		} elseif ($type == "visible") {
+			echo "<script src=\"" . $root . "javascripts/customCheckbox/runVisible.js\" type=\"text/javascript\"></script>";
+		}
+	}
+	
+//Insert live error script
+	function liveError() {
+		global $connDBA;
+		global $root;
+		
+		echo "<script src=\"" . $root . "javascripts/liveError/errorCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "javascripts/liveError/runNameError.js\" type=\"text/javascript\"></script>";
 	}
 	
 //Submit a form and toggle the tinyMCE to save its content
 	function submit($id, $value) {
+		global $connDBA;
+		global $root;
+		
 		echo "<input type=\"submit\" name=\"" . $id . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"tinyMCE.triggerSave();\" />";
 	}
 	
 //If the user is editing the lesson, display a different series of numbering
 	function step ($number, $text, $sessionNumber, $sessionText) {
+		global $connDBA;
+		global $root;
+		
 		if (isset ($_SESSION['review'])) {
-			echo "<img src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/images/numbering/" .$sessionNumber . ".gif\" alt=\"" . $sessionNumber . ".\" width=\"22\" height=\"22\" /> " . $sessionText;
+			echo "<img src=\"" . $root . "images/numbering/" . $sessionNumber . ".gif\" alt=\"" . $sessionNumber . ".\" width=\"22\" height=\"22\" /> " . $sessionText;
 		} else {
-			echo "<img src=\"http://" .  $_SERVER['HTTP_HOST'] . "/biomed-ed/images/numbering/" .$number . ".gif\" alt=\"" . $number . ".\" width=\"22\" height=\"22\" /> " . $text;
+			echo "<img src=\"" . $root . "images/numbering/" .$number . ".gif\" alt=\"" . $number . ".\" width=\"22\" height=\"22\" /> " . $text;
 		}
 	}
 	
 //Generate a random string
 	function randomValue($length = 8, $seeds = 'alphanum') {
+		global $connDBA;
+		global $root;
+		
 		$seedings['alpha'] = 'abcdefghijklmnopqrstuvwqyz';
 		$seedings['numeric'] = '0123456789';
 		$seedings['alphanum'] = 'abcdefghijklmnopqrstuvwqyz0123456789';
@@ -377,8 +496,11 @@ ob_start();
 	
 //A function to limit the length of the directions
 	function commentTrim ($length, $value) {
-	   $stripValue = array("<p>", "</p>", "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>", "</h1>", "</h2>", "</h3>", "</h4>", "</h5>", "</h6>", "<br />");
-	   $comments = str_replace($stripValue, " ", $value);
+		global $connDBA;
+		global $root;
+		
+	   $commentsStrip = preg_replace("/<img[^>]+\>/i", "(image)", $value);
+	   $comments = strip_tags($commentsStrip);
 	   $maxLength = $length;
 	   $countValue = html_entity_decode($comments);
 	   if (strlen($countValue) <= $maxLength) {
@@ -387,5 +509,14 @@ ob_start();
 	
 	   $shortenedValue = substr($countValue, 0, $maxLength - 3) . "...";
 	   return $shortenedValue;
+	}
+	
+//A function to check the extension of a file
+	function extension ($targetFile) {
+		$fileName = strtolower($targetFile);
+		$entension = explode(".", $targetFile);
+		$value = count($entension)-1;
+		$entension = $entension[$value];
+		return $entension;
 	}
 ?>

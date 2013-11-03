@@ -26,7 +26,7 @@
 		
 	//Selectivly grant access to system files
 		//CSS
-		if ($directory['0'] == "styles") {
+		if ($directory['0'] == "modules") {
 			if ($directory['1'] == "common") {
 				header ("Content-type: text/css");
 				require_once($gatewayFile);

@@ -22,12 +22,12 @@
 <?php
 //If the settings are being updated
 	if (isset($_SESSION['currentModule'])) {
-		$name = $_SESSION['currentModule'];
-		$moduleDataGrabber = mysql_query("SELECT * FROM moduledata WHERE name = '{$name}'", $connDBA);
+		$currentModule = $_SESSION['currentModule'];
+		$moduleDataGrabber = mysql_query("SELECT * FROM moduledata WHERE name = '{$currentModule}'", $connDBA);
 		$moduleData = mysql_fetch_array($moduleDataGrabber);
 		
 	//Process the form
-		if (isset($_POST['submit'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
@@ -46,13 +46,16 @@
 			$time = $_POST['time'];
 			$timeLabel = $_POST['timeLabel'];
 			$comments = mysql_real_escape_string($_POST['comments']);
-			$lock = $_POST['lock'];
+			$locked = $_POST['locked'];
 			$selected = $_POST['selected'];
 			$skip = $_POST['skip'];
+			$feedback = $_POST['feedback'];
+			$tags = mysql_real_escape_string($_POST['tags']);
+			$searchEngine = $_POST['searchEngine'];
 			
 			$timeFrame = $time . $timeLabel;
 			
-			$editModuleQuery = "UPDATE moduledata SET `lock` = '{$lock}', `name` = '{$name}', `category` = '{$category}', `employee` = '{$employee}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `selected` = '{$selected}', `skip` = '{$skip}' WHERE id = '{$id}'";
+			$editModuleQuery = "UPDATE moduledata SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `employee` = '{$employee}', `difficulty` = '{$difficulty}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `selected` = '{$selected}', `skip` = '{$skip}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE id = '{$id}'";
 			
 		//Update the session to manage the steps
 			$_SESSION['step'] = "lessonContent";
@@ -67,6 +70,11 @@
 				mysql_query("ALTER TABLE moduletest_{$oldTableName} RENAME TO moduletest_{$newTableName}", $connDBA);
 			}
 			
+		//Update the lesson table
+			$oldTableName = str_replace(" ", "", $_SESSION['currentModule']);;
+			$newTableName = str_replace(" ", "", $name);
+			mysql_query("ALTER TABLE modulelesson_{$oldTableName} RENAME TO modulelesson_{$newTableName}", $connDBA);
+			
 		//Update the directory name, if it exists
 			$directoryCheckGrabber = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$_SESSION['currentModule']}'", $connDBA);
 			$directoryCheck = mysql_fetch_array($directoryCheckGrabber);
@@ -79,6 +87,8 @@
 			
 		//Reset the session name
 			$_SESSION['currentModule'] = $name;
+			$_SESSION['category'] = $category;
+			$_SESSION['difficulty'] = $difficulty;
 			
 		//Execute command on database			
 			$editModuleQueryResult = mysql_query($editModuleQuery, $connDBA);
@@ -94,7 +104,7 @@
 //If the settings are being inserted	
 	} else {
 	//Process the form
-		if (isset($_POST['submit'])) {
+		if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['category']) && !empty($_POST['employee']) && !empty($_POST['difficulty']) && !empty($_POST['time']) && !empty($_POST['timeLabel']) && is_numeric($_POST['locked']) && is_numeric($_POST['selected']) && is_numeric($_POST['skip']) && is_numeric($_POST['feedback'])) {
 		//Do not process if a module with the same name exists
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$moduleCheck = mysql_query("SELECT * FROM moduledata WHERE `name` = '{$name}'", $connDBA);
@@ -106,7 +116,7 @@
 		//Get the last module position, and add one to the value for the next module
 			$lastModuleGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position DESC", $connDBA);
 			$lastModuleFetch = mysql_fetch_array($lastModuleGrabber);
-			$lastModule = $lastModuleFetch['position']+1;
+			$position = $lastModuleFetch['position']+1;
 			
 			$name = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
 			$category = mysql_real_escape_string($_POST['category']);
@@ -115,58 +125,91 @@
 			$time = $_POST['time'];
 			$timeLabel = $_POST['timeLabel'];
 			$comments = mysql_real_escape_string($_POST['comments']);
-			$lock = $_POST['lock'];
+			$locked = $_POST['locked'];
 			$selected = $_POST['selected'];
 			$skip = $_POST['skip'];
-			$time = serialize("1");
+			$feedback = $_POST['feedback'];
+			$tags = mysql_real_escape_string($_POST['tags']);
+			$searchEngine = $_POST['searchEngine'];
 			
 			$timeFrame = $time . $timeLabel;
-				
+			
 			$newModuleQuery = "INSERT INTO moduledata (
-							`id`, `position`, `lock`, `avaliable`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `selected`, `skip`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `randomizeQuestions`, `lessonURL`
+							`id`, `position`, `locked`, `avaliable`, `name`, `category`, `employee`, `difficulty`, `timeFrame`, `comments`, `selected`, `skip`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`
 							) VALUES (
-							NULL, '{$lastModule}', '{$lock}', '0', '{$name}', '{$category}', '{$employee}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$selected}', '{$skip}', '0', 'T', 'D', '100', '0', 'F', 'C', '0', 'G', '0', '0', '{$time}', 'R', 'R', 'U'
+							NULL, '{$position}', '{$locked}', '', '{$name}', '{$category}', '{$employee}', '{$difficulty}', '{$timeFrame}', '{$comments}', '{$selected}', '{$skip}', '{$feedback}', '{$tags}', '{$searchEngine}', '', '', '', '', '', '', '', '', '', '', '', '', ''
 							)";
+
+		//Create a new table for the lesson content
+			$dataBaseName = str_replace(" ", "", $name);
+			mysql_query("CREATE TABLE IF NOT EXISTS `modulelesson_{$dataBaseName}` (
+						  `id` int(255) NOT NULL AUTO_INCREMENT,
+						  `position` int(100) NOT NULL,
+						  `visible` int(1) NOT NULL,
+						  `type` longtext NOT NULL,
+						  `title` longtext NOT NULL,
+						  `content` longtext NOT NULL,
+						  `attachment` longtext NOT NULL,
+						  `comments` longtext NOT NULL,
+						  PRIMARY KEY (`id`)
+						)");
 			
 		//Create a session with the name of the module in it, we will need it for later use
 			$_SESSION['currentModule'] = $name;
+			$_SESSION['category'] = $category;
+			$_SESSION['difficulty'] = $difficulty;
 			
 		//Update the session to manage the steps
 			$_SESSION['step'] = "lessonContent";
 			
 		//Execute command on database			
-			$newModuleQueryResult = mysql_query($newModuleQuery, $connDBA);	
+			$newModuleQueryResult = mysql_query($newModuleQuery, $connDBA);
+			
 			header ("Location: lesson_content.php");
 			exit;
 		}
 	}
 ?>
+<?php
+	if (isset($_GET['checkName'])) {
+		$inputNameSpaces = $_GET['checkName'];
+		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
+		$checkName= mysql_query("SELECT * FROM `moduledata` WHERE `name` = '{$inputNameSpaces}'", $connDBA);
+		
+		if($name = mysql_fetch_array($checkName)) {					
+			if (isset($_SESSION['currentModule'])) {
+				if ($name['name'] !== $_SESSION['currentModule']) {
+					echo "<div class=\"error\" id=\"errorWindow\">A module with this name already exists</div>";
+				} else {
+					echo "<p>&nbsp;</p>";
+				}
+			} else {
+				echo "<div class=\"error\" id=\"errorWindow\">A module with this name already exists</div>";
+			}
+		} else {
+			echo "<p>&nbsp;</p>";
+		}
+		
+		echo "<script type=\"text/javascript\">validateName()</script>";
+		die();
+	}
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
 <head>
 <?php title("Module Setup Wizard : Module Settings"); ?>
 <?php headers(); ?>
 <?php tinyMCESimple(); ?>
-<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <?php validate(); ?>
+<?php liveError(); ?>
+<script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 </head>
 <body>
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
         <h2>Module Setup Wizard : Module Settings</h2>
 <p>Setup the module's initial settings, such as the name, time frame, and any comments.</p>
-<p>
-<?php
-//Display an error message
-	if (isset ($_GET['error'])) {
-		if ($_GET['error'] == "identical") {
-			errorMessage("A module with this name already exists.");
-		}
-	} else {
-		echo "&nbsp;";
-	}
-?>
-</p>
+<?php errorWindow("database", "A module with this name already exists", "error", "identical", "true"); ?>
       <form name="lessonSettings" action="lesson_settings.php" method="post" id="validate" onsubmit="return errorsOnSubmit(this);">
       <div class="catDivider">
         <?php
@@ -178,117 +221,31 @@
           <p>Module Name<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The name of the module')" onmouseout="UnTip()" /></p>
           <blockquote>
             <p>
-              <label>
-              <input class="validate[required,custom[onlyLetter]] text-input" maxlength="100" autocomplete="off" name="name" type="text" id="name" size="50"<?php
+              
+              <input class="validate[required,custom[onlyLetter]] text-input" maxlength="100" autocomplete="off" name="name" type="text" id="name" size="50" onblur="checkName(this.form.id, this.name)"<?php
 				//If the module is being edited
 					if (isset($_SESSION['currentModule'])) {
 						echo " value=\"" . stripslashes($moduleData['name']) . "\"";
 					}
 				?> />
-              </label>
+              
            </p>
           </blockquote>
-          <p>Category<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The category that this modules covers')" onmouseout="UnTip()" /></p>
+          <p>Directions: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Comments or directions regarding the content of this module')" onmouseout="UnTip()" /></p>
           <blockquote>
             <p>
-              <label>
-              <select name="category" id="category" class="validate[required]">
-              	<?php
-				//Select all of the category items
-					$categoryGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
-					//If the module is being edited
-					if (isset($_SESSION['currentModule'])) {
-						echo "<option value=\"\">- Select -</option>";
-						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes($category['category']) . "\"";
-							
-							if ($category['category'] == $moduleData['category']) {
-								echo " selected=\"selected\"";
-							}
-							
-							echo ">" . stripslashes($category['category']) . "</option>";
-						}
-					} else {
-						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
-						while ($category = mysql_fetch_array($categoryGrabber)) {
-							echo "<option value=\"" . stripslashes($category['category']) . "\">" . stripslashes($category['category']) . "</option>";
-						}
-					}
-				?>
-              </select>
-              </label></p>
+              <textarea name="comments" id="comments" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif; width:450px;"><?php
+		//Show the comments
+			if (isset($_SESSION['currentModule'])) {							
+				echo stripslashes($moduleData['comments']);
+			}
+		?></textarea>
+            </p>
           </blockquote>
-          <p>Intended Employee Type<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The employee position for which this module is intended')" onmouseout="UnTip()" /></p>
+          <p>Time frame: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The amount of time the user will have to complete the module from the assigned date')" onmouseout="UnTip()" /></p>
           <blockquote>
             <p>
-              <label>
-              <select name="employee" id="employee" class="validate[required]">
               <?php
-				//Select all of the employee types
-					$employeeGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
-					//If the module is being edited
-					if (isset($_SESSION['currentModule'])) {
-						echo "<option value=\"\">- Select -</option>";
-						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes($employee['employee']) . "\"";
-							
-							if ($employee['employee'] == $moduleData['employee']) {
-								echo " selected=\"selected\"";
-							}
-							
-							echo ">" . stripslashes($employee['employee']) . "</option>";
-						}
-					} else {
-						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
-						while ($employee = mysql_fetch_array($employeeGrabber)) {
-							echo "<option value=\"" . stripslashes($employee['employee']) . "\">" . stripslashes($employee['employee']) . "</option>";
-						}
-					}
-
-				?>
-              </select>
-              </label>
-            </p>
-          </blockquote>
-          <p>Difficulty: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The overall difficulty of this module')" onmouseout="UnTip()" /></p>
-          <blockquote>
-            <p>
-              <label>
-              <select name="difficulty" id="difficulty">
-                <option value="Easy"<?php
-				//Select difficulty level
-					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['difficulty'] == "Easy") {
-							echo " selected=\"selected\"";
-						}
-					}
-				?>>Easy</option>
-                <option value="Average"<?php
-				//Select difficulty level
-					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['difficulty'] == "Average") {
-							echo " selected=\"selected\"";
-						}
-					} else {
-						echo " selected=\"selected\"";
-					}
-				?>>Average</option>
-                <option value="Difficult"<?php
-				//Select difficulty level
-					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['difficulty'] == "Difficult") {
-							echo " selected=\"selected\"";
-						}
-					}
-				?>>Difficult</option>
-              </select>
-              </label>
-            </p>
-          </blockquote>
-          <p>Time Frame: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The amount of time the student will have to complete the module from the date it is assigned')" onmouseout="UnTip()" /></p>
-          <blockquote>
-            <p>
-            <?php
 			//Select the time frame
 				if (isset($_SESSION['currentModule'])) {
 					$letterArray = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
@@ -334,18 +291,104 @@
 			?>
             </p>
           </blockquote>
-          <p>Comments: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Any comments or directions regarding the content of this module')" onmouseout="UnTip()" /></p>
+          </blockquote>
+        <blockquote>
+          <p>Category<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The category that this modules covers')" onmouseout="UnTip()" /></p>
           <blockquote>
             <p>
-              <textarea name="comments" id="comments" cols="45" rows="5" style="font-family:Arial, Helvetica, sans-serif; width:450px;"><?php
-		//Show the comments
-			if (isset($_SESSION['currentModule'])) {							
-				echo stripslashes($moduleData['comments']);
-			}
-		?></textarea>
-           </p>
+              
+              <select name="category" id="category" class="validate[required]">
+                <?php
+				//Select all of the category items
+					$categoryGrabber = mysql_query("SELECT * FROM modulecategories ORDER BY position ASC", $connDBA);
+					//If the module is being edited
+					if (isset($_SESSION['currentModule'])) {
+						echo "<option value=\"\">- Select -</option>";
+						while ($category = mysql_fetch_array($categoryGrabber)) {
+							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\"";
+							
+							if ($category['category'] == $moduleData['category']) {
+								echo " selected=\"selected\"";
+							}
+							
+							echo ">" . stripslashes(htmlentities($category['category'])) . "</option>";
+						}
+					} else {
+						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
+						while ($category = mysql_fetch_array($categoryGrabber)) {
+							echo "<option value=\"" . stripslashes(htmlentities($category['category'])) . "\">" . stripslashes(htmlentities($category['category'])) . "</option>";
+						}
+					}
+				?>
+              </select>
+            </p>
           </blockquote>
-          <p>&nbsp;</p>
+          <p>Intended employee type<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The employee position for which this module is intended')" onmouseout="UnTip()" /></p>
+          <blockquote>
+            <p>
+              
+              <select name="employee" id="employee" class="validate[required]">
+                <?php
+				//Select all of the employee types
+					$employeeGrabber = mysql_query("SELECT * FROM moduleemployees ORDER BY position ASC", $connDBA);
+					//If the module is being edited
+					if (isset($_SESSION['currentModule'])) {
+						echo "<option value=\"\">- Select -</option>";
+						while ($employee = mysql_fetch_array($employeeGrabber)) {
+							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\"";
+							
+							if ($employee['employee'] == $moduleData['employee']) {
+								echo " selected=\"selected\"";
+							}
+							
+							echo ">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
+						}
+					} else {
+						echo "<option selected=\"selected\" value=\"\">- Select -</option>";
+						while ($employee = mysql_fetch_array($employeeGrabber)) {
+							echo "<option value=\"" . stripslashes(htmlentities($employee['employee'])) . "\">" . stripslashes(htmlentities($employee['employee'])) . "</option>";
+						}
+					}
+
+				?>
+              </select>
+              
+            </p>
+          </blockquote>
+          <p>Difficulty: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('The overall difficulty of this module')" onmouseout="UnTip()" /></p>
+          <blockquote>
+            <p>
+              
+              <select name="difficulty" id="difficulty">
+                <option value="Easy"<?php
+				//Select difficulty level
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['difficulty'] == "Easy") {
+							echo " selected=\"selected\"";
+						}
+					}
+				?>>Easy</option>
+                <option value="Average"<?php
+				//Select difficulty level
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['difficulty'] == "Average") {
+							echo " selected=\"selected\"";
+						}
+					} else {
+						echo " selected=\"selected\"";
+					}
+				?>>Average</option>
+                <option value="Difficult"<?php
+				//Select difficulty level
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['difficulty'] == "Difficult") {
+							echo " selected=\"selected\"";
+						}
+					}
+				?>>Difficult</option>
+                </select>
+            </p>
+          </blockquote>
         </blockquote>
         </div>
         <div class="catDivider">
@@ -355,79 +398,129 @@
         </div>
         <div class="stepContent">
           <blockquote>
-            <p>Lock Module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Prevent organizations from customizing these settings for their needs. <br />When an organization customizes these settings, it will only be applied to the corresponding organization.')" onmouseout="UnTip()" /></p>
+            <p>Lock module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Prevent organizations from customizing these settings for their needs.')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
-                <select name="lock" id="lock">
-                  <option value="1"<?php
+                <label>
+                  <input type="radio" name="locked" value="1" id="locked_0" class="validate[required] radio"<?php
 				//Select the locked settings
 					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['lock'] == "1") {
-							echo " selected=\"selected\"";
+						if ($moduleData['locked'] == "1") {
+							echo " checked=\"checked\"";
 						}
-					} else {
-						echo " selected=\"selected\"";
 					}
-				?>>Unlocked</option>
-                  <option value="0"<?php
-				//Select the selected settings
+				?> />
+                Yes</label>
+                <label>
+                  <input type="radio" name="locked" value="0" id="locked_1" class="validate[required] radio"<?php
+				//Select the locked settings
 					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['lock'] == "0") {
-							echo " selected=\"selected\"";
+						if ($moduleData['locked'] == "0") {
+							echo " checked=\"checked\"";
 						}
 					}
-				?>>Locked</option>
-                </select>
+				?> />
+                No</label>
+                <br />
               </p>
             </blockquote>
-            <p>Selected during Setup: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('This module will be selected by default when organization instructors are assigning modules to students.&lt;br /&gt;(i.e.: This module contains important information, and should be included in every training course.)')" onmouseout="UnTip()" /></p>
+            <p>Force module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force every user in this system to take this lesson')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
-                <select name="selected" id="selected">
-                  <option value="0"<?php
-				//Select the selected settings
-					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['selected'] == "0") {
-							echo " selected=\"selected\"";
-						}
-					} else {
-						echo " selected=\"selected\"";
-					}
-				?>>No</option>
-                  <option value="1"<?php
+                <label>
+                  <input type="radio" name="selected" value="1" id="selected_0" class="validate[required] radio"<?php
 				//Select the selected settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['selected'] == "1") {
-							echo " selected=\"selected\"";
+							echo " checked=\"checked\"";
 						}
 					}
-				?>>Yes</option>
-                </select>
+				?> />
+                  Yes</label>
+                <label>
+                  <input type="radio" name="selected" value="0" id="selected_1" class="validate[required] radio"<?php
+				//Select the selected settings
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['selected'] == "0") {
+							echo " checked=\"checked\"";
+						}
+					}
+				?> />
+                No</label>
+                <br />
               </p>
             </blockquote>
-            <p>Permit user to skip module: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Premit students to skip this module and come back to it later. <br/ >This option allows students to take modules out of the presented order.')" onmouseout="UnTip()" /></p>
+            <p>Permit user to skip module<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Premit users to skip this module and come back to it later')" onmouseout="UnTip()" /></p>
             <blockquote>
               <p>
-                <select name="skip" id="skip">
-                  <option value="0"<?php
-				//Select the skip settings
-					if (isset($_SESSION['currentModule'])) {							
-						if ($moduleData['skip'] == "0") {
-							echo " selected=\"selected\"";
-						}
-					} else {
-						echo " selected=\"selected\"";
-					}
-				?>>No</option>
-                  <option value="1"<?php
+                <label>
+                  <input type="radio" name="skip" value="1" id="skip_0" class="validate[required] radio"<?php
 				//Select the skip settings
 					if (isset($_SESSION['currentModule'])) {							
 						if ($moduleData['skip'] == "1") {
-							echo " selected=\"selected\"";
+							echo " checked=\"checked\"";
 						}
 					}
-				?>>Yes</option>
-                </select>
+				?> />
+                Yes</label>
+                <label>
+                  <input type="radio" name="skip" value="0" id="skip_1" class="validate[required] radio"<?php
+				//Select the skip settings
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['skip'] == "0") {
+							echo " checked=\"checked\"";
+						}
+					}
+				?> />
+                No</label>
+              </p>
+            </blockquote>
+            <p>Force user to give feedback<span class="require">*</span>: <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Force a user to provide feedback at the end of this module')" onmouseout="UnTip()" /></p>
+            <blockquote>
+              <p>
+                <label>
+                  <input type="radio" name="feedback" value="1" id="feedback_0" class="validate[required] radio"<?php
+				//Select the skip settings
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['feedback'] == "1") {
+							echo " checked=\"checked\"";
+						}
+					}
+				?> />
+                  Yes</label>
+                <label>
+                  <input type="radio" name="feedback" value="0" id="feedback_1" class="validate[required] radio"<?php
+				//Select the skip settings
+					if (isset($_SESSION['currentModule'])) {							
+						if ($moduleData['feedback'] == "0") {
+							echo " checked=\"checked\"";
+						}
+					}
+				?> />
+                No</label>
+                <br />
+              </p>
+            </blockquote>
+            <p>Search keywords (Seperate keyword with a comma and a space): <img src="../../../images/admin_icons/help.png" alt="Help" width="16" height="16" onmouseover="Tip('Supply a list of key words to help narrow down results in searches.<br />These seach results can show up on a search engine, such as Google, to help boost sales.')" onmouseout="UnTip()" /><br />
+            </p>
+            <blockquote>
+              <p>
+                <input name="tags" type="text" id="tags" size="50" autocomplete="off"<?php
+				//If the module is being edited
+					if (isset($_SESSION['currentModule'])) {
+						echo " value=\"" . stripslashes(htmlentities($moduleData['tags'])) . "\"";
+					}
+				?> />
+                <label>
+                  <input type="checkbox" name="searchEngine" id="searchEngine"<?php
+				//If the module is being edited
+					if (isset($_SESSION['currentModule'])) {
+						if ($moduleData['searchEngine'] == "on") {
+							echo " checked=\"checked\"";
+						}
+					}
+				?> />
+                  Accessible by search engines</label>
               </p>
             </blockquote>
           </blockquote>        
@@ -446,6 +539,10 @@
 					echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','modify.php');return document.MM_returnValue\" />";
 				} else {
 					submit("submit", "Next Step &gt;&gt;");
+					
+					if (!isset($_SESSION['currentModule'])) {
+						echo "<input type=\"button\" name=\"cancel\" id=\"cancel\" value=\"Cancel\" onclick=\"MM_goToURL('parent','../index.php');return document.MM_returnValue\" />";
+					}
 				}
 		  ?>
           <?php formErrors(); ?>

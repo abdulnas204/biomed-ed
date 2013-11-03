@@ -68,7 +68,7 @@
 <script src="../../../javascripts/common/goToURL.js" type="text/javascript"></script>
 <script src="../../../javascripts/common/openWindow.js" type="text/javascript"></script>
 </head>
-<body<?php bodyClass(); ?>>
+<body onunload="window.opener.location.reload()"<?php bodyClass(); ?>>
 <?php toolTip(); ?>
 <?php topPage("site_administrator/includes/top_menu.php"); ?>
       <h2><?php echo $title; ?></h2>

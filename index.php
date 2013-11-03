@@ -5,26 +5,10 @@
 	$getPageID = $_GET['page'];
 
 //If no page URL variable is defined, then redirect to page=1
-	if (!isset ($_GET['page']) && !isset ($_SESSION['MM_Username'])) {
+	if (!isset ($_GET['page'])) {
 		header("Location: index.php?page=1");
-		exit;
-	} elseif (isset ($_SESSION['MM_Username']) && isset ($_GET['switch'])) {
-		$userRole = $_SESSION['MM_UserGroup'];
-		
-		switch ($userRole) {
-			case "Student": header ("Location: student/index.php"); exit; break;
-			case "Instructor": header ("Location: instructor/index.php"); exit; break;
-			case "Organization Administrator": header ("Location: admin/index.php"); exit; break;
-			case "Site Administrator": header ("Location: site_administrator/index.php"); exit; break;
-		}
-	} elseif (!isset ($_GET['page']) && isset ($_SESSION['MM_Username'])) {
-		header("Location: index.php?page=1");
-		exit;
-	} elseif (isset ($_GET['alert']) && !isset ($_SESSION['MM_Username'])) {
-		header("Location: login.php?alert");
 		exit;
 	}
-	
 //Hide the admin menu if an incorrect page displays
 	$pageCheckGrabber = mysql_query("SELECT * FROM pages WHERE position = {$getPageID}", $connDBA);
 	$pageCheckArray = mysql_fetch_array($pageCheckGrabber);
@@ -41,7 +25,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<?php title($pageInfo['title']); ?>
+<?php
+	if ($pageCheck == 0 && $getPageID == 1) {
+		$title = "Setup Required";
+	} elseif (isset($getPageID)) {
+		if (empty($pageInfo['content'])) {
+			$title = "Page Not Found";
+		} else {
+			$title = $pageInfo['title'];
+		}
+	}
+	
+	title($title); 
+?>
 <?php headers(); ?>
 <?php meta(); ?>
 <script src="javascripts/common/goToURL.js" type="text/javascript"></script>
@@ -50,7 +46,6 @@
 <?php topPage("includes/top_menu.php"); ?>
 <div class="layoutControl">
 <div class="contentLeft">
-  <h2><?php echo $pageInfo['title']; ?></h2>
 <?php
 //Display content based on login status
 	if (isset($_SESSION['MM_Username']) && isset($pageCheck) && $pageCheck !== 0) {
@@ -62,8 +57,22 @@
 		if ($getPageID == 1) {echo " onclick=\"alert ('The page you are currently hiding is the site entry point. Hiding this page will not lock visitors out of the page, but will only hide it from the menu.');\"";}
 		echo ">No</option></select> | <a href=\"site_administrator/index.php\">Back to Staff Home Page</a> | <a href=\"site_administrator/cms/index.php\">Back to Pages</a> | <a href=\"logout.php\">Logout</a></div></div></div><br /></div></form>";
 	}
-  ?>
-  <?php if ($pageCheck == 0 && $getPageID == 1) {echo "<br /> <div align=\"center\">Please <a href=\"login.php\">login</a> to create your first page.</div>";} elseif (isset($getPageID)) {echo $pageInfo['content'];} ?>
+	
+	if ($pageCheck == 0 && $getPageID == 1) {
+		echo "<h2>Setup Required</h2>";
+		if (!isset($_SESSION['MM_Username'])) {
+			alert("Please <a href=\"login.php\">login</a> to create your first page.");
+		} else {
+			alert("Please <a href=\"site_administrator/cms/manage_page.php\">create your first page</a>.");
+		}
+	} elseif (isset($getPageID)) {
+		if (empty($pageInfo['content'])) {
+			errorMessage("The page you are looking for was not found on our system");
+		} else {
+			echo "<h2>" . $pageInfo['title'] . "</h2>" . $pageInfo['content'];
+		}
+	}
+?>
 </div>
 <div class="dataRight">
 <br />

@@ -17,7 +17,7 @@
 			case "Site Administrator": $topPage = "site_administrator/includes/top_menu.php"; break;
 		}
 	} else {
-		$topPage = "includes/top_menu.php\">";
+		$topPage = "includes/top_menu.php";
 	}
 ?>
 <?php topPage($topPage); ?>
@@ -34,7 +34,7 @@
           <li>In the pop-up window, click on the tab at the top of the windows that says &quot;Security&quot;.</li>
           <li>Click on a button labeled &quot;Custom Level&quot;.</li>
           <li>In the settings window, scroll down to a section called &quot;Scripting&quot;.</li>
-          <li>Right underneath the word &quot;Scripting&quot;, and set the &quot;Active Scripting&quot; to &quot;Enabled&quot;.</li>
+          <li>Underneath the word &quot;Scripting&quot;,  set the &quot;Active Scripting&quot; to &quot;Enabled&quot;.</li>
           <li>Press &quot;Ok&quot;, and &quot;Ok&quot; again to save the changes.</li>
           <li>The button below will work if Javascript is enabled.</li>
         </ol>
@@ -121,7 +121,7 @@
 			case "Site Administrator": $bottomPage = "site_administrator/includes/bottom_menu.php"; break;
 		}
 	} else {
-		$bottomPage = "includes/bottom_menu.php\">";
+		$bottomPage = "includes/bottom_menu.php";
 	}
 ?>
 <?php footer($bottomPage); ?>

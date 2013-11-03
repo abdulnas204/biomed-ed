@@ -113,7 +113,6 @@
         </p>
           <?php formErrors(); ?>
       </blockquote>
-      </label>
       </div>
     </form>
 <?php footer("site_administrator/includes/bottom_menu.php"); ?>
