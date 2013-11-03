@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 16th, 2010
-Last updated: December 2nd, 2010
+Last updated: Janurary 9th, 2011
 
 This is the setup script for the TinyMCE Media widget.
 */
@@ -19,7 +19,7 @@ This is the setup script for the TinyMCE Media widget.
 	require_once("../../../system/core/index.php");
 
 //Select the API key for the spell checker
-	$apiGrabber = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
+	$api = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 
 //Output this as a JavaScript file
 	header("Content-type: text/javascript");
@@ -59,7 +59,7 @@ tinyMCE.init({
     external_link_list_url : "<?php echo $root; ?>system/tiny_mce/plugins/advlink/data_base_links.php",
     autosave_ask_before_unload : false,
     editor_deselector : "noEditorMedia",
-    gecko_spellcheck : false,
+    gecko_spellcheck : false
 });
 
 function filebrowser(field_name, url, type, win) {

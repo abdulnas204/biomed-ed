@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: December 10th, 2010
 
 This is purly a backend script used to merge questions 
 from the question bank into the test.
@@ -28,7 +28,8 @@ from the question bank into the test.
 		
 		if ($importCheck['questionBank'] == "1") {
 		//Select all of the questions from the bank, with the same category as the test
-			$importQuestions = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `category` = '{$importCheck['category']}' ORDER BY `id` ASC", "raw");	
+			$category = escape($importCheck['category']);
+			$importQuestionsGrabber = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `category` = '{$category}' ORDER BY `id` ASC", "raw");	
 			
 		//Import the questions into the test
 			$lastQuestion = lastItem($monitor['testTable']);
@@ -36,7 +37,7 @@ from the question bank into the test.
 			while ($importQuestions = fetch($importQuestionsGrabber)) {			
 				$position = $lastQuestion++;
 				$id = $importQuestions['id'];
-									
+				
 				query("INSERT INTO `{$monitor['testTable']}` (
 					  `id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 					  ) VALUES (
@@ -58,6 +59,7 @@ from the question bank into the test.
 		$points = $importQuestions['points'];
 		$extraCredit = $importQuestions['extraCredit'];
 		$partialCredit = $importQuestions['partialCredit'];
+		$category = escape(stripslashes($importQuestions['category']));
 		$link = $importQuestions['link'];
 		$randomize = $importQuestions['randomize'];
 		$totalFiles = $importQuestions['totalFiles'];
@@ -73,7 +75,7 @@ from the question bank into the test.
 		$incorrectFeedback = escape(stripslashes($importQuestions['incorrectFeedback']));
 		$partialFeedback = escape(stripslashes($importQuestions['partialFeedback']));
 							
-		query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'");
+		query("UPDATE `{$monitor['testTable']}` SET `questionBank` = '0', `linkID` = '0', `type` = '{$type}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `partialCredit` = '{$partialCredit}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `totalFiles` = '{$totalFiles}', `choiceType` = '{$choiceType}', `case` = '{$case}', `tags` = '{$tags}', `question` = '{$question}', `questionValue` = '{$questionValue}', `answer` = '{$answer}', `answerValue` = '{$answerValue}', `fileURL` = '{$fileURL}', `correctFeedback` = '{$correctFeedback}', `incorrectFeedback` = '{$incorrectFeedback}', `partialFeedback` = '{$partialFeedback}' WHERE `id` = '{$questionID}'");
 		
 		if ($type == "File Response") {
 			copy("../questionbank_" . $userData['organization'] . "/test/answers/" . $fileURL, $monitor['directory'] . "test/answers/" . $fileURL);

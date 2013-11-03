@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 24th, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: December 20th, 2010
 
 This is the developer administration log out page.
 */
@@ -23,7 +23,7 @@ This is the developer administration log out page.
 	unset($_SESSION['developerAdministration']);
 	
 	if (isset($_GET['action']) && $_GET['action'] == "complete") {
-		redirect($root . "logout.php");
+		redirect($root . "users/logout.php");
 	}
 	
 //Title

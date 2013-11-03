@@ -75,7 +75,11 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 		
 		var URL = content.value;
 		var URLsplit = URL.split("/");
-		var returnValue = "http://";
+		<?php
+		//Detirmine whether or not this should be an SSL link
+		echo "var returnValue = \"" . $protocol . "\";
+		";
+		?>
 		
 		for(var count = 0; count <= URLsplit.length - 1; count ++) {
 			if (count >= 2) {
@@ -92,6 +96,10 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 		}
 		
 		content.value = returnValue;
+	}
+	
+	function unsetCookie() {
+		document.cookie = "directory=; expires=Thu, 01-Jan-70 00:00:01 GMT;";
 	}
 </script>
 <script type="text/javascript">
@@ -475,8 +483,8 @@ $(document).ready(function() {
 //]]>
 </script>
 </head>
-
-<body>
+<!-- //Developer Enhancement, to unset the directory cookie //-->
+<body onunload="unsetCookie()">
 
 <input type="hidden" id="currentfolder" value="<?php echo $uploadpath;?>" />
 <input type="hidden" id="currentview" value="<?php echo $viewLayout;?>" />
@@ -787,7 +795,7 @@ $(document).ready(function() {
 		//Developer Enhancement, check whether or not files must pass through gateway
 			if (isset($secure)) {
 		?>
-        <button type="submit" onclick="updateField('file')"><?php echo translate("Insert");?></button>
+        <button type="submit" onclick="updateField('file');"><?php echo translate("Insert");?></button>
         <?php
 			} else {
 		?>

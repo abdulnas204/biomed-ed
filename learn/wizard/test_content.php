@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: September 9th, 2010
-Last updated: December 4th, 2010
+Last updated: December 10th, 2010
 
 This is the test content page for the learning unit 
 generator.
@@ -26,14 +26,14 @@ generator.
 	reorder($monitor['testTable'], "test_content.php");
 	
 //Delete a test question
-	if (isset ($_GET['id']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
+	if (isset($_GET['id']) && isset($_GET['action']) && $_GET['action'] == "delete") {
 		if (exist($monitor['testTable'], "id", $_GET['id'])) {
 			$delete = query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$_GET['id']}'");
 			
 			if ($delete['type'] == "File Response") {
-				delete($monitor['testTable'], "test_content.php", true, $monitor['directory'] . "test/answers/" . $delete['fileURL']);
+				delete($monitor['testTable'], "test_content.php", false, true, $monitor['directory'] . "test/answers/" . $delete['fileURL']);
 			} else {
-				delete($monitor['testTable'], "test_content.php", true);
+				delete($monitor['testTable'], "test_content.php", false, true);
 			}
 		}
 	}
@@ -94,25 +94,24 @@ generator.
 			
 			echo reorderMenu($monitor['testTable'] , $testData['id'], false, false, "<div" . $class . ">{content}</div>");
 			echo cell(URL($type, "preview_question.php?id=" . $testData['id'], false, true, "Preview this <strong>" . $type . "</strong> question", false, true, "640", "480"), "150");
-			echo "<td width=\"100\"><div";
 			
 			if ($extraCredit == "on") {
-				echo " class=\"extraCredit\"";
+				$class = " class=\"extraCredit\"";
+			} else {
+				$class = "";
 			}
-			
-			echo ">\n" . $points;
 			
 			if ($points == "1") {
-				echo " Point";
+				$point = " Point";
 			} else {
-				echo " Points";
+				$point = " Points";
 			}
 			
-			echo "</div>\n</td>\n";
+			echo cell("<div" . $class  . ">" . $points . $point . "</div>", "100");
 			echo cell(commentTrim(100, $question));
 			
 			if (isset($importedQuestion)) {
-				cell(URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, " onclick=\"return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')\""), "50");
+				echo cell(URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, " onclick=\"return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')\""), "50");
 			} else {
 				$URL = "../questions/";
 				
@@ -132,8 +131,10 @@ generator.
 				echo editURL($URL, $type, "question");
 			}
 			
-			echo deleteURL("test_content.php?id=" .  $testData['id'], $type, "question");
+			echo deleteURL("test_content.php?action=delete&id=" .  $testData['id'], $type, "question");
 			echo "</tr>\n";
+			
+			unset($importedQuestion);
 		}
 		
 		echo "</table>\n";

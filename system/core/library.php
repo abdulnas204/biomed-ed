@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: December 1st, 2010
+Last updated: December 23rd, 2010
 
 This is the back-end function library, which contains 
 useful function which are used through out this system.
@@ -156,8 +156,8 @@ Array-related functions
 		foreach ($array as $value) {
 			$result = array_merge($result, flatten($value));
 		}
-	
-		return array_unique($result);
+		
+		return $result;
 	}
 	
 //Detirmine the size of an array, even if several values are left empty
@@ -427,6 +427,36 @@ File-related functions
 		} else {
 			return "application/octet-stream";
 		}
+	}
+	
+/*
+Misc. functions
+---------------------------------------------------------
+*/
+	
+//Safely mail automated emails
+	function autoEmail($to, $subject, $message) {
+		$domain = explode(":", $_SERVER['HTTP_HOST']);
 		
+		if (mail($to, $subject, $message, "From: No Reply<no-reply@" . $domain['0'] . ">")) {
+			//Do nothing, the email was sent
+		} else {
+			die(errorMessage("Error sending automated email."));
+		}
+	}
+	
+//Restrict access to super-administrator only parts of the site
+	function lockAccess() {
+		global $root;
+		
+		if (!strstr($_SERVER['PHP_SELF'], "login.php")) {
+			if (!loggedIn() || !isset($_SESSION['developerAdministration'])) {
+				redirect($root . "admin/login.php");
+			}
+		} else {
+			if (loggedIn() && isset($_SESSION['developerAdministration'])) {
+				redirect($root . "admin/index.php");
+			}
+		}
 	}
 ?>

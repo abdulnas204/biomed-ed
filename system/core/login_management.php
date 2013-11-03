@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: December 23rd, 2010
 
 This script is used to process, maintain, and secure all 
 login actions and user-related queries.
@@ -104,11 +104,49 @@ Login management
 					}
 				} else {
 					if (!isset($_GET['redirect'])) {
-						redirect($root . "login.php?alert=true");
+						redirect($root . "users/login.php?alert=true");
 					} else {
-						redirect($root . "login.php?redirect=" . $_GET['redirect'] . "&alert=true");
+						redirect($root . "users/login.php?redirect=" . $_GET['redirect'] . "&alert=true");
 					}
 				}
+			}
+		}
+	}
+	
+//Maintain login status
+	function maintain() {
+		global $privileges, $root, $pluginRoot;
+		
+		if (isset($privileges)) {
+			if (loggedIn()) {
+				$allPrivileges = query("SELECT * FROM `roles` WHERE `name` = '{$_SESSION['role']}'");
+				$rolePrivileges = array();
+				
+				foreach(unserialize($allPrivileges['privileges']) as $value) {
+					array_push($rolePrivileges, str_replace("_", "", $value));
+				}
+				
+				$pageName = str_replace("/" . str_replace($root, "", $pluginRoot), "", $_SERVER['SCRIPT_NAME']);
+				
+				foreach($privileges as $pages => $privilege) {
+					foreach(explode(";", $pages) as $page) {
+						if (strstr($page, ",")) {
+							
+						} else {
+							if ($pageName == $page) {
+								$access = true;
+								break;
+								break;
+							}
+						}
+					}
+				}
+				
+				if (!isset($access)) {
+					//redirect($root . "portal/index.php");
+				}
+			} else {
+				redirect($root . "index.php");
 			}
 		}
 	}
@@ -117,43 +155,40 @@ Login management
 	function logout() {
 		session_destroy();
 	}
-	
-//Maintain login status
-	function maintain($role) {
-		global $root;
-		
-		if (!loggedIn() || $_SESSION['role'] !== $role) {
-			unset($_SESSION['userName'], $_SESSION['role'], $_SESSION['developerAdministration']);
-			$redirect = urlencode($_SERVER['REQUEST_URI']);
-			redirect($root . "login.php?redirect=" . $redirect);
-		  }
-	  }
 	  
 //Grab the user's data
 	function userData() {
-		return query("SELECT * FROM `users` WHERE `userName` = '{$_SESSION['userName']}'");
+		if (loggedIn()) {
+			return query("SELECT * FROM `users` WHERE `userName` = '{$_SESSION['userName']}'");
+		} else {
+			return false;
+		}
 	}
 	
 	$userData = userData();
 	
 //Check the user's access to a particular item
 	function access() {
-		$values = func_get_args();
-		$role = query("SELECT * FROM `roles` WHERE `name` = '{$_SESSION['role']}'");
-		$privileges = unserialize($role['privileges']);
-		$return = false;
-		
-		if (loggedIn() && exist("roles", "name", $_SESSION['role'])) {
-			for($count = 0; $count <= sizeof($values) - 1; $count ++) {
-				$currentPrivilege = str_replace(" ", "_", $values[$count]);
-				
-				if (!empty($privileges) && array_key_exists($currentPrivilege, $privileges) && $privileges[$currentPrivilege] == "1") {
-					$return = true;
-					break;
+		if (loggedIn()) {
+			$values = func_get_args();
+			$role = query("SELECT * FROM `roles` WHERE `name` = '{$_SESSION['role']}'");
+			$privileges = unserialize($role['privileges']);
+			$return = false;
+			
+			if (loggedIn() && exist("roles", "name", $_SESSION['role'])) {
+				for($count = 0; $count <= sizeof($values) - 1; $count ++) {
+					$currentPrivilege = str_replace(" ", "_", $values[$count]);
+					
+					if (!empty($privileges) && array_key_exists($currentPrivilege, $privileges) && $privileges[$currentPrivilege] == "1") {
+						$return = true;
+						break;
+					}
 				}
 			}
+			
+			return $return;
+		} else {
+			return false;
 		}
-		
-		return $return;
 	}
 ?>

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: Janurary 8th, 2011
 
 This is the test checking page, which asks a user if a test 
 should be generated along with the lesson.
@@ -23,7 +23,15 @@ should be generated along with the lesson.
 	$monitor = monitor("Create a Test", "navigationMenu");
 
 //Process the form
-	if (isset ($_POST['submit'])) {		
+	if (isset ($_POST['submit'])) {
+	//Select all custom form fields
+		$fields = query("SELECT * FROM `fields`", "raw");
+		$sql = "";
+		
+		while($field = fetch($fields)) {
+			$sql .= "`field_{$field['id']}` longtext NOT NULL,";
+		}
+		
 		query("CREATE TABLE IF NOT EXISTS `{$monitor['testTable']}` (
 			  `id` int(255) NOT NULL AUTO_INCREMENT,
 			  `questionBank` int(1) NOT NULL,
@@ -48,6 +56,7 @@ should be generated along with the lesson.
 			  `correctFeedback` longtext NOT NULL,
 			  `incorrectFeedback` longtext NOT NULL,
 			  `partialFeedback` longtext NOT NULL,
+			  {$sql}
 			  PRIMARY KEY (`id`)
 			  )");
 							

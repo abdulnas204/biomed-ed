@@ -41,7 +41,18 @@ administration plugin.
  * The keys are the page URLs (relative to the plugin root), and the value is the privilege name
  * To account for URL parameters or active sessions, start with the page URL, then wrap each URL paramerter with a (), and a session with a [], and seperate each item with a comma
  * Here is an example of a page allowing access when an "id" parameter is defined and a "edit" session is active: "page.php,(id),[edit]"
- * To assign multiple pages to one permission, simply include all of the pages in one string, and seperate the URL with a semicolon
+ * To assign multiple pages to one permission, simply include all of the pages in one string, and seperate the URLs with a semicolon
+ * To allow public access to a page, simply construct the array as described above, but, instead, assign the value as "Public"
 */
 	$privileges = array(/* None, as this is not dependant on configuration, but an additional login */);
+	
+/*
+ * Force a list of pages to use a secure (https) connection, if an SSL certificate is installed
+ * The keys are the page URLs (relative to the plugin root), and the value is the level of importance
+ * The values may either be "Optional" (use a secure connection if an SSL certificate is installed) or "Important" (deny access to the page if an SSL certificate is not installed)
+ * To account for URL parameters or active sessions, start with the page URL, then wrap each URL paramerter with a (), and a session with a [], and seperate each item with a comma
+ * Here is an example of a secured page when an "id" parameter is defined and a "edit" session is active: "page.php,(id),[edit]"
+ * To assign multiple pages to a secure connection, simply include all of the pages in one string, and seperate the URLs with a semicolon
+*/
+	$SSL = array();
 ?>

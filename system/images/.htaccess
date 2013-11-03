@@ -19,6 +19,3 @@
 	allow from all
 </Files>
 deny from all
-
-ErrorDocument 403 /biomed-ed/system/deny/index.php?error=403
-ErrorDocument 404 /biomed-ed/system/deny/index.php?error=404

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: Novemeber 30th, 2010
+Last updated: December 21st, 2010
 
 This is the overview page for the learning units in this 
 system.
@@ -35,7 +35,9 @@ system.
 	avaliability("learningunits", "index.php", "Edit Learning Unit");
 	
 //Delete a learning unit
-	delete("learningunits", "index.php", "Delete Learning Unit", false, false, $_GET['id'], "lesson_{$_GET['id']},test_{$_GET['id']}");
+	if (isset($_GET['id'])) {
+		delete("learningunits", "index.php", "Delete Learning Unit", false, false, $_GET['id'], "lesson_{$_GET['id']},test_{$_GET['id']}");
+	}
 
 //Forward to editor
 	if (isset ($_GET['id']) && $_GET['edit'] == "true") {
@@ -43,7 +45,7 @@ system.
 		
 		if (exist("learningunits", "id", $_GET['id'])) {
 			if ($unitData['organization'] == $userData['organization']) {
-				$_SESSION['currentUnit'] = $sessionSet['id'];
+				$_SESSION['currentUnit'] = $unitData['id'];
 				$_SESSION['review'] = "review";
 				
 				redirect("wizard/lesson_settings.php");
@@ -84,6 +86,10 @@ system.
 		$organization = $userData['organization'];
 		$count = 1;
 		
+		if (access("Purchase Learning Unit")) {
+			echo form("purchase", false, false, "enroll/cart.php");
+		}
+		
 		echo "<table class=\"dataTable\">\n<tr>\n";
 		echo column("", false, "Edit Learning Unit");
 		echo column("Name", "200");
@@ -95,14 +101,15 @@ system.
 			echo column("Delete", "50", "Delete Learning Unit");
 		}
 		
+		echo column("Purchase", "100", "Purchase Learning Unit");
 		echo "</tr>\n";
 		
 		while ($data = fetch($dataGrabber)) {
 			echo "<tr";
 			if ($count & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
 			
-			if (exist("lesson_" . $data['id'], "position", "1")) {
-				echo cell(tip("There isn't any lesson content to this learning <br />unit. Please add content before displaying.", false, "noShow"), "25", "Edit Learning Unit");
+			if (!exist("lesson_" . $data['id'], "position", "1")) {
+				echo cell("<div align=\"center\">" . tip("There isn't any lesson content to this learning <br />unit. Please add content before displaying.", false, "noShow") . "</div>", "25", "Edit Learning Unit");
 			} else {
 				echo option("learningunits", $data['id'], false, false, "Edit Learning Unit");
 			}
@@ -113,20 +120,36 @@ system.
 			
 			if (access("Edit Learning Unit")) {
 				if (access("Edit Unowned Learning Units")) {
-					editURL("index.php?edit=true&id=" . $data['id'], $data['name'], "lesson", false, "Edit Learning Unit");
+					echo editURL("index.php?edit=true&id=" . $data['id'], $data['name'], "lesson", false, "Edit Learning Unit");
 				} else {
 					if ($data['locked'] == "0") {
-						editURL("index.php?edit=true&id=" . $data['id'], $data['name'], "lesson", false, "Edit Learning Unit");
+						echo editURL("index.php?edit=true&id=" . $data['id'], $data['name'], "lesson", false, "Edit Learning Unit");
 					} else {
 						echo cell(tip("This item cannot be edited", false, "action noEdit"), "50", "Edit Learning Unit");
 					}
 				}
-				
-				if (exist("learningunits", "organization", $organization) && $data['organization'] == $organization) {
-					echo deleteURL("index.php?action=delete&id=" . $data['id'], $data['name'], "lesson", false, false, "Delete Learning Unit");
-				} elseif (exist("learningunits", "organization", $organization)) {
-					echo cell(tip("This item cannot be deleted", false, "action noDelete"), "50", "Delete Learning Unit");
+			}
+			
+			if (exist("learningunits", "organization", $organization) && $data['organization'] == $organization) {
+				echo deleteURL("index.php?action=delete&id=" . $data['id'], $data['name'], "lesson", false, false, "Delete Learning Unit");
+			} elseif (exist("learningunits", "organization", $organization)) {
+				echo cell(tip("This item cannot be deleted", false, "action noDelete"), "50", "Delete Learning Unit");
+			}
+			
+			if (!is_array(unserialize($userData['learningunits'])) || !array_key_exists($data['id'], unserialize($userData['learningunits']))) {
+				if (isset($_SESSION['cart']) && is_array($_SESSION['cart']) && in_array($data['id'], $_SESSION['cart'])) {
+					$selected = true;
+				} else {
+					$selected = false;
 				}
+				
+				if (!empty($data['price'])) {
+					echo cell(checkBox("purchase[]", "purchase_" . $data['id'], " $" . $data['price'], $data['id'], false, false, $selected), "100", "Purchase Learning Unit");
+				} else {
+					echo cell(checkBox("purchase[]", "purchase_" . $data['id'], " $0.00", $data['id'], false, false, $selected), "100", "Purchase Learning Unit");
+				}
+			} else {
+				echo cell("<span class=\"notAssigned\">Purchased</span>", "100", "Purchase Learning Unit");
 			}
 			  
 			echo "</tr>\n";
@@ -137,7 +160,17 @@ system.
 		 echo "</table>\n";
 		 
 		 if (access("Purchase Learning Unit")) {
-			 closeForm(false);
+			 echo "<hr />\n";
+			 echo "<div align=\"right\">";
+			 
+			 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+			 	echo button("submit", "submit", "Add Selected Items to Cart", "submit");
+			 } else {
+				 echo button("submit", "submit", "Update Cart", "submit");
+			 }
+			 
+			 echo "</div>";
+			 echo closeForm(false);
 		 }
 	 } else {
 		 echo "<div class=\"noResults\">This are no learning units currently avaliable.";

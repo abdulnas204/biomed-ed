@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: December 22nd, 2010
 
 This is the description management page for the test 
 generator.
@@ -20,17 +20,17 @@ generator.
 	require_once('../../system/core/index.php');
 	require_once(relativeAddress("learn/system/php") . "index.php");
 	require_once(relativeAddress("learn/system/php") . "functions.php");
-	$monitor = monitor("Description", "tinyMCEAdvanced,validate,autoSuggest");
+	$monitor = monitor("Description", "tinyMCEAdvanced,tinyMCEMediaConfig,validate,autoSuggest");
 	$questionData = dataGrabber("Description");
 	
 //Process the form
 	if (isset ($_POST['submit']) && !empty($_POST['question'])) {
 		$question = escape($_POST['question']);
 		$type = $_POST['type'];
-		$category = $_POST['category'];
+		$category = escape($_POST['category']);
 		$tags = escape($_POST['tags']);
 		
-		if (isset($questionData)) {					
+		if (isset($questionData)) {			
 			updateQuery($type, "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'", "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
@@ -47,7 +47,7 @@ generator.
 	catDivider("Content", "one", true);
 	echo "<blockquote>\n";
 	directions("Description content", true);
-	indent(textArea("question", "question", "large", true, false, false, "questionData", "question"));
+	indent(textArea("question", "questionContent", "large", true, false, false, "questionData", "question", "class=\"noEditorMedia\""));
 	echo "</blockquote>\n";
 	
 	catDivider("Settings", "two");
@@ -55,6 +55,7 @@ generator.
 	type();
 	category();
 	tags();
+	customField("Question Generator", "questionData");
 	echo "</blockquote>\n";
 	
 	catDivider("Submit", "three");

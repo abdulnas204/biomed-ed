@@ -1,50 +1,69 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+
+Sections of the code are courtesy of PayPal.
+---------------------------------------------------------
+
+Created by: Oliver Spryn & PayPal developers
+Created on: August 18th, 2010
+Last updated: December 12th, 2010
+
+This script is assign users to a learning unit after it 
+has been purchased, and to confirm that the payment 
+occurred.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	
 //Prevent non-system access
-	if (empty($_POST) || empty($_GET)) {
+	if (empty($_POST)) {
 		redirect("../index.php");
 	}
 	
-//Provide a userData string for global use
+//Provide variables for global use
 	$userDataName = gzinflate(base64_decode($_GET['user']));
-	$userDataGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$userDataName}'", $connDBA);
-	$userData = mysql_fetch_array($userDataGrabber);
+	$userData = query("SELECT * FROM `users` WHERE `userName` = '{$userDataName}'");
+	$paymentInfo = query("SELECT * FROM `payment` WHERE `id` = '1'");
 	
 //Create a function to fire when an error is present
 	function error($type) {
-		global $root, $userData, $values, $item_name, $item_number, $payment_status, $payment_amount, $payment_currency, $txn_id , $receiver_email, $payer_email;
+		global $pluginRoot, $paymentInfo, $userData, $values, $item_name, $item_number, $payment_status, $total, $payment_amount, $payment_currency, $txn_id , $receiver_email, $payer_email;
 		
-		autoEmail("wot200@gmail.com", "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at: " . $root . "modules/enroll/ipn.php. " . $type . " Below is all of the known information.
+		autoEmail($paymentInfo['errorEmail'], "Payment Gateway Error", $userData['firstName'] . " " . $userData['lastName'] . " attempted to process an order via the PayPal IPN, located at: " . $pluginRoot . "enroll/ipn.php. " . $type . " Below is all of the known information.
 		
-		---------------------------------------------------------
-		HTTP POST-DATA:
-		" . $values . "
-		
+		---------------------------------------------------------		
 		PAYMENT STATUS:
-		" . $payment_status . "
+		(System): Completed (Gateway): " . $payment_status . "
 		
 		PAYMENT AMOUNT:
-		" . $payment_amount . "
+		(System): " . $total . " (Gateway): " . $payment_amount . "
 		
 		PAYMENT CURRENCY:
-		" . $payment_currency . "
+		(System): USD (Gateway): " . $payment_currency . "
+		
+		RECEIVER EMAIL:
+		(System): " . $paymentInfo['email'] . " (Gateway): " . urldecode($receiver_email) . "
+		
+		PAYER EMAIL:
+		(System): " . $userData['emailAddress1'] . " (Gateway): " . urldecode($payer_email) . "
 		
 		TRANSACTION ID:
 		" . $txn_id . "
-		
-		RECEIVER EMAIL:
-		" . $receiver_email . "
-		
-		PAYER EMAIL:
-		" . $payer_email . "
 		---------------------------------------------------------
-		Processed at: " . date('l, F jS, Y at h:i:s A'));
+		Processed on: " . date('l, F jS, Y \a\\t h:i:s A'));
 	}
 	
 //Begin assembly of post-data
-	$values = 'cmd=_notify-validate';
+	$values = "cmd=_notify-validate";
 	
 	foreach ($_POST as $key => $value) {
 		$value = urlencode(stripslashes($value));
@@ -55,70 +74,83 @@
 	$header = "POST /cgi-bin/webscr HTTP/1.0\r\n";
 	$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
 	$header .= "Content-Length: " . strlen($values) . "\r\n\r\n";
-	$postSend = fsockopen ('ssl://www.sandbox.paypal.com', 443, $errno, $errstr, 30);
+	$postSend = fsockopen("ssl://" . $paymentInfo['transaction'], 443, $errno, $errstr, 30);
 
 //Assign response variables to local variables
 	$payment_status = $_POST['payment_status'];
-	$payment_amount = $_POST['mc_gross'];
+	$payment_amount = $_POST['payment_gross'];
 	$payment_currency = $_POST['mc_currency'];
 	$txn_id = $_POST['txn_id'];
 	$receiver_email = $_POST['receiver_email'];
+	$tax = $_POST['tax'];
 	$payer_email = $_POST['payer_email'];
+	$payment_fee = $_POST['payment_fee'];
 
 //Process based on the given response
 	if (!$postSend) {
-		errorMessage("The system could not make a connection to the payment gateway. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the modules you just purchased. The webmaster has been notified of this error.");
-		echo "<div align=\"center\"><p>";
-		button("continue", "continue", "Continue", "button", "../index.php");
-		echo "</p></div>";
+		errorMessage("The system could not make a connection to the payment gateway. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the modules you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
 		error("There was no response from the server when sending the post-data.");
 		exit;
 	} else {
-		fputs ($postSend, $header . $values);
+		fputs($postSend, $header . $values);
 		
 		while (!feof($postSend)) {
-			$res = fgets ($postSend, 1024);
-			$paymentDataGrabber = mysql_query("SELECT * FROM `payment` WHERE `id` = '1'", $connDBA);
-			$paymentData = mysql_fetch_array($paymentDataGrabber);
+			$res = fgets($postSend, 1024);
 			$paymentArray = array();
-			$total = gzinflate(base64_decode($_GET['value']));
+			$total = number_format(gzinflate(base64_decode($_GET['value'])), 2);
 			
-			if (strcmp ($res, "VERIFIED") == 0) {
-				if ($payment_status === "Completed" && exist("billing", "transactionID", $txn_id) == false && intval($payment_amount) === intval($total) && $payment_currency === "USD" && $paymentData['business'] === $receiver_email && $payer_email === $userData['emailAddress1']) {
-					$currentModules = unserialize($userData['modules']);
-					$userModules = unserialize(gzinflate(base64_decode($_GET['product'])));
+			if (strcmp($res, "VERIFIED") == 0) {
+				if ($payment_status === "Completed" && !exist("billing", "transactionID", $txn_id) && $payment_amount === $total && $payment_currency === "USD" && $paymentInfo['email'] === urldecode($receiver_email)) {
+					$currentUnits = unserialize($userData['learningunits']);
+					$userUnits = unserialize(gzinflate(base64_decode($_GET['product'])));
 					
 					if (!is_array($currentModules)) {
-						$currentModules = array();
+						$currentUnits = array();
 					}
 					
-					foreach ($userModules as $item) {
-						$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"));
-						$currentModules[$item] = $module;
+					foreach ($userUnits as $item) {
+						$unit = array("item" => $item, "lessonStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"));
+						$currentUnits[$item] = $unit;
+					}
+					
+					$purchasedUnits = array();
+					
+					foreach($userUnits as $id) {
+						$priceData = query("SELECT * FROM `learningunits` WHERE `id` = '{$id}'");
+						
+						if (empty($priceData['price'])) {
+							$price = "0.00";
+						} else {
+							$price = number_format($priceData['price'], 2);
+						}
+						
+						$purchasedUnits[$id] = array("item" => $id, "price" => $price);
 					}
 					
 					$userID = $userData['id'];
-					$modules = serialize($currentModules);
-					$purchasedModules = serialize($userModules);
+					$units = serialize($currentUnits);
+					$purchasedUnits = escape(serialize($purchasedUnits));
 					$date = strtotime("now");
+					$business = escape(urldecode($_POST['business']));
+					$payerEmail = escape($payer_email);
 					
-					mysql_query("UPDATE `users` SET `modules` = '{$modules}' WHERE `id` = '{$userID}'", $connDBA);
-					mysql_query("INSERT INTO `billing` (
-									`id`, `ownerUser`, `ownerOrganization`, `items`, `price`, `date`, `transactionID`
-								) VALUES (
-									NULL, '{$userID}', '', '{$purchasedModules}', '{$total}', '{$date}', '{$txn_id}'
-								)", $connDBA);
-								
-					redirect("../index.php");
+					query("UPDATE `users` SET `learningunits` = '{$units}' WHERE `id` = '{$userData['id']}'");
+					query("INSERT INTO `billing` (
+						  `id`, `ownerUser`, `ownerOrganization`, `items`, `tax`, `total`, `date`, `transactionID`, `businessEmail`, `payerEmail`, `paymentFee`
+						  ) VALUES (
+						  NULL, '{$userID}', '', '{$purchasedUnits}', '{$tax}', '{$total}', '{$date}', '{$txn_id}', '{$business}', '{$payerEmail}', '{$payment_fee}'
+						  )");
 				} else {
-					error("The payment gateway credentials from the gateway do not match the payment credentials from the system.");
+					errorMessage("The difference between the credentials from the payment gateway and the credentials from the system. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the modules you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
+					error("The payment credentials from the gateway do not match the payment credentials from the system.");
+					exit;
 				}
-				
-			} else if (strcmp ($res, "INVALID") == 0) {
+			} else if (strcmp($res, "INVALID") == 0) {
 				error("The payment gateway returned invalid.");
 			}
 		}
 		
-		fclose ($postSend);
+		fclose($postSend);
+		redirect("../index.php");
 	}
 ?>

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: September 10th, 2010
-Last updated: December 4th, 2010
+Last updated: December 21st, 2010
 
 This is the file response management page for the test 
 generator.
@@ -29,8 +29,9 @@ generator.
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
 		$type = $_POST['type'];
-		$category = $_POST['category'];
+		$category = escape($_POST['category']);
 		$link = $_POST['link'];
+		$partialCredit = $_POST['partialCredit'];
 		$tags = escape($_POST['tags']);
 		$totalFiles = $_POST['totalFiles'];
 		$feedBackCorrect = escape($_POST['feedBackCorrect']);
@@ -53,11 +54,11 @@ generator.
 		}
 				
 		if (isset ($questionData)) {
-			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', {$sql}`correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', {$sql}`correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");	
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', {$sql}`correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `totalFiles` = '{$totalFiles}', {$sql}`correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");	
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'File Response', '{$points}', '{$extraCredit}', '0', '{$category}', '{$link}', '0', '{$totalFiles}', '', '1', '{$tags}', '{$question}', '', '', '', '{$fileURL}', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'File Response', '{$points}', '{$extraCredit}', '0', '{$category}', '0', '{$totalFiles}', '', '1', '{$tags}', '{$question}', '', '', '', '{$fileURL}', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'File Response', '{$points}', '{$extraCredit}', '0', '{$category}', '{$link}', '{$partialCredit}', '{$totalFiles}', '', '1', '{$tags}', '{$question}', '', '', '', '{$fileURL}', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'File Response', '{$points}', '{$extraCredit}', '0', '{$category}', '{$partialCredit}', '{$totalFiles}', '', '1', '{$tags}', '{$question}', '', '', '', '{$fileURL}', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -95,9 +96,11 @@ generator.
 	type();
 	category();
 	descriptionLink();
+	partialCredit();
 	directions("Number of files user is premitted to upload");
 	indent(dropDown("totalFiles", "totalFiles", "1,2,3,4,5,6,7,8,9,10", "1,2,3,4,5,6,7,8,9,10", false, false, false, "1", "questionData", "totalFiles"));
 	tags();
+	customField("Question Generator", "questionData");
 	echo "</blockquote>\n";
 	
 	catDivider("Answer", "three");
@@ -108,15 +111,16 @@ generator.
 	if (isset($_GET['id'])) {
 		$directory = $monitor['gatewayPath'] . "test/answers";
 	} elseif (isset($_GET['bankID'])) {
-		$directory = $pluginRoot . "gateway.php/modules/questionbank_" . $userData['organization'] . "/test/answers";
+		$directory = $pluginRoot . "gateway.php/questionbank_" . $userData['organization'] . "/test/answers";
 	} else {
 		$directory = false;
 	}
 	
 	if ($directory != false && isset($questionData) && !empty($questionData['fileURL'])) {
-		echo "<table name=\"answerTable\" id=\"answerTable\">\n<tr>\n<td>";
-		echo fileUpload("answer", "answer", false, false, false, false, "questionData", "fileURL", $directory, true);
-		echo "</td>\n<td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true", "action smallDelete", false, false, false, false, false, false, " onclick=\"return confirm('This action will delete this file. Continue?')\"") . "</td>\n</tr>\n</table>\n";
+		echo "<table name=\"answerTable\" id=\"answerTable\">\n<tr>\n";
+		echo cell(fileUpload("answer", "answer", false, false, false, false, "questionData", "fileURL", $directory, true));
+		echo cell(URL("", $_SERVER['REQUEST_URI'] . "&delete=true", "action smallDelete", false, false, false, false, false, false, "onclick=\"return confirm('This action will delete this file. Continue?')\""), "50");
+		echo "</tr>\n</table>\n";
 	} else {
 		echo fileUpload("answer", "answer", false, false, false, false, "questionData", "fileURL");
 	}
@@ -124,7 +128,7 @@ generator.
 	echo "</blockquote>\n</blockquote>\n";
 	
 	catDivider("Feedback", "four");	
-	feedback();
+	feedback(true);
 	
 	catDivider("Finish", "five");
 	formButtons();

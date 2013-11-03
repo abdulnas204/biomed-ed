@@ -10,20 +10,43 @@ Developer enhancements are denoted by a //Developer Enhancement comment
 	if (loggedIn()) {
 		//Do nothing, access is granted
 	} else {
-		die("You do not have access to this content");
+		die(errorMessage("You do not have access to this content"));
 	}
 	
 //Developer Enhancement, to detirmine the folder root
-	if (isset($_SESSION['currentUnit'])) {
-		$path = $strippedRoot . "learn/" . $_SESSION['currentUnit'] . "/lesson/browser/";
+	if ((isset($_SESSION['currentUnit']) && !isset($_SESSION['questionBank'])) || (isset($_COOKIE['directory']) && $_COOKIE['directory'] == "unit")) {
+		$path = $strippedRoot . "learn/unit_" . $_SESSION['currentUnit'] . "/lesson/browser/";
 		$secure = true;
-	} elseif (isset($_SESSION['questionBank'])) {
-		$path = $strippedRoot . "learn/questionbank/test/questions/";
+	} elseif ((isset($_SESSION['questionBank']) && !isset($_SESSION['currentUnit'])) || (isset($_COOKIE['directory']) && $_COOKIE['directory'] == "bank")) {
+		$path = $strippedRoot . "learn/questionbank_{$userData['organization']}/test/questions/";
 		$secure = true;
-	} elseif (!isset($_SESSION['questionBank']) && !isset($_SESSION['currentUnit'])) {		
+	} elseif (!isset($_SESSION['questionBank']) && !isset($_SESSION['currentUnit']) && !isset($_COOKIE['directory'])) {		
 		$path = $strippedRoot . "system/files/";
-	} else {
-		die("This is a temporary error. Please contact Oliver for details.");
+	} elseif (isset($_SESSION['questionBank']) && isset($_SESSION['currentUnit']) && !isset($_COOKIE['directory'])) {
+	//Process the form	
+		if (isset($_POST['unit']) || isset($_POST['bank'])) {
+			if (isset($_POST['unit'])) {
+				$value = "unit";
+			} else {
+				$value = "bank";
+			}
+			
+			setcookie("directory", $value, time()+3600);
+			redirect($_SERVER['REQUEST_URI']);
+		}
+			
+	//Display the form
+		headers("Server Files", false, false, "class=\"overrideBackground\"", false, true);
+		title("Server Files", "You have both the Learning Unit Wizard and the Question Bank open simultaneously. Which file directory do you wish to open?");
+		echo form("type");
+		echo "<div class=\"noResults\">";
+		echo button("unit", "unit", "Learning Unit Files", "submit");
+		echo button("bank", "bank", "Question Bank Files", "submit");
+		echo "<br /><br /><br />\n";
+		echo "</div>";
+		echo closeForm(false);
+		footer(false, true);
+		exit;
 	}
 	
 /*
@@ -190,15 +213,15 @@ $editor="tinymce";
  * 
  */
 // Maximum file size
-$max_file_size_in_bytes = sprintf(ereg_replace("[^0-9]", "", ini_get('upload_max_filesize')) * 1024 * 1024);
+$max_file_size_in_bytes = sprintf(strip(ini_get('upload_max_filesize'), "numbersOnly") * 1024 * 1024);
 
 // Characters allowed in the file name (in a Regular Expression format)               
 $valid_chars_regex = '.A-Z0-9_ !@#$%^&()+={}\[\]\',~`-';
 
 // Allowed file extensions
 // Remove an extension if you don't want to allow those files to be uploaded.
-//$extension_whitelist = "7z,aiff,asf,avi,bmp,csv,doc,docx,fla,flv,gif,gz,gzip,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pptx,pxd,qt,ram,rar,rm,rmi,rmvb,rtf,sdc,sitd,swf,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xlsx,zip";
-$extension_whitelist = "asf,avi,bmp,fla,flv,gif,jpeg,jpg,mov,mpeg,mpg,png,tif,tiff,wmv"; // Images, video and flash only
+$extension_whitelist = "7z,aiff,asf,avi,bmp,csv,doc,docx,fla,flv,gif,gz,gzip,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pptx,pxd,qt,ram,rar,rm,rmi,rmvb,rtf,sdc,sitd,swf,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xlsx,zip";
+//$extension_whitelist = "asf,avi,bmp,fla,flv,gif,jpeg,jpg,mov,mpeg,mpg,png,tif,tiff,wmv"; // Images, video and flash only
 
 
 /*

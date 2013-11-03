@@ -9,8 +9,8 @@ open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
  
 Created by: Oliver Spryn
-Created on: November 16th, 2010
-Last updated: December 2nd, 2010
+Created on: July 19th, 2010
+Last updated: December 21st, 2010
 
 This is the setup script for the TinyMCE Advanced widget.
 */
@@ -19,13 +19,14 @@ This is the setup script for the TinyMCE Advanced widget.
 	require_once("../../core/index.php");
 
 //Select the API key for the spell checker
-	$apiGrabber = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
+	$api = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 
 //Output this as a JavaScript file
 	header("Content-type: text/javascript");
 ?>
 tinyMCE.init({
     mode : "textareas",
+    theme : "advanced",
     theme : "advanced",
     skin : "o2k7",
     skin_variant : "silver",

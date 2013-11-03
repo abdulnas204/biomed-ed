@@ -21,7 +21,7 @@ function addBlank(tableID) {
 	var newCell1 = newRow.insertCell(0);
 	newCell1.innerHTML = "<input name='questionValue[]' type='text' id='questionValue" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
 	var newCell2 = newRow.insertCell(1);
-	newCell2.innerHTML = "<input name='answerValue[]' type='text' id='answerValue" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
+	newCell2.innerHTML = "<input name='answerValue[]' type='text' id='answerValue" + currentID + "' autocomplete='off' size='50' />";
 	var newCell3 = newRow.insertCell(2);
 	newCell3.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '1')\">";
 }
@@ -46,7 +46,7 @@ function addMatching(tableID) {
 	document.getElementById('id').value = currentID;
 }
 
-function addMultipleChoice(tableID, cellOneStart, cellOneMiddle, cellOneEnd, cellTwoStart, cellTwoEnd) {
+function addMultipleChoice(tableID) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
 	var previousID = document.getElementById('id').value;
@@ -75,12 +75,12 @@ function addShortAnswer(tableID, cellOneStart, cellOneEnd) {
 	newRow.align = "center";
 	
 	var newCell1 = newRow.insertCell(0);
-	newCell1.innerHTML = cellOneStart + currentID + cellOneEnd;
+	newCell1.innerHTML = "<input name='answerValue[]' type='text' id='answerValue" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
 	var newCell2 = newRow.insertCell(1);
 	newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '1', true)\">";
 }
 
-function addFile(tableID, cellOneStart, cellOneMiddle, cellOneEnd, totalFiles) {
+function addFile(tableID, totalFiles) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
 	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
@@ -89,7 +89,7 @@ function addFile(tableID, cellOneStart, cellOneMiddle, cellOneEnd, totalFiles) {
 	
 	if (table.rows.length <= totalFiles) {
 		var newCell1 = newRow.insertCell(0);
-		newCell1.innerHTML = cellOneStart + currentID + cellOneMiddle + currentID + cellOneEnd;
+		newCell1.innerHTML = "<input id='36_" + currentID + "' name='36_" + currentID + "' type='file' size='50' class='validate[required]' />"
 		var newCell2 = newRow.insertCell(1);
 		newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('" + tableID + "', '" + currentID + "', '1', true)\">";
 	} else {

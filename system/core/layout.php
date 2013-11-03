@@ -12,14 +12,17 @@ open source, freeware, nor commercial/closed source.
 /* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 4th, 2010
+Last updated: December 23rd, 2010
 
 This script is used to construct the layout of a page.
 */
 
 //Include the start of a page
-	function headers($title, $functions = false, $toolTip = false, $bodyClass = false, $publicNavigation = false, $hideHTML = false, $customScript = false) {
-		global $root, $rootUserName;
+	function headers($title, $functions = false, $toolTip = false, $bodyParameters = false, $publicNavigation = false, $hideHTML = false, $customScript = false) {
+		global $root, $userData, $rootUserName, $protocol;
+		
+	//Check access to this page
+		maintain();
 		
 	//Grab needed information
 		$siteInfo = query("SELECT * FROM `siteprofiles`");
@@ -30,7 +33,7 @@ This script is used to construct the layout of a page.
 		
 		if (!strstr($requestURL, "enable_javascript.php")) {
 			$noScript = "<noscript>
-  <meta http-equiv=\"refresh\" content=\"0; url=" . $root . "enable_javascript.php\">
+  <meta http-equiv=\"refresh\" content=\"0; url=" . $root . "enable_javascript.htm\">
 </noscript>";
 		} else {
 			$noScript = "
@@ -53,23 +56,9 @@ This script is used to construct the layout of a page.
 <meta name=\"robots\" content=\"index,follow\">
 <meta name=\"generator\" content=\"Ensigma Pro\" />
 <meta name=\"author\" content=\"" . $siteInfo['author'] . "\" />
-<meta name=\"copyright\" content=\"" . $siteInfo['copyright'] . "\" />";
-		
-		if ($description == "") {
-			$metaInformation .= "
-<meta name=\"description\" content=\"" . $siteInfo['description'] . "\" />";
-		} else {
-			$metaInformation .= "
-<meta name=\"description\" content=\"" . prepare(strip_tags($description)) . "\" />";
-		}
-		
-		if ($additionalKeywords == "") {
-			$metaInformation .= "
+<meta name=\"copyright\" content=\"" . $siteInfo['copyright'] . "\" />
+<meta name=\"description\" content=\"" . $siteInfo['description'] . "\" />
 <meta name=\"keywords\" content=\"" . $siteInfo['meta'] . "\" />";
-		} else {
-			$metaInformation .= "
-<meta name=\"keywords\" content=\"" . $siteInfo['meta'] . ", " . prepare($additionalKeywords) . "\" />";
-		}
 		
 	//Include additional functions
 		$scripts = "";
@@ -77,17 +66,23 @@ This script is used to construct the layout of a page.
 		if ($functions == true) {
 			$functionsArray = explode(",", $functions);
 			
+			$scripts .= sessionControl() . "
+";
+			
 			foreach ($functionsArray as $functions) {
 				$scripts .= $functions() . "
 ";
 			}
+		} else {
+			$scripts .= sessionControl() . "
+";
 		}
 		
 	//Decide whether or not to display a white background
 		if ($hideHTML == true && $hideHTML != "XML") {
-			$additionalHTML = " class=\"overrideBackground\"" . $additionalParameters;
+			$additionalHTML = " class=\"overrideBackground\"" . $bodyParameters;
 		} else {
-			$additionalHTML = $additionalParameters;
+			$additionalHTML = $bodyParameters;
 		}
 		
 	//Include a tooltip
@@ -109,7 +104,9 @@ This script is used to construct the layout of a page.
 		
 	//Test to see which item to highlight on the navigation bar
 		function headerHighLight($text, $URL) {
-			if (strstr("http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'], $URL)) {
+			global $protocol;
+			
+			if (strstr($protocol . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'], $URL)) {
 				return URL($text, $URL . "index.php", "topCurrentPageNav");
 			} else {
 				return URL($text, $URL . "index.php", "topPageNav");
@@ -120,7 +117,7 @@ This script is used to construct the layout of a page.
 		if ($hideHTML == false) {
 		//Begin layout of the page
 			$HTML = "
-  
+
 <!-- The top content of the page //-->
 <div id=\"page\">
   <div id=\"header_bg\">
@@ -132,11 +129,8 @@ This script is used to construct the layout of a page.
 			
 		//Include the user login status
 			if (loggedIn()) {
-				$userName = $_SESSION['userName'];
-				$name = query("SELECT * FROM `users` WHERE `userName` = '{$userName}'");
-				
 				$HTML .= "
-          You are logged in as " . URL($name['firstName'] . " " . $name['lastName'], $root . "users/profile.php?id=" . $name['id']) . " 
+          You are logged in as " . URL($userData['firstName'] . " " . $userData['lastName'], $root . "users/profile.php?id=" . $userData['id']) . " 
           ";
 				
 				if (isset($_SESSION['developerAdministration']) && $_SESSION['developerAdministration'] === $rootUserName) {
@@ -145,11 +139,11 @@ This script is used to construct the layout of a page.
           " .  URL("(Logout)", $root . "admin/logout.php?action=complete");
 				} else {
 					$HTML .= 
-          URL("(Logout)", $root . "logout.php");
+          URL("(Logout)", $root . "users/logout.php");
 				}
 			} else {
 				$HTML .= "
-          You are not logged in. " . URL("(Login)", $root . "login.php");
+          You are not logged in. " . URL("(Login)", $root . "users/login.php");
 			}
 		
 			$HTML .= "
@@ -172,7 +166,7 @@ This script is used to construct the layout of a page.
 				$home = "index.php";
 			}
 			
-			$bannerImage .= "<img src=\"" . "" . $root . "system/images/banner.png\"";
+			$bannerImage = "<img src=\"" . "" . $root . "system/images/banner.png\"";
 			
 			if ($siteInfo['auto'] !== "on") {
 				$bannerImage .= " width=\"" . $siteInfo['width'] . "\" height=\"" . $siteInfo['height'] . "\"";
@@ -206,7 +200,7 @@ This script is used to construct the layout of a page.
 			}
 			
 		//Public website navigation bar
-			if ($type == "Public") {
+			if ($URL == "Public") {
 				$pageData = query("SELECT * FROM pages ORDER BY position ASC", "raw");	
 				$lastPageCheck = query("SELECT * FROM pages ORDER BY position DESC LIMIT 1");
 				
@@ -280,10 +274,19 @@ This script is used to construct the layout of a page.
   <!-- Page content //-->
   <div id=\"content\">
     <div class=\"box generalboxcontent boxaligncenter\">";
+		} else {
+			$HTML = "";
+		}
+		
+	//Modify the $bodyParameters variable for ease of use
+		if ($bodyParameters == true) {
+			$bodyParameters = " " . $bodyParameters;
 		}
 		
 	//Construct the HTML
-		echo "<!--
+		echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+		
+<!--
 This system is powered by Ensigma Pro, an Apex Development
 project.
 
@@ -301,13 +304,10 @@ open source, freeware, nor commercial/closed source.
 
 Third-party works are accredited where necessary.
 ---------------------------------------------------------
+
+" . $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on " . date("F j, Y \a\\t g:i A") . "
 //-->
 
-<!--
-http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on " . date("F j, Y \a\\t g:i A") . "
-//-->
-
-<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
 <html xmlns=\"http://www.w3.org/1999/xhtml\">
 <head>
 <!-- The title of the page //-->
@@ -324,12 +324,21 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/themes/" . $siteInfo['style'] . "\" />
 " . $scripts . $script . "
 </head>
-<body" . $bodyClass . ">" . $toolTipScript . $HTML;
+<body" . $bodyParameters . ">" . $toolTipScript . $HTML;
 	}
 	
 //Include a footer
 	function footer($publicNavigation = false, $hideHTML = false) {
-		global $root;
+		global $root, $protocol;
+		
+	//Detect an SSL connection
+		if ($protocol == "https://") {
+			$company = "https://apexdevelopment.worldsecuresystems.com/img/branding/apex_development_footer.png";
+			$product = "https://apexdevelopment.worldsecuresystems.com/img/branding/ensigma_pro.png";
+		} else {
+			$company = "http://apexdevelopment.businesscatalyst.com/img/branding/apex_development_footer.png";
+			$product = "http://apexdevelopment.businesscatalyst.com/img/branding/ensigma_pro.png";
+		}
 		
 	//Grab needed information
 		$footer = query("SELECT * FROM siteprofiles");
@@ -358,10 +367,12 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
 		}
 		
 		echo "
+  <div id=\"sessionTimeoutWarning\" style=\"display: none\"></div>
+  
   <!-- Branding //-->
   <div align=\"center\">
-    " . URL("<img src=\"http://apexdevelopment.businesscatalyst.com/img/branding/apex_development_footer.png\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
-    " . URL("<img src=\"http://apexdevelopment.businesscatalyst.com/img/branding/ensigma_pro.png\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
+    " . URL("<img src=\"" . $company . "\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
+    " . URL("<img src=\"" . $product . "\">", "http://apexdevelopment.businesscatalyst.com/", false, "_blank") . "
   </div>";
   		if ($hideHTML == false) {
 			echo "
@@ -467,9 +478,7 @@ http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . " was generated on 
     </div>
 	
     <!-- Footer text //-->
-    <div class=\"footer\">
     " . $footer['siteFooter'] . "
-    </div>
   </div>
 </div>
 <br />";

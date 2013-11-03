@@ -1,0 +1,80 @@
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+*/
+
+/* Navigate through a lesson */	
+	span.currentPage {
+		font-weight:bolder;
+	}
+	
+	a.previousPage {
+		background:url(../../images/common/back.png) no-repeat left;
+		padding-left:18px;
+	}
+	
+	a.nextPage {
+		background:url(../../images/common/next.png) no-repeat right;
+		padding-right:18px;
+	}
+	
+/* Test structure */	
+	span.questionNumber {
+		font-size:14px;
+		font-weight:bolder;
+	}
+	
+	span.questionPoints {
+		font-size:9px;
+		font-weight:bolder;
+	}
+	
+	span.checkmark {
+		background:url(../../images/common/checkmark.png) no-repeat left;
+		padding-left: 23px;
+	}
+	
+	span.x {
+		background:url(../../images/common/x.png) no-repeat left;
+		padding-left: 23px;
+	}
+	
+	tr.attention {
+		background:#EBEBEB;
+	}
+	
+	.calculate {
+		background-color:transparent;
+		border:none;
+		text-align:center;
+	}
+	
+	.good {
+		color:#0F0;
+	}
+	
+	.average {
+		color:#333;
+	}
+	
+	.bad {
+		color:#F00;
+	}
+	
+/* Learning unit progress */	
+	li.notStarted {
+		list-style-image:url(../../images/common/x.png);
+	}
+	
+	li.completed {
+		list-style-image:url(../../images/common/checkmark.png);
+	}
+	
+	li.inProgress {
+		list-style-image:url(../../images/common/percent.png);
+	}

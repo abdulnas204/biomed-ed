@@ -10,12 +10,10 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: December 20th, 2010
 
 This is the configuration script for the learning plugin.
 */
-
-//--------------------------- Add "Edit Unowned Learning Units" ---------------------------//
 
 //Plugin information
 	$name = "Learning Module";
@@ -42,7 +40,8 @@ This is the configuration script for the learning plugin.
  * The keys are the page URLs (relative to the plugin root), and the value is the privilege name
  * To account for URL parameters or active sessions, start with the page URL, then wrap each URL paramerter with a (), and a session with a [], and seperate each item with a comma
  * Here is an example of a page allowing access when an "id" parameter is defined and a "edit" session is active: "page.php,(id),[edit]"
- * To assign multiple pages to one permission, simply include all of the pages in one string, and seperate the URL with a semicolon
+ * To assign multiple pages to one permission, simply include all of the pages in one string, and seperate the URLs with a semicolon
+ * To allow public access to a page, simply construct the array as described above, but, instead, assign the value as "Public"
 */
 	$privileges = array(
 				//View lessons and tests
@@ -108,6 +107,33 @@ This is the configuration script for the learning plugin.
 				questions/question_bank.php,[review],[currentUnit];
 				questions/short_answer.php,[review],[currentUnit];
 				questions/true_false.php,[review],[currentUnit]" => "Edit Learning Unit",
+				
+				//Editing unowned lessons and tests
+				"index.php,(id),(edit);
+				wizard/lesson_settings.php,[review],[currentUnit];
+				wizard/lesson_content.php,[review],[currentUnit];
+				wizard/preview_page.php,[review],[currentUnit];
+				wizard/manage_content.php,[review],[currentUnit];
+				wizard/manage_content.php,(id),[review],[currentUnit];
+				wizard/lesson_verify.php,[review],[currentUnit];
+				wizard/test_check.php,[review],[currentUnit];
+				wizard/test_settings.php,[review],[currentUnit];
+				wizard/test_content.php,[review],[currentUnit];
+				wizard/preview_question.php,[review],[currentUnit];
+				wizard/question_merge.php,[review],[currentUnit];
+				wizard/complete.php,[review],[currentUnit];
+				questions/blank.php,[review],[currentUnit];
+				questions/description.php,[review],[currentUnit];
+				questions/essay.php,[review],[currentUnit];
+				questions/file_response.php,[review],[currentUnit];
+				questions/functions.php,[review],[currentUnit];
+				questions/matching.php,[review],[currentUnit];
+				questions/multiple_choice.php,[review],[currentUnit];
+				questions/preview.php,[review],[currentUnit];
+				questions/question_bank.php,[review],[currentUnit];
+				questions/short_answer.php,[review],[currentUnit];
+				questions/true_false.php,[review],[currentUnit];
+				overview.php,(id)" => "Edit Unowned Learning Units",
 				
 				//Delete lessons and tests
 				"index.php,(id),(action)" => "Delete Learning Unit",
@@ -188,8 +214,8 @@ This is the configuration script for the learning plugin.
 				*/
 				
 				//Assign users to learning unit
-				"assign/index.php,
-				assign/assign.php,
+				"assign/index.php;
+				assign/assign.php;
 				assign/details.php" => "Assign Users to Learning Unit",
 				
 				//Purchase learning unit
@@ -198,4 +224,14 @@ This is the configuration script for the learning plugin.
 				//Access learning unit statistics
 				"statistics/index.php" => "Access Learning Unit Statistics"
 				);
+
+/*
+ * Force a list of pages to use a secure (https) connection, if an SSL certificate is installed
+ * The keys are the page URLs (relative to the plugin root), and the value is the level of importance
+ * The values may either be "Optional" (use a secure connection if an SSL certificate is installed) or "Important" (deny access to the page if an SSL certificate is not installed)
+ * To account for URL parameters or active sessions, start with the page URL, then wrap each URL paramerter with a (), and a session with a [], and seperate each item with a comma
+ * Here is an example of a secured page when an "id" parameter is defined and a "edit" session is active: "page.php,(id),[edit]"
+ * To assign multiple pages to a secure connection, simply include all of the pages in one string, and seperate the URLs with a semicolon
+*/
+	$SSL = array();
 ?>

@@ -12,7 +12,7 @@ open source, freeware, nor commercial/closed source.
 /* 
 Created by: Oliver Spryn
 Created on: July 16th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: December 14th, 2010
 
 This is the error page for the system, which will return a 
 customized and user-friendly error for a 403 and 404 error.

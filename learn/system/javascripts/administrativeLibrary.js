@@ -34,7 +34,39 @@ function triggerAddition(input) {
 	}
 }
 
+function changeSelected(input) {
+	var selectionInputs = document.getElementsByName("selected[]");
+	
+	switch(input) {
+		case "" : 
+		case "textField" : 
+		case "textArea" : 
+			//Do nothing
+			break;
+		
+		case "dropDown" : 
+		case "radio" : 
+			for (var count = 0; count <= selectionInputs.length; count++) {
+				selectionInputs[count].type = "radio"
+			}
+			
+			break;
+			
+		case "checkbox" : 
+			for (var count = 0; count <= selectionInputs.length; count++) {
+				selectionInputs[count].type = "checkbox"
+			}
+			
+			break;
+		
+		default : 
+			alert("Invalid input type");
+			break;
+	}
+}
+
 function addValue(tableID) {
+	var fieldType = document.getElementById("fieldType").value;
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
 	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
@@ -43,9 +75,17 @@ function addValue(tableID) {
 	newRow.align = "center";
 	
 	var newCell1 = newRow.insertCell(0);
-	newCell1.innerHTML = "<input name='value[]' type='text' id='value" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
+	
+	if (fieldType == "checkbox") {
+		newCell1.innerHTML = "<label><input name='selected[]' type='checkbox' id='selected_" + currentID + "' value='" + currentID + "'></label>";
+	} else {
+		newCell1.innerHTML = "<label><input name='selected[]' type='radio' id='selected_" + currentID + "' value='" + currentID + "'></label>";
+	}
+	
 	var newCell2 = newRow.insertCell(1);
-	newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '2')\">";
+	newCell2.innerHTML = "<input name='values[]' type='text' id='value" + currentID + "' autocomplete='off' size='50' class='validate[required]' />";
+	var newCell3 = newRow.insertCell(2);
+	newCell3.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '2')\">";
 }
 
 function deleteObject(tableID, rowID, values, noHeader) {

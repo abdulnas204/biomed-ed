@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 16th, 2010
-Last updated: December 2nd, 2010
+Last updated: December 21st, 2010
 
 This is the setup script for the TinyMCE Question widget.
 */
@@ -19,7 +19,7 @@ This is the setup script for the TinyMCE Question widget.
 	require_once("../../../system/core/index.php");
 
 //Select the API key for the spell checker
-	$apiGrabber = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
+	$api = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 
 //Output this as a JavaScript file
 	header("Content-type: text/javascript");

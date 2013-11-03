@@ -1,15 +1,35 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+
+Created by: Oliver Spryn
+Created on: September 4th, 2010
+Last updated: December 23rd, 2010
+
+This script is dedicated to displaying the test section 
+of each learning unit.
+*/
+
 //Header functions
-	require_once('../system/connections/connDBA.php');
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	
-//Grab all module and test data
-	$userData = userData();
+//Set variables which will be access repeatedly through out this script
 	$testID = $_GET['id'];
-	$parentTable = "moduletest_" . $testID;
+	$parentTable = "test_" . $testID;
 	$testTable = "testdata_" . $userData['id'];
+	$questionBank = "questionbank_0";
+	$unitInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}' LIMIT 1");
 	$attempt = lastItem($testTable, "testID", $testID, "attempt");
 	$accessGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
-	$accessArray = unserialize($accessGrabber['modules']);
+	$accessArray = unserialize($accessGrabber['learningunits']);
 	
 	if ($attempt - 1 == 0) {
 		$currentAttempt = 1;
@@ -20,15 +40,15 @@
 	if ($accessArray[$testID]['testStatus'] == "C") {
 		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 		$updateArray = serialize($accessArray);
-		query("UPDATE `users` SET `modules` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
+		
+		query("UPDATE `users` SET `learningunits` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
 	} else {
 		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 	}
 	
-	if (isset ($_GET['id'])) {
-		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$_GET['id']}' LIMIT 1");
-		
-		if (exist("moduledata", "id", $_GET['id']) == false) {
+//Ensure the user has permission to access this test
+	if (isset ($_GET['id'])) {		
+		if (!exist("learningunits", "id", $_GET['id'])) {
 			redirect("index.php");
 		}
 		
@@ -36,14 +56,18 @@
 			redirect("index.php");
 		}
 		
-		if ($accessArray[$testID]['moduleStatus'] != "F" || $accessArray[$testID]['testStatus'] == "A" || $accessArray[$testID]['testStatus'] == "F") {
+		if ($accessArray[$testID]['lessonStatus'] != "F") {
+			redirect("lesson.php?id=" . $testID);
+		}
+		
+		if ($accessArray[$testID]['testStatus'] == "A" || $accessArray[$testID]['testStatus'] == "F") {
 			redirect("review.php?id=" . $testID);
 		}
 	} else {
 		redirect("index.php");
 	}
 	
-//Create a function to see if test questions exist
+//Check to see if test questions exist
 	function questionExist($id) {
 		global $testTable, $testID, $currentAttempt;
 		
@@ -57,125 +81,44 @@
 	}
 	
 //If the test is left unconfigured, then prompt the user to configure it before taking the test
-	if (!query($query, false, false)) {
-	//Generate the test configuration form
-		$testDifficultyGrabber = query("SELECT * FROM `{$parentTable}`", "raw");
-		$questionsCalc = "";
-		$questions = "";
-		$difficulty = "";
-		$count = 1;
-		
-		while ($testDifficulty = mysql_fetch_array($testDifficultyGrabber)) {
-			if ($testDifficulty['difficulty'] == "Easy") {
-				$easy = true;
-			} elseif ($testDifficulty['difficulty'] == "Average") {
-				$average = true;
-			} elseif ($testDifficulty['difficulty'] == "Difficult") {
-				$difficult = true;
-			}
-		}
-		
-		if (isset($easy)) {
-			$difficulty .= "Easy,";
-		}
-		
-		if (isset($average)) {
-			$difficulty .= "Average,";
-		}
-		
-		if (isset($difficult)) {
-			$difficulty .= "Difficult,";
-		}
-		
-		if (isset($_GET['data'])) {
+	if (!query($query, false, false)) {		
+		if (is_array($_GET) && sizeof($_GET) >= 2) {
 			header("Content-type: text/xml");
 			
-			if (isset ($_GET['difficulty'])) {
-				echo "<root><level><url>all</url><difficulty>All Levels</difficulty></level>";
-				
-				foreach(explode(",", rtrim($difficulty, ",")) as $difficultValue) {
-					echo "<level>";
-					echo "<url>" . strtolower($difficultValue) . "</url>";
-					echo "<difficulty>" . $difficultValue . "</difficulty>";
-					echo "</level>";
-				}
-				
-				echo "</root>";
-				exit;
-			}
+			echo "<root>\n";
 			
-			if (isset($_GET['type'])) {
-				switch ($_GET['type']) {
-					case "all" :
-						$sql = "";
-						break;
-						
-					case "easy" :
-						$sql = " WHERE `difficulty` = 'Easy'";
-						break;
-						
-					case "average" :
-						$sql = " WHERE `difficulty` = 'Average'";
-						break;
-						
-					case "difficult" :
-						$sql = " WHERE `difficulty` = 'Difficult'";
-						break;
-				}
+			if (sizeof($_GET) > 2) {
+				$sql = "SELECT `field_{$key}` FROM `{$parentTable}` WHERE";
+				$restrictImport = array();
 				
-				if (in_array($_GET['type'], explode(",", rtrim(strtolower($difficulty), ",")))) {
-					$questionsGrabber = query("SELECT `position` FROM `{$parentTable}`{$sql} AND `type` != 'Description' ORDER BY `position` DESC", "selected", false);
+				foreach($_GET as $key => $parameterPrep) {
+					$parameter = escape($parameterPrep);
 					
-					if ($_GET['type'] != "all") {						
-						if ($bankGrabber = query("SELECT * FROM `{$parentTable}` WHERE `questionBank` = '1' AND `type` != 'Description'", "raw", false)) {
-							while ($bank = mysql_fetch_array($bankGrabber)) {
-								if ($bank['questionBank'] == "1") {
-									if ($externalCheck = query("SELECT * FROM `questionbank`{$sql} AND `id` = '{$bank['linkID']}' AND `type` != 'Description'", "array", false)) {
-										while ($external = mysql_fetch_array($externalCheck)) {
-											if (is_array($externalCheck) && !empty($externalCheck) && in_array($_GET['type'], $external['difficulty'])) {
-												array_push($questionsGrabber, $external['position']);
-											}
-										}
-									}
-								}
-							}
-						}
+					if ($key != "id" && $key != "data") {
+						$sql .= " `{$parentTable}`.`field_{$key}` = '{$parameter}' AND `{$questionBank}`.`field_{$key}` = '{$parameter}' AND";
 					}
-				} else {
-					$questionsGrabber = query("SELECT `position` FROM `{$parentTable}` WHERE `type` != 'Description' ORDER BY `position` DESC", "selected", false);
 				}
 				
-				foreach ($questionsGrabber as $number) {
-					$questionsCalc .= $number . ",";
+				$sql = rtrim($sql, " AND") . "UNION ALL ELECT `field_{$key}` FROM `{$parentTable}` WHERE";
+				
+				$questions = query(rtrim($sql, " AND"), "num");
+				
+				for ($count = $questions; $count >= 1; $count --) {
+					echo "<group>\n";
+					echo "<question>" . $count ."</question>\n";
+					echo "</group>\n";
 				}
-				
-				echo "<root>";
-				
-				for ($count = sizeof(explode(",", rtrim($questionsCalc, ","))); $count >= 1; $count--) {
-					echo "<data>";
-					echo "<question>" . $count . "</question>";
-					echo "</data>";
-				}
-				
-				echo "</root>";
 			} else {
-				$questionsGrabber = query("SELECT `position` FROM `{$parentTable}` WHERE `type` != 'Description' ORDER BY `position` DESC", "selected", false);
+				$questions = query("SELECT * FROM `{$parentTable}`", "num");
 				
-				foreach ($questionsGrabber as $number) {
-					$questionsCalc .= $number . ",";
+				for ($count = $questions; $count >= 1; $count --) {
+					echo "<group>\n";
+					echo "<question>" . $count ."</question>\n";
+					echo "</group>\n";
 				}
-				
-				echo "<root>";
-				
-				for ($count = sizeof(explode(",", rtrim($questionsCalc, ","))); $count >= 1; $count--) {
-					echo "<data>";
-					echo "<question>" . $count . "</question>";
-					echo "</data>";
-				}
-				
-				echo "</root>";
 			}
 			
+			echo "</root>\n";
 			exit;
 		}
 		
@@ -282,29 +225,96 @@
 		}
 			
 	//Top content
-		headers($moduleInfo['name'] . " Configuration", "Student", "liveUpdate", false, false, false, false, false, false, false, "<script type=\"text/javascript\">var dsDifficulty = new Spry.Data.XMLDataSet(\"" . $_SERVER['REQUEST_URI'] . "&data=xml&difficulty=true\", \"root/level\");var dsQuestions = new Spry.Data.XMLDataSet(\"" . $_SERVER['REQUEST_URI'] . "&data=xml&type={dsDifficulty::url}\", \"root/data\");</script>");
+		headers($unitInfo['name'] . " Configuration", "liveUpdate", true, false, false, false, "<script type=\"text/javascript\">
+  var dsQuestions = new Spry.Data.XMLDataSet(\"" . $_SERVER['REQUEST_URI'] . "&data=xml\", \"root/group\", {useCache:false});
+</script>");
 		
 	//Title
-		title($moduleInfo['name'] . " Configuration", "Please configure this test to best suit your needs prior to starting. Keep in mind that once these settings are set, then cannot be changed for this test, unless you decide to retake it after this session.");
+		title($unitInfo['name'] . " Configuration", "Please configure this test to best suit your needs. Keep in mind that once these settings are set, they cannot be changed, unless you decide to retake this test after this session.");
 		
 	//Configuration form
-		$possibleConfig = array("Easy", "Average", "Difficult");
-		form("configuration");
+		echo form("configuration");
+		echo hidden("parameters", "parameters", "");
 		catDivider("Configuration", "one", true);
-		echo "<blockquote>";
-		directions("Difficulty", false);
-		echo "<blockquote><p><span spry:region=\"dsDifficulty\" id=\"difficultySelector\"><select id=\"difficulty\" name=\"difficulty\" onchange=\"document.forms[0].questions.disabled = true; dsDifficulty.setCurrentRowNumber(this.selectedIndex);\"><option spry:repeat=\"dsDifficulty\" value=\"{difficulty}\">{difficulty}</option></select></span>";
-		echo "</p></blockquote>";
+		echo "<blockquote>\n";
+		
+		$customFields = query("SELECT * FROM `fields` WHERE `testFilter` = '1' AND `fieldType` != 'checkbox' AND `fieldType` != 'textArea' ORDER BY `position` ASC", "raw");
+		
+		while ($field = fetch($customFields)) {
+			if (in_array("Question Generator", unserialize($field['section']))) {
+				$items = "";
+				$values = unserialize($field['values']);
+				
+				if ($field['showTip'] == "1") {
+					$tip = strip_tags($field['description']);
+				} else {
+					$tip = false;
+				}
+				
+				directions($field['name'], false, $tip);
+				
+				switch($field['fieldType']) {
+					case "dropDown" : 
+					case "radio" : 
+						$items = "- All -,";
+						$IDs = ",";
+						
+						foreach ($values as $value) {
+							$items .= prepare($value, true, true) . ",";
+							$IDs .= prepare($value, true, true) . ",";
+						}
+						
+						indent(dropDown($field['id'], $field['id'], rtrim($items, ","), rtrim($IDs, ","), false, false, false, false, false, false, "onchange=\"updateDataSet(this.id)\""));
+						
+						break;
+						
+					case "textField" : 
+						$items = "- All -,";
+						$IDs = ",";
+						$values = array_unique(query("SELECT `field_{$field['id']}` FROM `{$parentTable}`", "selected"));
+						
+						foreach ($values as $value) {
+							if (!empty($value)) {
+								$items .= prepare($value, true, true) . ",";
+								$IDs .= prepare($value, true, true) . ",";
+							}
+						}
+						
+						indent(dropDown($field['id'], $field['id'], rtrim($items, ","), rtrim($IDs, ","), false, false, false, false, false, false, "onchange=\"updateDataSet(this.id)\""));
+						break;
+						
+					case "checkbox" : 
+						$count = 0;
+						echo "<blockquote><p>";
+						
+						foreach ($values as $value) {
+							echo checkbox($field['id'] . "[]", $field['id'] . "_" . $count, $value, prepare($value, true, true), false, false, false, false, false, false, "onclick=\"updateDataSet(this.id)\"");
+							echo "<br />\n";
+							$count++;
+						}
+						
+						echo "</p></blockquote>";
+						break;
+						
+					default : 
+						die(errorMessage("Incorrect field type selected on " . $fields['id']));
+						break;
+				}
+			}
+		}
+		
 		directions("Number of questions", false);
-		echo "<blockquote><p><span spry:region=\"dsQuestions\" id=\"questionSelector\"><select id=\"questions\" name=\"questions\"><option spry:repeat=\"dsQuestions\" value=\"{question}\">{question}</option></select></span>";
-		echo "</p></blockquote></blockquote>";		
+		echo "\n<blockquote>\n";
+		echo "<span spry:region=\"dsQuestions\" id=\"questionSelector\">\n";
+		echo "<select id=\"questions\" name=\"questions\">\n<option spry:repeat=\"dsQuestions\" value=\"{question}\">{question}</option>\n</select>\n";
+		echo "</span>\n";
+		echo "</blockquote>\n";
+		echo "</blockquote>\n";		
 		
 		catDivider("Submit", "two");
-		echo "<blockquote><p>";
-		button("setup", "setup", "Submit", "submit");
-		button("cancel", "cancel", "Cancel", "cancel", "index.php");
-		echo "</p></blockquote>";
-		closeForm(true, false);
+		indent(button("setup", "setup", "Submit", "submit") . 
+		button("cancel", "cancel", "Cancel", "cancel", "index.php"));
+		echo closeForm();
 		
 	//Include the footer
 		footer();

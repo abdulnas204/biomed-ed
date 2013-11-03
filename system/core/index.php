@@ -10,19 +10,27 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 1st, 2010
+Last updated: Janurary 10th, 2011
 
 This script is the core of the system, which contains key 
-infomation and definitions which will be used globally.
+information and definitions which will be used globally.
 */
 
 //Start a session and output buffering
+	session_set_cookie_params("1200");
+	session_name("ENSIGMAPRO");
 	session_start();
 	ob_start();
-
+	
 //Root address for entire site
-	$root = "http://" . $_SERVER['HTTP_HOST'] . "/biomed-ed/";
-	$strippedRoot = str_replace("http://" . $_SERVER['HTTP_HOST'], "", $root);
+	if ($_SERVER['HTTPS'] == "on") {
+		$protocol = "https://";
+	} else {
+		$protocol = "http://";
+	}
+	
+	$root = $protocol . $_SERVER['HTTP_HOST'] . "/";
+	$strippedRoot = str_replace($protocol . $_SERVER['HTTP_HOST'], "", $root);
 
 //Database connection
 	$databaseType = "mysql";
@@ -38,14 +46,18 @@ infomation and definitions which will be used globally.
 	$rootUserName = "spryno724";
 	$rootPassWord = "Oliver99";
 	
-//Set upload time limit
+//Set server configurations
 	set_time_limit(3600);
+	ini_set("expose_php", "Off");
+	
+	/*---------------------------------------------------- Developer use ONLY!!!! Disable during production!!!! ----------------------------------------------------*/
+	error_reporting(-1);
 	
 //Create a relative address in order to access other system functions	
 	function relativeAddress($addressAddition) {
 		global $strippedRoot;
 		
-		$URL = array_filter(explode("/", $_SERVER['PHP_SELF']));
+		$URL = array_merge(array_filter(explode("/", $_SERVER['PHP_SELF'])));
 		$relativeAddress = "";
 		
 		foreach($URL as $directory) {
@@ -53,12 +65,17 @@ infomation and definitions which will be used globally.
 				if (!strstr($directory, ".php")) {
 					$relativeAddress .= "../";
 				} else {
+					$relativeAddress .= "../";
 					break;
 				}
 			}
 			
-			if (strtolower($directory) == strtolower(trim($strippedRoot, "/"))) {
+			if (strtolower(trim($strippedRoot, "/")) == "") {
 				$process = true;
+			} else {
+				if (strtolower($directory) == strtolower(trim($strippedRoot, "/"))) {
+					$process = true;
+				}
 			}
 		}
 		

@@ -10,68 +10,100 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: December 23rd, 2010
 
 This is the plugin script for the learning plugin to 
 display on the user's portal.
 */
 
-//Categorize the contents by its plugin
-	echo "<p class=\"homeDivider\">" . $name . "</p>\n";
-
-//Display a chart with the overall progress of the user
-	echo "<p class=\"directions\">This chart displays your current progress on your lesson-plan:</p>\n";
-	chart("../learn/system/flash/bar2D.swf", "../learn/system/php/data.php?type=account");
+	if (is_array(unserialize($userData['learningunits'])) && sizeof(unserialize($userData['learningunits'])) > 0) {
+	//Categorize the contents by its plugin
+		echo "<p class=\"homeDivider\">" . $name . "</p>\n";
+		echo "<div class=\"layoutControl\">\n";
+		echo "<div class=\"halfLeft\">\n";
 	
-//Display a calendar with the lesson plan of the user
-	echo "<!-- Begin FullCalendar widget //-->\n";
-	echo fullCalendar();
-	echo "\n<script type=\"text/javascript\">\n\$(document).ready(function() { \n\$(\"#calendar\").fullCalendar({\ntheme: true, events: \"../learn/system/php/data.php?type=calendar\"});\n});\n</script>\n";
-	echo "<p>&nbsp;</p>";
-	echo "<p class=\"directions\">This calendar displays your lesson-plan:</p>\n";
-	echo "<div align=\"center\"><div id=\"calendar\"></div></div>\n";
-	echo "<!-- End FullCalendar widget //-->\n";
-	
-//Display progress in individual modules	
-	$lessons = unserialize($userData['modules']);
-	
-	if (is_array(unserialize($lessons)) && !empty($lessons)) {
-		echo "<p class=\"directions\">Information on modules you are currently enrolled:</p>\n";
-		echo "<ul>\n";
+	//Display a chart with the overall progress of the user
+		$lessons = unserialize($userData['learningunits']);
 		
-		foreach ($lessons as $key => $value) {
-			$moduleData = query("SELECT * FROM `moduledata` WHERE `id` = '{$key}'");
+		if (is_array($lessons) && !empty($lessons)) {
+			$return = "<ul>\n";
 			
-			echo "<li class=\"";
-			
-			if ($value['moduleStatus'] == "F" && $value['testStatus'] == "F") {
-				echo "completed";
-			} elseif ($value['moduleStatus'] == "C" && $value['testStatus'] == "C") {
-				echo "notStarted";
-			} else {
-				echo "inProgress";
+			foreach ($lessons as $key => $value) {
+				$unitData = query("SELECT * FROM `learningunits` WHERE `id` = '{$key}'");
+				
+				$return .= "<li class=\"";
+				
+				if ($value['lessonStatus'] == "F" && $value['testStatus'] == "F") {
+					$return .= "completed";
+				} elseif ($value['lessonStatus'] == "C" && $value['testStatus'] == "C") {
+					$return .= "notStarted";
+				} else {
+					$return .= "inProgress";
+				}
+				
+				if ($value['lessonStatus'] == "F") {
+					$lessonStatus = "Completed";
+				} elseif ($value['lessonStatus'] == "C") {
+					$lessonStatus = "Not Started";
+				} else {
+					$lessonStatus = "In Progress";
+				}
+				
+				if ($value['testStatus'] == "F") {
+					$testStatus = "Completed";
+				} elseif ($value['testStatus'] == "C") {
+					$testStatus = "Not Started";
+				} else {
+					$testStatus = "In Progress";
+				}
+				
+				$return .= "\">" . tip("<strong>Lesson Progress</strong> - " . $lessonStatus . "<br /><strong>Test Progress</strong> - " . $testStatus,  URL($unitData['name'], "../learn/lesson.php?id=" . $unitData['id']));
+				$return .= "</li>\n";
 			}
 			
-			if ($value['moduleStatus'] == "F") {
-				$moduleStatus = "Completed";
-			} elseif ($value['moduleStatus'] == "C") {
-				$moduleStatus = "Not Started";
-			} else {
-				$moduleStatus = "In Progress";
-			}
-			
-			if ($value['testStatus'] == "F") {
-				$testStatus = "Completed";
-			} elseif ($value['testStatus'] == "C") {
-				$testStatus = "Not Started";
-			} else {
-				$testStatus = "In Progress";
-			}
-			
-			echo "\">" . tip("<strong>Lesson Progress</strong> - " . $moduleStatus . "<br /><strong>Test Progress</strong> - " . $testStatus,  URL($moduleData['name'], "../modules/lesson.php?id=" . $moduleData['id']));
-			echo "</li>";
+			$return .= "</ul>\n";
 		}
 		
-		echo "</ul>";
+		sideBox("Lesson-plan progress", "Custom Content", "<p align=\"center\">" . chart("../learn/system/flash/bar2D.swf", "../learn/system/php/data.htm?type=account", "500", "240") . "</p>" . $return);
+		
+		echo "</div>\n<div class=\"halfRight\">\n";
+		
+	//Display a calendar with the lesson plan of the user
+		$return = "";
+		
+		foreach(unserialize($userData['learningunits']) as $event) {
+			$detailsGrabber = query("SELECT * FROM `learningunits` WHERE `id` = '{$event['item']}'");
+			$time = strip($detailsGrabber['timeFrame'], "numbersOnly");
+			$timeLabel = strip($detailsGrabber['timeFrame'], "lettersOnly");
+			$start = $event['startDate'];
+			$end = strtotime(date("Y-m-d", $event['startDate']) . " +" . $time . $timeLabel);
+			
+			if ($start < strtotime("now") && strtotime("now") < $end) {
+				$return .= "<p><strong>" . URL($detailsGrabber['name'], "../learn/lesson.htm?id=" . $detailsGrabber['id']) . "</strong><br />\n";
+				$return .= "Start: <em>" . date("l, F d, Y", $start) . "</em><br />\n";
+				$return .= "End: <em>" . date("l, F d, Y", $end) . "</em><br />\n</p>\n";
+			}
+		}
+		
+		if (!empty($return)) {
+			$return = $return;
+		} else {
+			$return = "<em>There is nothing on today's agenda!</em>";
+		}
+		
+		echo eventCalendar();
+		sideBox("Lesson Plan Calendar", "Custom Content", "
+<div class=\"layoutControl\">
+<div class=\"halfLeft\">
+<div align=\"center\">
+<div id=\"eventCal\"></div>
+</div>
+</div>
+<div class=\"halfRight\">
+<div id=\"eventsInfo\">\n" . $return . "\n</div>
+</div>
+</div>");
+	
+		echo "</div>\n</div>\n";
 	}
 ?>

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: July 30th, 2010
-Last updated: December 3rd, 2010
+Last updated: December 11th, 2010
 
 This is the home page of the site, which contains content 
 from the CMS portion of the site, as well as a customizeable 
@@ -73,8 +73,8 @@ sidebar.
 
 //Admin toolbar
 	if (loggedIn() && !empty($pageInfo['content'])) {
-		form("pages", "post", false, "cms/index.php");
-		echo "<div class=\"toolBar noPadding\"><div align=\"center\">";
+		echo form("pages", "post", false, "cms/index.php");
+		echo "<div class=\"toolBar noPadding\">\n<div align=\"center\">";
 		echo URL("Edit This Page", "cms/manage_page.php?id=" . $pageInfo['id']);
 		echo " | Visible: ";
 		echo hidden("action", "action", "setAvaliability");
@@ -87,8 +87,8 @@ sidebar.
 		echo URL("Back to Pages", "cms/index.php");
 		echo " | ";
 		echo URL("Back to Sidebar", "cms/sidebar.php");
-		echo "</div></div>";
-		closeForm(false, false);
+		echo "</div>\n</div>";
+		echo closeForm(false);
 	}
 	
 //Display the page content	
@@ -101,11 +101,11 @@ sidebar.
 	} else {
 		if (empty($pageInfo['content'])) {
 			title("Page Not Found", "The page you are looking for was not found on our system");
-			echo "<p>&nbsp;</p><p align=\"center\">";
+			echo "<p>&nbsp;</p>n<p align=\"center\">";
 			button("continue", "continue", "Continue", "history");
-			echo "</p>";
+			echo "</p>\n";
 		} else {
-			echo "<h2>" . $pageInfo['title'] . "</h2>" . $pageInfo['content'];
+			echo "<h2>" . $pageInfo['title'] . "</h2>\n" . $pageInfo['content'];
 		}
 	}
 	
@@ -113,7 +113,7 @@ sidebar.
 	if (isset($sideBarResult)) {
 		$sideBarCheck = query("SELECT * FROM `sidebar` WHERE `visible` = 'on' ORDER BY `position` ASC", "raw");
 		
-		echo "</div><div class=\"";
+		echo "</div>\n<div class=\"";
 		
 		if ($sideBarLocation['sideBar'] == "Left") {
 			echo "dataLeft";

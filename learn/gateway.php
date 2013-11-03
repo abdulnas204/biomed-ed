@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 3rd, 2010
+Last updated: Janurary 10th, 2011
 
 This is the gateway script, which will selectively allow 
 access to secured filed based on the user's credentials, 
@@ -22,7 +22,7 @@ access to the subject, and other conditions.
 	require_once(relativeAddress("learn/system/php") . "index.php");
 	require_once(relativeAddress("learn/system/php") . "functions.php");
 	
-//Create a function to open the file
+//Open the file
 	function open() {
 		global $gatewayFile, $fileSize;
 		
@@ -45,9 +45,24 @@ access to the subject, and other conditions.
 		exit;
 	}
 	
-//If a file extension was handed into the gateway
+//If a file was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {
-		$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+		$requestedURL = "";
+		$parameters = explode("/", $_SERVER['PHP_SELF']);
+		$limit = sizeof($parameters);
+		
+		for($count = 0; $count <= $limit - 4; $count ++) {
+			$requestedURL .= $parameters[$count] . "/";
+		}
+		
+		$requestedURL .= $parameters[$limit - 1];
+		
+		if ($protocol == "https://") {
+			$gatewayFilePrep = explode("?", "https://" . $_SERVER['HTTP_HOST'] . $requestedURL);
+		} else {
+			$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $requestedURL);
+		}
+		
 		$gatewayFile = urldecode(str_replace($pluginRoot . "gateway.php/", "", $gatewayFilePrep['0']));
 		
 	//Expose the directory path and file type
@@ -67,39 +82,30 @@ access to the subject, and other conditions.
 		if (!file_exists($gatewayFile) || is_dir($gatewayFile)) {
 			redirect($root . "system/deny/index.php?error=404");
 		}
+		
+	open();
 	
 	//Site administrators will have access to lesson and answer files from modules
 		if ($_SESSION['role'] == "Site Administrator") {
 			for ($count = 0; $count <= $directoryDepth; $count++) {
 				if ($count == "1") {
 					if ($directoryArray['1'] == "lesson" || $directoryArray['1'] == "test") {
-						open();
-					}
-				}
-			}
-		}
-		
-	//Organization administrators will have access 
-		if ($_SESSION['MM_UserGroup'] == "Organization Administrator") {
-			for ($count = 0; $count <= $directoryDepth; $count++) {
-				if ($count == "2") {
-					if ($directoryArray['2'] == "lesson") {
-						open();
+						
 					}
 				}
 			}
 		}
 		
 	//Student will have access to lesson and answer files partaining to them
-		if ($_SESSION['MM_UserGroup'] == "Student") {
-			$userData = userData();
-			$moduleAccess = unserialize($userData['modules']);
+		if (access("Purchase Learning Unit")) {
+			$fileAccess = unserialize($userData['learningunits']);
+			$id = str_replace("unit_", "", $directoryArray['0']);
 			
 			for ($count = 0; $count <= $directoryDepth; $count++) {
-				if ($count == "2" && array_key_exists($directoryArray['1'], $moduleAccess)) {
-					if ($directoryArray['2'] == "test") {
-						$fileDataGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$directoryArray['1']}' AND `type` = 'File Response'", "raw");
-						$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$directoryArray['1']}'");
+				if ($count == "2" && array_key_exists($id, $fileAccess)) {
+					if ($directoryArray['1'] == "test") {
+						$fileDataGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$id}' AND `type` = 'File Response'", "raw");
+						$moduleInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$id}'");
 						$userFiles = array();
 						$testFiles = array();
 						
@@ -118,25 +124,25 @@ access to the subject, and other conditions.
 							}
 						}
 						
-						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "O") {
-							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['4'], $userFiles)) {
+						if ($fileAccess[$id]['testStatus'] == "O") {
+							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['3'], $userFiles)) {
 								open();
 							}
 						}
 						
-						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "A" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") {
-							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['4'], $userFiles)) {
+						if ($fileAccess[$id]['testStatus'] == "A" || $fileAccess[$id]['testStatus'] == "F") {
+							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['3'], $userFiles)) {
 								open();
 							}
 							
-							if (isset($correctAnswers) && $directoryArray['3'] == "answers" && in_array($directoryArray['4'], $testFiles)) {
+							if (isset($correctAnswers) && $directoryArray['2'] == "answers" && in_array($directoryArray['3'], $testFiles)) {
 								open();
 							}
 						}
 					}
 					
-					if ($directoryArray['2'] == "lesson") {
-						if (($moduleAccess[$directoryArray['1']]['testStatus'] == "C" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") || $directoryArray['4'] == "public") {
+					if ($directoryArray['1'] == "lesson") {
+						if (($fileAccess[$id]['testStatus'] == "C" || $fileAccess[$id]['testStatus'] == "F") || $directoryArray['3'] == "public") {
 							open();
 						}
 					}

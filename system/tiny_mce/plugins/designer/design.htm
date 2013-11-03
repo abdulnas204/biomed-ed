@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>{#designer.desc}</title>
+<script type="text/javascript" src="../../tiny_mce_popup.js"></script>
+<script type="text/javascript" src="../../utils/mctabs.js"></script>
+<script type="text/javascript" src="js/designer.js"></script>
+<link rel="stylesheet" href="css/designer.css" type="text/css">
+</head>
+
+<body>
+<div class="tabs">
+  <ul>
+    <li id="general_tab" class="current"><span><a href="javascript:mcTabs.displayTab('general_tab','general_panel');" onmousedown="return false;">{#designer.insertTab}</a></span></li>
+    <li id="advanced_tab"><span><a href="javascript:mcTabs.displayTab('advanced_tab','advanced_panel');" onmousedown="return false;">{#designer.docs}</a></span></li>
+  </ul>
+</div>
+<div class="panel_wrapper">
+  <div id="general_panel" class="panel current">
+    {#designer.directions}
+    <br /><br />
+    
+    <strong>{#designer.required}</strong>
+    <blockquote>
+      <a href="javascript:DesignerDialog.insert('{title}');">{#designer.insertTitle}</a><br />
+      <a href="javascript:DesignerDialog.insert('{top_navigation}');">{#designer.topNav}</a><br />
+      <a href="javascript:DesignerDialog.insert('{content}');">{#designer.content}</a><br />
+      <a href="javascript:DesignerDialog.insert('{bottom_navigation}');">{#designer.bottomNav}</a><br />
+      <a href="javascript:DesignerDialog.insert('{footer}');">{#designer.footer}</a><br />
+    </blockquote>
+    <br />
+    
+    <strong>{#designer.optional}</strong>
+    <blockquote>
+      <a href="javascript:DesignerDialog.insert('{logo}');">{#designer.logo}</a><br />
+    </blockquote>
+  </div>
+  <div id="advanced_panel" class="panel">
+    <p>When creating a template, there are several elements which <em>must</em> be included in order for the site to function properly. These elements include:</p>
+    <ul>
+      <li>Top title bar</li>
+      <li>Top navigation menu</li>
+      <li>Content of the page</li>
+      <li>Bottom navigation menu</li>
+      <li>Footer</li>
+    </ul>
+    <p>These items are optional:</p>
+    <ul>
+      <li>Logo</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

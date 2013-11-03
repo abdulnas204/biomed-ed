@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 28th, 2010
-Last updated: December 4th, 2010
+Last updated: Janurary 9th, 2011
 
 This script contains additional functions relevent to this 
 plugin only.
@@ -98,7 +98,7 @@ Server-side functions
 	
 //Montior access to the lesson and test wizard
 	function monitor($title, $functions = false, $hideHTML = false) {
-		global $connDBA, $strippedRoot;
+		global $strippedRoot;
 		
 		$titlePrefix = "Learning Wizard : ";
 		
@@ -116,7 +116,7 @@ Server-side functions
 			}
 		}
 		
-		if (strstr($_SERVER['REQUEST_URI'], "/wizard/lesson_settings.php") || strstr($_SERVER['REQUEST_URI'], "/questions/")) {
+		if (strstr($_SERVER['SCRIPT_NAME'], "/wizard/lesson_settings.php") || strstr($_SERVER['SCRIPT_NAME'], "/questions/")) {
 			$customScript = "<script type=\"text/javascript\">
   var data = new Spry.Data.XMLDataSet(\"" . $_SERVER['PHP_SELF'] . "?data=xml\", \"/root/group\");
 </script>";
@@ -130,8 +130,8 @@ Server-side functions
 		if (isset($_SESSION['currentUnit'])) {
 			$lessonTable = "lesson" . "_" . $_SESSION['currentUnit'];
 			$testTable = "test" . "_" . $_SESSION['currentUnit'];
-			$directory = "../" . $_SESSION['currentUnit'] . "/";
-			$gatewayPath = "../gateway.php/" . $_SESSION['currentUnit'] . "/";
+			$directory = "../unit_" . $_SESSION['currentUnit'] . "/";
+			$gatewayPath = "../preview.php/unit_" . $_SESSION['currentUnit'] . "/";
 			$redirect = "../wizard/test_content.php";
 			$type = "Learning Unit";
 			
@@ -151,7 +151,8 @@ Server-side functions
 			$monitor = array("parentTable" => $parentTable, "title" => $titlePrefix, "directory" => $directory);
 		}
 		
-		$pageFile = end(explode("/", $_SERVER['SCRIPT_NAME']));
+		$pageFilePrep = explode("/", $_SERVER['SCRIPT_NAME']);
+		$pageFile = end($pageFilePrep);
 		
 		if (isset($_SESSION['currentUnit'])) {
 			$id = $_SESSION['currentUnit'];
@@ -225,7 +226,7 @@ Server-side functions
 	
 //Keep track of steps in the learning unit wizard
 	function navigation($title, $text, $break = true) {
-		global $connDBA, $monitor;
+		global $monitor;
 		
 		function navigationHighlight($title, $URL) {
 			if (strstr($_SERVER['PHP_SELF'], $URL)) {
@@ -284,7 +285,7 @@ Server-side functions
 	
 //Regulate the how questions are inserted and updated
 	function insertQuery($type, $unitQuery, $bankQuery = false, $feedbackQuery = false) {
-		global $connDBA, $monitor;
+		global $monitor, $userData;
 		
 		switch ($type) {
 			case "Learning Unit" :
@@ -294,26 +295,31 @@ Server-side functions
 						  {$unitQuery}
 					  )");
 					  
+				$id = mysql_insert_id();
+					  
+				processFields("Question Generator", $monitor['testTable'], $id);	  
 				redirect($monitor['redirect'] . "?inserted=question");
 				break;
 							
 			case "Bank" :
-				query("INSERT INTO `questionbank_0` (
-						  `id`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+				query("INSERT INTO `questionbank_{$userData['organization']}` (
+						  `id`, `type`, `points`, `extraCredit`, `partialCredit`, `category`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
 					  ) VALUES (							
 						  {$bankQuery}
 					  )");
 				
+				$id = mysql_insert_id();
 				$category = prepare($_POST['category'], false, true);
-				$categoryID = query("SELECT * FROM `modulecategories` WHERE `category` = '{$category}'");
+				$categoryID = query("SELECT * FROM `categories` WHERE `category` = '{$category}'");
 				
+				processFields("Question Generator", "questionbank_" . $userData['organization'], $id);
 				redirect("../question_bank/index.php?id=" . $categoryID['id'] . "&inserted=question");
 				break;
 		}
 	}
 	
 	function updateQuery($type, $unitQuery, $bankQuery = false, $feedbackQuery = false) {
-		global $connDBA, $monitor;
+		global $monitor, $userData;
 		
 		if (isset($_GET['id'])) {
 			$update = $_GET['id'];
@@ -326,16 +332,17 @@ Server-side functions
 		switch ($type) {
 			case "Learning Unit" :
 				query("UPDATE `{$monitor['testTable']}` SET {$unitQuery} WHERE `id` = '{$update}'");
-				
+				processFields("Question Generator", $monitor['testTable'], $update);
 				redirect($monitor['redirect'] . "?updated=question");
 				break;
 				
 			case "Bank" :
-				query("UPDATE `questionbank_0` SET {$bankQuery} WHERE `id` = '{$update}'");
+				query("UPDATE `questionbank_{$userData['organization']}` SET {$bankQuery} WHERE `id` = '{$update}'");
 				
 				$category = prepare($_POST['category']);
 				$categoryID = query("SELECT * FROM `categories` WHERE `category` = '{$category}'");
 				
+				processFields("Question Generator", "questionbank_" . $userData['organization'], $update);
 				redirect("../question_bank/index.php?id=" . $categoryID['id'] . "&updated=question");
 				break;
 		}
@@ -396,7 +403,7 @@ Server-side functions
 	
 //Lesson content
 	function lesson($id, $table, $preview = false) {
-		global $monitor, $root, $pluginRoot, $userData;
+		global $monitor, $root, $pluginRoot, $userData, $protocol;
 		
 		if ($preview == false) {
 			$URL = $_SERVER['PHP_SELF'] . "?id=" . $id . "&";
@@ -406,6 +413,7 @@ Server-side functions
 		
 	//Grab all of the lesson content and settings
 		$settings = query("SELECT * FROM `learningunits` WHERE `id` = '{$id}'");
+		$accessArray = unserialize($userData['learningunits']);
 	
 		if (isset($_GET['page'])) {
 			if (exist($table)) {
@@ -428,7 +436,7 @@ Server-side functions
 			$previousPage = intval($_GET['page']) - 1;
 			$nextPage = intval($_GET['page']) + 1;
 			
-			echo "<div class=\"toolBar noPadding\">";
+			echo "\n<div class=\"toolBar noPadding\">";
 			
 			title($lesson['title'], false);
 			
@@ -457,7 +465,7 @@ Server-side functions
 			if (exist($table, "position", $previousPage)) {
 				$navigation .= URL("Previous Step", $URL . "page=" . $previousPage , "previousPage");
 				
-				if (exist($table, "position", $nextPage) || ($settings['test'] == "1" && exist(str_replace("lesson", "test", $table) && $preview == false))) {
+				if (exist($table, "position", $nextPage) || ($settings['test'] == "1" && exist(str_replace("lesson", "test", $table)) && $preview == false)) {
 					$navigation .= " | ";
 				}
 			}
@@ -465,13 +473,13 @@ Server-side functions
 			if (exist($table, "position", $nextPage)) {
 				$navigation .= URL("Next Step", $URL . "page=" . $nextPage , "nextPage");
 			}
+		} else {
+			$navigation = "";
 		}
 		
-	//Link to the test, if it exists and the user is assigned to this learning unit
-		$accessArray = unserialize($userData['learningunits']);
-	
-		if ($preview == false && is_array($accessArray) && in_array($id, $accessArray)) {
-			if (array_key_exists($id, $accessArray)) {
+	//Link to the test, if it exists and the user is assigned to this learning unit		
+		if ($preview == false) {
+			if (is_array($accessArray) && array_key_exists($id, $accessArray)) {
 				if ($accessArray[$id]['testStatus'] == "F") {
 					$testURL = "review.php?id=" . $id;
 					$text = "Review Test";
@@ -486,30 +494,30 @@ Server-side functions
 			
 			if (!exist($table, "position", $nextPage)) {
 				if ($settings['reference'] == "0" && $accessArray[$id]['testStatus'] != "F") {
-					$alert = " onclick=\"return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')\"";
+					$alert = "onclick=\"return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')\"";
 				} else {
 					$alert = false;
 				}
 				
 				$navigation .= URL($text, $testURL, "nextPage", false, false, false, false, false, false, $alert);
-			} elseif (!exist($table, "position", $nextPage) && $moduleData['test'] == "0") {				
+			} elseif (!exist($table, "position", $nextPage) && $settings['test'] == "0") {				
 				$navigation .= URL("Finish", $testURL, "nextPage");
 			}
 		}
 		
 		if ($preview == false) {
-			$navigation .= "</div>";
+			$navigation .= "\n</div>\n";
 			
-			echo $navigation . "</div><p>&nbsp;</p>";
+			echo $navigation . "</div>\n<p>&nbsp;</p>\n";
 		}
 		
-	//Display the content		
-		echo prepare($lesson['content'], false, true);
+	//Display the content	
+		echo prepare($lesson['content']);
 		echo "\n";
 		
 		if (!empty($lesson['attachment'])) {
 			$siteInfo = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
-			$file = $pluginRoot . "gateway.php/" . $id . "/lesson/" . $lesson['attachment'];
+			$file = $pluginRoot . "unit_" . $id . "/lesson/" . $lesson['attachment'];
 			$fileType = extension($file);
 			
 			echo "<br />\n";
@@ -519,7 +527,7 @@ Server-side functions
 			//If it is a PDF
 				case "pdf" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"Acrobat Reader\") != -1) {
+  if (acrobat.installed) {
     document.write(\"<embed src=\\\"" . $file . "#toolbar=0\\\" width=\\\"800\\\" height=\\\"500\\\">\");
   } else {
     document.write(\"<a href=\\\"http://get.adobe.com/reader/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/acrobat.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://get.adobe.com/reader/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Adobe&reg; Acrobat&reg; plugin to view this content.</a>\");
@@ -574,7 +582,7 @@ Server-side functions
 			//If it is a WAV audio file
 				case "wav" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"QuickTime\") != -1) {
+  if (quicktime.installed) {
 	  document.write(\"<object width=\\\"640\\\" height=\\\"16\\\" classid=\\\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\\\" codebase=\\\"http://www.apple.com/qtactivex/qtplugin.cab\\\"><param name=\\\"src\\\" value=\\\"" . $file . "\\\"><param name=\\\"autoplay\\\" value=\\\"false\\\"><param name=\\\"controller\\\" value=\\\"true\\\"><embed src=\\\"" . $file . "\\\" width=\\\"640\\\" height=\\\"16\\\" autoplay=\\\"false\\\" controller=\\\"true\\\" pluginspage=\\\"http://www.apple.com/quicktime/download/\\\"></embed></object>\");
   } else {
 	document.write(\"<a href=\\\"http://www.apple.com/quicktime/download/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/quicktime.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://www.apple.com/quicktime/download/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Apple&reg; QuickTime&reg; plugin to view this content.</a>\");
@@ -585,7 +593,7 @@ Server-side functions
 			//If it is an MP3 audio file
 				case "mp3" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"Flash\") != -1) {
+  if (flash.installed) {
 	  document.write(\"<object id=\\\"player\\\" width=\\\"640\\\" height=\\\"30\\\" data=\\\"" . $pluginRoot . "system/flash/player.swf\\\" type=\\\"application/x-shockwave-flash\\\"><param name=\\\"movie\\\" value=\\\"" . $pluginRoot . "system/flash/player.swf\\\" /><param name=\\\"allowfullscreen\\\" value=\\\"false\\\" /><param name=\\\"flashvars\\\" value='config={\\\"clip\\\":{\\\"url\\\":\\\"" . $file . "\\\",\\\"autoPlay\\\":false},\\\"plugins\\\":{\\\"controls\\\":{\\\"autoHide\\\":false,\\\"fullscreen\\\":false}}}' /></object>\");
   } else {
 	document.write(\"<a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/flash.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Adobe&reg; Flash&reg; plugin to view this content.</a>\");
@@ -597,13 +605,15 @@ Server-side functions
 				case "avi" : 
 				case "wmv" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"Windows Media Player\") != -1) {
+  if (windowsmedia.installed) {
     document.write(\"<object id=\\\"MediaPlayer\\\" width=\\\"640\\\" height=\\\"480\\\" classid=\\\"CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95\\\" standby=\\\"Loading Windows Media Player components...\\\" type=\\\"application/x-oleobject\\\"><param name=\\\"FileName\\\" value=\\\"" . $file . "\\\"><param name=\\\"autostart\\\" value=\\\"false\\\"><param name=\\\"ShowControls\\\" value=\\\"true\\\"><param name=\\\"ShowStatusBar\\\" value=\\\"true\\\"><param name=\\\"ShowDisplay\\\" value=\\\"false\\\"><embed type=\\\"application/x-mplayer2\\\" src=\\\"" . $file . "\\\" name=\\\"MediaPlayer\\\"width=\\\"640\\\" height=\\\"480\\\" showcontrols=\\\"1\\\" showstatusBar=\\\"1\\\" showdisplay=\\\"0\\\" autostart=\\\"0\\\"></embed></object><br /><br /><strong>Having problems? <a href=\\\"" . $file . "?force=true\\\" target=\\\"_blank\\\">Try downloading the file</a>.</strong>\");
   } else {
-    if (/Firefox[\/\s](\d+\.\d+)/.test(navigator.userAgent)) {
+    if (is_fx || is_moz || is_chrome || is_opera || (is_safari && navigator.appVersion.indexOf(\"Win\") != -1)) {
       document.write(\"<a href=\\\"http://port25.technet.com/pages/windows-media-player-firefox-plugin-download.aspx\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Microsoft&reg; Port25 website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/mediaplayer.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://port25.technet.com/pages/windows-media-player-firefox-plugin-download.aspx\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Microsoft&reg; Port25 website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Windows&reg; Media Player&reg; plugin to view this content.</a>\");
-    } else if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)) {
+    } else if (is_ie) {
       document.write(\"<a href=\\\"http://windows.microsoft.com/en-US/windows/downloads/windows-media-player\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Microsoft&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/mediaplayer.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://windows.microsoft.com/en-US/windows/downloads/windows-media-player\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Microsoft&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Windows&reg; Media Player&reg; plugin to view this content.</a>\");
+    } else if (is_safari && navigator.appVersion.indexOf(\"Mac\") != -1) {
+      document.write(\"<a href=\\\"http://www.apple.com/downloads/macosx/video/windowsmediaplayerformacosx.html\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/mediaplayer.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://www.apple.com/downloads/macosx/video/windowsmediaplayerformacosx.html\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Windows&reg; Media Player&reg; plugin to view this content.</a>\");
     } else {
       document.write(\"<img src=\\\"" . $pluginRoot . "system/images/programIcons/error.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /> The Windows&reg; Media Player&reg; plugin is not avaliable for your browser. Please use the most recent version of either <a href=\\\"http://www.getfirefox.net/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Mozilla&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">Mozilla&reg; Firefox&reg;</a> or <a href=\\\"http://www.microsoft.com/windows/internet-explorer/default.aspx\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Microsoft&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">Microsoft&reg; Internet Explorer&reg;</a> in order to use this plugin.\");
     }
@@ -615,7 +625,7 @@ Server-side functions
 				case "mp4" : 
 				case "flv" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"Flash\") != -1) {
+  if (flash.installed) {
 	  document.write(\"<object id=\\\"player\\\" width=\\\"640\\\" height=\\\"480\\\" data=\\\"" . $root . "system/flash/player.swf\\\" type=\\\"application/x-shockwave-flash\\\"><param name=\\\"movie\\\" value=\\\"" . $pluginRoot . "system/flash/player.swf\\\" /><param name=\\\"allowfullscreen\\\" value=\\\"true\\\" /><param name=\\\"flashvars\\\" value='config={\\\"clip\\\":{\\\"url\\\":\\\"" . $file . "\\\",\\\"autoPlay\\\":false},\\\"plugins\\\":{\\\"controls\\\":{\\\"autoHide\\\":false}}}' /></object>\")
   } else {
 	  document.write(\"<a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/flash.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Adobe&reg; Flash&reg; plugin to view this content.</a>\");
@@ -626,7 +636,7 @@ Server-side functions
 			//If it is an MOV video file
 				case "mov" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"QuickTime\") != -1) {
+  if (quicktime.installed) {
 	  document.write(\"<object width=\\\"640\\\" height=\\\"480\\\" classid=\\\"clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B\\\" codebase=\\\"http://www.apple.com/qtactivex/qtplugin.cab\\\"><param name=\\\"src\\\" value=\\\"" . $file . "\\\"><param name=\\\"autoplay\\\" value=\\\"false\\\"><param name=\\\"controller\\\" value=\\\"true\\\"><embed src=\\\"" . $file . "\\\" width=\\\"640\\\" height=\\\"480\\\" autoplay=\\\"false\\\" controller=\\\"true\\\" pluginspage=\\\"http://www.apple.com/quicktime/download/\\\"></embed></object>\");
   } else {
 	document.write(\"<a href=\\\"http://www.apple.com/quicktime/download/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/quicktime.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://www.apple.com/quicktime/download/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Apple&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Apple&reg; QuickTime&reg; plugin to view this content.</a>\");
@@ -637,7 +647,7 @@ Server-side functions
 			//If it is a SWF file
 				case "swf" : 
 					echo "<script type=\"text/javascript\">
-  if (pluginlist.indexOf(\"Flash\") != -1) {
+  if (flash.installed) {
 	  document.write(\"<object width=\\\"640\\\" height=\\\"480\\\" data=\\\"" . $file . "\\\" type=\\\"application/x-shockwave-flash\\\"><param name=\\\"src\\\" value=\\\"" . $file . "\\\" /><embed src=\\\"" . $file . "\\\" width=\\\"640\\\" height=\\\"480\\\"></embed></object>\")
   } else {
 	  document.write(\"<a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\"><img src=\\\"" . $pluginRoot . "system/images/programIcons/flash.png\\\" alt=\\\"icon\\\" style=\\\"vertical-align:middle;\\\" /></a> <a href=\\\"http://get.adobe.com/flashplayer/\\\" target=\\\"_blank\\\" onclick=\\\"return confirm('You are about to be taken to the Adobe&reg; website, which is a trusted source, but is not controlled by " . $siteInfo['siteName'] . ". Click &quot;OK&quot; to continue.')\\\">You need to download the Adobe&reg; Flash&reg; plugin to view this content.</a>\");
@@ -660,9 +670,11 @@ Server-side functions
 	
 //Test content
 	function test($table, $fileURL, $preview = false) {
-		global $connDBA, $testValues, $monitor, $userData, $pluginRoot;
+		global $testValues, $monitor, $userData, $pluginRoot;
 		
-		$attempt = lastItem($testTable, "testID", $testID, "attempt");
+		$id = strip($table, "numbersOnly");
+		$attempt = lastItem($table, "testID", $id, "attempt");
+		$settings = query("SELECT * FROM `learningunits` WHERE `id` = '{$id}'", false, false);
 		
 		if ($attempt - 1 == 0) {
 			$currentAttempt = 1;
@@ -682,30 +694,32 @@ Server-side functions
 				$limit = "";
 			}
 		} else {
-			$testID = str_replace("test_", "", $table);
-			$selectionGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}'", "raw");
+			$selectionGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$id}'", "raw");
 			$additionalSQLConstruct = " WHERE ";
 			
 			while ($selection = fetch($selectionGrabber)) {
 				$additionalSQLConstruct .= "`id` = '{$selection['questionID']}' OR ";
 			}
 			
-			$additionalSQL = rtrim($additionalSQLConstruct, " OR ") . " AND `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
+			$additionalSQL = rtrim($additionalSQLConstruct, " OR ") . " AND `testID` = '{$id}' AND `attempt` = '{$currentAttempt}'";
 			$limit = "";
 		}
 		
 		if ($table != "questionbank_" . $userData['organization'] && $preview != false) {
-			$order = " ORDER BY `position` ASC";
+			if ($settings['randomizeAll'] == "Randomize") {
+				$order = " ORDER BY RAND() ASC";
+			} else {
+				$order = " ORDER BY `position` ASC";
+			}
+			
 			$grab = "*";
 			$join = "";
 		} elseif (is_numeric($preview)) {
 			$order = "";
 			$grab = "*";
 			$join = "";
-		} else {
-			$moduleInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}'");
-			
-			if ($moduleInfo['randomizeAll'] == "Randomize") {
+		} else {			
+			if ($settings['randomizeAll'] == "Randomize") {
 				$order = " ORDER BY `randomPosition` ASC";
 			} else {
 				$order = " ORDER BY `position` ASC";
@@ -713,10 +727,6 @@ Server-side functions
 			
 			$grab = $table . ".*, testdata_" . $userData['id'] . ".randomPosition, testdata_" . $userData['id'] . ".answerValueScrambled";
 			$join = " LEFT JOIN testdata_" . $userData['id'] . " ON " . $table . ".id = testdata_" . $userData['id'] . ".questionID";
-		}
-		
-		if (!is_numeric($preview)) {
-			$settings = query("SELECT * FROM`learningunits` WHERE `id` = '{$testID}'");
 		}
 		
 		$testDataGrabber = query("SELECT {$grab} FROM `{$table}`{$join}{$additionalSQL}{$order}{$limit}", "raw");
@@ -771,10 +781,10 @@ Server-side functions
 				echo "</p>\n</td>\n<td valign=\"top\">\n" . $testData['question'];
 				
 				if ($testData['choiceType'] == "checkbox") {
-					echo "\nThere may be more than one correct answer.)<br />";
+					echo "\n(There may be more than one correct answer.)<br />";
 				}
 				
-				echo "<br /><br />\n";
+				echo "\n<br /><br />\n";
 			}
 			
 			switch ($testData['type']) {
@@ -799,7 +809,7 @@ Server-side functions
 						if (isset($monitor)) {
 							$URL = $monitor['gatewayPath'] . "/test/responses";
 						} else {
-							$URL = $pluginRoot . "gateway.php/" . $_GET['id'] . "/test/responses";
+							$URL = $pluginRoot . "unit_" . $_GET['id'] . "/test/responses";
 							$fillValue = unserialize($testValues['userAnswer']);
 						}
 						
@@ -809,36 +819,40 @@ Server-side functions
 							$fileID = 1;
 							
 							foreach ($fillValue as $key => $file) {
-								echo "<tr id=\"" . $fileID . "\">\n<td>";
-								
-								echo fileUpload($testDataLoop['id'] . "_" . $fileID, $testDataLoop['id'] . "_" . $fileID, false, true, false, $fillValue[$key], false, false, $URL, false, true);
-								echo "</td>\n<td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=" . $fileID, "action smallDelete", false, false, false, false, false, false, " onclick=\"return confirm('This action will delete this file. Continue?')\"");
-								echo "</td>\n</tr>\n";
+								echo "<tr id=\"" . $fileID . "\">\n";
+								echo cell(fileUpload($testDataLoop['id'] . "_" . $fileID, $testDataLoop['id'] . "_" . $fileID, false, true, false, $fillValue[$key], false, false, $URL, false, true));
+								echo cell(URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=" . $fileID, "action smallDelete", false, false, false, false, false, false, " onclick=\"return confirm('This action will delete this file. Continue?')\""));
+								echo "</tr>\n";
 								
 								$fileID++;
 							}
 							
 							unset($fileID);
 							
-							echo "</table\n><p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "_', '\' name=\'" . $testDataLoop['id'] . "_', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "');\">Add Another File</span></p>\n<p><strong>Note:</strong> Uploading a new file will replace the existing one.</p>\n";
+							echo "</table>\n";
+							echo "<br />
+<p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '" . $testData['totalFiles'] . "');\">Add Another File</span></p>\n<p><strong>Note:</strong> Uploading a new file will replace the existing one.</p>\n";
 						} else {
-							echo "<tr id=\"1\">\n<td>";
-							echo fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, false, false, false, false, false, true);
-							echo "</td>\n<td><span class=\"action smallDelete\" onclick=\"deleteObject('upload_" . $testDataLoop['id'] . "', '1', '1', true)\"></span>";
-							echo "</td>\n</tr>\n</table>\n<p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '<input id=\'" . $testDataLoop['id'] . "_', '\' name=\'" . $testDataLoop['id'] . "_', '\' type=\'file\' size=\'50\' class=\'validate[required]\' />', '" . $testData['totalFiles'] . "');\">Add Another File</span></p>\n";
+							echo "<tr id=\"1\">\n";
+							echo cell(fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, false, false, false, false, false, true));
+							echo cell("<span class=\"action smallDelete\" onclick=\"deleteObject('upload_" . $testDataLoop['id'] . "', '1', '1', true)\"></span>");
+							echo "</tr>\n";
+							echo "</table>\n";
+							echo "<p><span class=\"smallAdd\" id=\"add_" . $testDataLoop['id'] . "\" onclick=\"addFile('upload_" . $testDataLoop['id'] . "', '" . $testData['totalFiles'] . "');\">Add Another File</span></p>\n";
 						}
 						
-						echo "<p>Max file size (for single file): " . ini_get('upload_max_filesize') . "<br>Max file size (for all files): " . ini_get('post_max_size') . "</p>\n";
+						echo "<p>Max file size (for single file): " . ini_get('upload_max_filesize') . "<br>\nMax file size (for all files): " . ini_get('post_max_size') . "</p>\n";
 					} else {
 						if (isset($testValues)) {
 							$fillValue = unserialize($testValues['userAnswer']);
 							
 							if (!empty($fillValue)) {
 								echo "<table name=\"upload_" . $testDataLoop['id'] . "\" id=\"upload_" . $testDataLoop['id'] . "\">\n";
-								echo "<tr id=\"1\">\n<td>";
-								echo fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, $fillValue['0'], false, false, "../gateway.php/modules/" . $_GET['id'] . "/test/responses", false, false);
-								echo "</td>\n<td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=1", "action smallDelete", false, false, false, false, false, false, " return confirm('This action will delete this file. Continue?')");
-								echo "</td>\n</tr>\n</table>\n";
+								echo "<tr id=\"1\">\n";
+								echo cell(fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true, false, $fillValue['0'], false, false, "unit_" . $_GET['id'] . "/test/responses", false, false));
+								echo cell(URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=1", "action smallDelete", false, false, false, false, false, false, "return confirm('This action will delete this file. Continue?')"));
+								echo "</tr>\n";
+								echo "</table>\n";
 								echo "<p><strong>Note:</strong> Uploading a new file will replace the existing one.</p>\n";
 							} else {
 								echo fileUpload($testDataLoop['id'] . "_1", $testDataLoop['id'] . "_1", false, true);
@@ -856,6 +870,7 @@ Server-side functions
 					$answerCompare = unserialize($testData['answerValue']);
 					$valueNumbers = sizeof($blankQuestion);
 					$matchingCount = 1;
+					
 					echo "<p>";
 					
 					for ($list = 0; $list <= $valueNumbers - 1; $list++) {
@@ -885,18 +900,27 @@ Server-side functions
 				
 				case "Matching" : 
 					$question = unserialize($testData['questionValue']);
-					$answer = unserialize($testValues['answerValueScrambled']);
+					
+					if ($preview == false) {
+						$answer = unserialize($testValues['answerValueScrambled']);
+					} else {
+						$answer = unserialize($testData['answerValue']);
+						shuffle($answer);
+					}
+					
 					$answerCompare = unserialize($testData['answerValue']);
 					$valueNumbers = sizeof($question);
 					$matchingCount = 1;
 					$fillValue = unserialize($testValues['userAnswer']);
 					
-					echo "<table width=\"100%\">";
+					echo "<table width=\"100%\">\n";
 					
 					for ($list = 0; $list <= $valueNumbers - 1; $list++) {
-						echo "<tr><td width=\"20\">";
 						$dropDownValue = "-,";
 						$dropDownID = ",";
+						
+						echo "<tr>\n";
+						echo "<td width=\"10\" valign=\"middle\">\n";
 						
 						for ($value = 1; $value <= $valueNumbers; $value++) {
 							$dropDownValue .= $value . ",";
@@ -913,20 +937,23 @@ Server-side functions
 								if (array_key_exists($list, $value)) {
 									echo dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true, false, $fillValue[$list])  . " ";
 								} elseif (!array_key_exists($list, $value) && isset($answerCompare[$list])) {
-									dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
+									echo dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
 								}
 							} else {
-								dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
+								echo dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true)  . " ";
 							}
 						} else {
-							dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true);
+							echo dropDown($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $matchingCount, $values, $IDs, false, true);
 						}
 						
-						echo"</td><td width=\"200\"><p>" . prepare($question[$list], false, true) . "</p></td><td width=\"200\"><p>" . $matchingCount++ . ". " . prepare($answer[$list], false, true) . "</p></td></tr>";
-						
+						echo "</td>\n";
+						echo cell($question[$list], "200");
+						echo cell($matchingCount++, "10");
+						echo cell($answer[$list], "200");
+						echo "</tr>\n";
 					}
 					
-					echo"</table>";				  
+					echo"</table>\n";				  
 					break;
 				
 				case "Multiple Choice" :									
@@ -947,28 +974,29 @@ Server-side functions
 						}
 					}
 					
-					if ($testData['choiceType'] == "radio") {
-						$questionValue = "";
-						$questionID = "";
+					echo "<table>\n";
 					
-						while (list($questionKey, $questionArray) = each($questions)) {
-							$questionValue .= $questionArray . ",";
-							$questionID .= $questionKey + 1 . ",";
-						}
-						
-						$values = rtrim($questionValue, ",");
-						$IDs = rtrim($questionID, ",");
-						
-						
-						if (isset($testValues)) {
-							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true, false, unserialize($testValues['userAnswer']));
-						} else {
-							radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $IDs, false, true);
-						}
-						
+					if ($testData['choiceType'] == "radio") {						
+						while (list($valueID, $value) = each($questions)) {
+							echo "<tr>\n";
+							echo "<td width=\"5\">";
+							if (isset($testValues)) {
+								echo radioButton($testDataLoop['id'], $testDataLoop['id'], false, $testDataLoop['id'] . "_" . $valueID, false, true, false, unserialize($testValues['userAnswer']));
+							} else {
+								echo radioButton($testDataLoop['id'], $testDataLoop['id'], false, $testDataLoop['id'] . "_" . $valueID, false, true);
+							}
+							
+							echo "</td>\n";
+							echo cell("\n<label for=\"" . $testDataLoop['id'] . "_" . $valueID . "\">" . $value . "</label>\n");
+							echo "</tr>\n";
+						}					
 					} else {
-						while (list($questionKey, $questionArray) = each($questions)) {
-							$identifier = $questionKey + 1;
+						while (list($valueID, $value) = each($questions)) {
+							$identifier = $valueID + 1;
+							
+							echo "<tr>\n";
+							echo "<td width=\"5\">";
+							
 							if (isset($testValues)) {
 								if (is_array(unserialize($testValues['userAnswer']))) {
 									$fillValue = unserialize($testValues['userAnswer']);
@@ -977,25 +1005,29 @@ Server-side functions
 								}
 								
 								if (in_array($identifier, $fillValue)) {
-									checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1", true);
+									echo checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $identifier, false, $identifier, true, "1", true);
 								} else {
-									checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1");
+									echo checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $identifier, false, $identifier, true, "1");
 								}
 							} else {
-								checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . $identifier, $questionArray, $identifier, true, "1");
+								echo checkbox($testDataLoop['id'] . "[]", $testDataLoop['id'] . "_" . $identifier, false, $identifier, true, "1");
 							}
 							
-							echo "<br />";
+							echo "</td>\n";
+							echo cell("\n<label for=\"" . $testDataLoop['id'] . "_" . $valueID . "\">" . $identifier . "</label>\n");
+							echo "</tr>\n";
 						}
 					}
+					
+					echo "</table>\n";
 					
 					break;
 					
 				case "Short Answer" : 
 					if (isset($testValues)) {
-						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, unserialize($testValues['userAnswer']));
+						echo textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true, false, unserialize($testValues['userAnswer']));
 					} else {
-						textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true);
+						echo textField($testDataLoop['id'], $testDataLoop['id'], false, false, false, true);
 					}
 					
 					break;
@@ -1042,29 +1074,27 @@ Server-side functions
 					}
 					
 					if (isset($testValues)) {
-						radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true, false, unserialize($testValues['userAnswer']));
+						echo radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true, false, unserialize($testValues['userAnswer']));
 					} else {
-						radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true);
+						echo radioButton($testDataLoop['id'], $testDataLoop['id'], $values, $id, true, true);
 					}
 					
 					break;
 			}
 			
 			if ($testData['type'] != "Description") {
-				echo "<br /><br /></td></tr>";
+				echo "\n<br /><br />\n</td>\n</tr>\n";
 			}
 		}
 		
-		echo "</table>";
+		echo "</table>\n";
 		
 		if ($preview == false) {
-			echo "<blockquote><p>";
-			button("save", "save", "Save", "submit", false);
-			button("submit", "submit", "Submit", "submit", false, " return confirm('Once the test is submitted, it cannot be reopened. Continue?');");
-			echo "</p></blockquote>";
+			indent(button("save", "save", "Save", "submit", false) . "\n" . 
+			button("submit", "submit", "Submit", "submit", false, "return confirm('Once the test is submitted, it cannot be reopened. Continue?');"));
 		}
 		
-		closeForm(false, true);
+		echo closeForm(false);
 	}
 	
 /*
@@ -1072,62 +1102,84 @@ Create standard question types for the question generator
 ---------------------------------------------------------
 */
 	
-//Pull category or employee data for auto-suggestion
-	if ((strstr($_SERVER['REQUEST_URI'], "wizard/lesson_settings.php") || strstr($_SERVER['REQUEST_URI'], "/questions/")) && isset($_GET['data']) && $_GET['data'] == "xml") {
-		header("Content-type: text/xml");
-		echo "<root>";
+//Pull category data for auto-suggestion
+	if ((strstr($_SERVER['SCRIPT_NAME'], "wizard/lesson_settings.php") || strstr($_SERVER['SCRIPT_NAME'], "/questions/")) && isset($_GET['data']) && $_GET['data'] == "xml") {
+		header("Content-type: text/xml");	
+		$categoryBank = query("SELECT * FROM `categories` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
+		$priorEntries = query("SELECT * FROM `learningunits` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
+		$additionalFields = query("SELECT * FROM `fields`", "raw");
+		$noRepeat = array("category" => array());
 		
-		$userData = userData();		
-		$categoryBank = query("SELECT * FROM `modulecategories` ORDER BY `category` ASC", "raw");
-		$priorEntries = query("SELECT * FROM `learningunits` WHERE `organization` = '{$userData['organization']}'", "raw");
-		$noRepeat = array(array(), array());
+		echo "<root>\n";
 		
-		if (access("accessAllSuggestions")) {
-			while($category = mysql_fetch_array($categoryBank)) {
-				echo "<group>";
+		while($category = fetch($categoryBank)) {
+			echo "<group>\n";
+			
+			if (!in_array(prepare($category['category']), $noRepeat["category"])) {
+				echo "<category>" . prepare($category['category']) . "</category>\n";
+			}
+			
+			echo "</group>\n";
+			
+			array_push($noRepeat["category"], prepare($category['category']));
+		}
+		
+		while($suggestion = fetch($priorEntries)) {
+			echo "<group>\n";
+			
+			if (!in_array(prepare($suggestion['category']), $noRepeat["category"])) {
+				echo "<category>" . prepare($suggestion['category']) . "</category>\n";
+			}
+			
+			echo "</group>\n";
+			
+			array_push($noRepeat["category"], prepare($suggestion['category']));
+		}
+		
+		while($fields = fetch($additionalFields)) {
+			$fieldInfo = query("SELECT * FROM `learningunits` WHERE `organization` = '{$userData['organization']}' ORDER BY `field_{$fields['id']}` ASC", "raw");
+			$noRepeat[$fields['id']] = array();
+			
+			while ($field = fetch($fieldInfo)) {
+				echo "<group>\n";
 				
-				if (!in_array(prepare($category['category'], false, true), $noRepeat['0'])) {
-					echo "<category>" . prepare($category['category'], false, true) . "</category>";
+				if (!in_array(prepare($field["field_" . $fields['id']]), $noRepeat[$fields['id']])) {
+					echo "<field_" . $fields['id'] . ">" . prepare($field["field_" . $fields['id']]) . "</field_" . $fields['id'] . ">\n";
 				}
 				
-				echo "<employee></employee>";
-				echo "</group>";
+				echo "</group>\n";
 				
-				array_push($noRepeat['0'], prepare($category['category'], false, true));
+				array_push($noRepeat[$fields['id']], prepare($field["field_" . $fields['id']]));
+			}
+			
+			if (isset($_SESSION['currentUnit']) && exist("test_" . $_SESSION['currentUnit'])) {
+				$testFields = query("SELECT * FROM `test_{$_SESSION['currentUnit']}` ORDER BY `field_{$fields['id']}` ASC", "raw");
+				
+				while ($field = fetch($testFields)) {
+					echo "<group>\n";
+					
+					if (!in_array(prepare($field["field_" . $fields['id']]), $noRepeat[$fields['id']])) {
+						echo "<field_" . $fields['id'] . ">" . prepare($field["field_" . $fields['id']]) . "</field_" . $fields['id'] . ">\n";
+					}
+					
+					echo "</group>\n";
+					
+					array_push($noRepeat[$fields['id']], prepare($field["field_" . $fields['id']]));
+				}
 			}
 		}
 		
-		while($suggestion = mysql_fetch_array($priorEntries)) {
-			echo "<group>";
-			
-			if (!in_array(prepare($suggestion['category'], false, true), $noRepeat['0'])) {
-				echo "<category>" . prepare($suggestion['category'], false, true) . "</category>";
-			}
-			
-			if (!in_array(prepare($suggestion['employee'], false, true), $noRepeat['1'])) {
-				echo "<employee>" . prepare($suggestion['employee'], false, true) . "</employee>";
-			}
-			
-			echo "</group>";
-			
-			array_push($noRepeat['0'], prepare($suggestion['category'], false, true));
-			array_push($noRepeat['1'], prepare($suggestion['employee'], false, true));
-		}
-		
-		echo "</root>";
+		echo "</root>\n";
 		exit;
 	}
 	
 //Ensure the page is handling the correct question type
 	function dataGrabber($type) {
-		global $connDBA, $monitor;
+		global $monitor, $userData;
 		
 		if (isset($_GET['id'])) {
-			$id = $_GET['id'];
-			$dataGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$id}'", $connDBA);
-			
-			if ($dataGrabber) {
-				$data = mysql_fetch_array($dataGrabber);
+			if (exist($monitor['testTable'], "id", $_GET['id'])) {
+				$data = query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$_GET['id']}'");
 				
 				if ($data['type'] == $type) {
 					return $data;
@@ -1139,12 +1191,9 @@ Create standard question types for the question generator
 			}
 		}
 		
-		if (isset($_GET['bankID'])) {
-			$id = $_GET['bankID'];
-			$dataGrabber = mysql_query("SELECT * FROM `questionbank_0` WHERE `id` = '{$id}'", $connDBA);
-			
-			if ($dataGrabber) {
-				$data = mysql_fetch_array($dataGrabber);
+		if (isset($_GET['bankID'])) {		
+			if (exist("questionbank_{$userData['organization']}", "id", $_GET['bankID'])) {
+				$data = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `id` = '{$_GET['bankID']}'");
 				
 				if ($data['type'] == $type) {
 					return $data;
@@ -1168,7 +1217,7 @@ Create standard question types for the question generator
 //Display the point value
 	function points() {
 		directions("Question points", true);
-		indent(textField("points", "points", "5", "5", false, true, ",custom[onlyNumber]", false, "questionData", "points") . 
+		indent(textField("points", "points", "5", "5", false, true, "custom[onlyNumber]", false, "questionData", "points") . 
 		"&nbsp;" . 
 		checkbox("extraCredit", "extraCredit", "Extra Credit", false, false, false, false, "questionData", "extraCredit", "on"));
 	}
@@ -1178,8 +1227,8 @@ Create standard question types for the question generator
 		global $questionData;
 		
 		$active = 0;
-		$valuesPrep = "";
-		$valueIDsPrep = "";
+		$valuesPrep = "- Select -,";
+		$valueIDsPrep = ",";
 		
 		if (isset($_SESSION['currentUnit'])) {
 			$active = 1;
@@ -1203,10 +1252,8 @@ Create standard question types for the question generator
 		$valueIDs = rtrim($valueIDsPrep, ",");
 		
 		if ($active > 1 && !isset($_GET['id']) && !isset($_GET['bankID']) && !isset($_GET['feedbackID'])) {
-			directions("Insert question into");
-			echo "<blockquote><p>";
-			dropDown("type", "type", $values, $valueIDs, false, false, false, false, false, false, " onchange=\"toggleDescription(this.value);\"");
-			echo "</p></blockquote>";
+			directions("Insert question into", true);
+			indent(dropDown("type", "type", $values, $valueIDs, false, true, false, false, false, false, " onchange=\"toggleDescription(this.value);\""));
 		} else {
 			if (isset($questionData)) {
 				if (!array_key_exists("position", $questionData)) {
@@ -1218,80 +1265,43 @@ Create standard question types for the question generator
 				}
 			}
 			
-			echo hidden("type", "type", $valueIDs);
-		}
-	}
-	
-//Display all levels of difficulty
-	function difficulty() {
-		global $monitor;
-		
-		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
-			if (isset($_SESSION['currentModule'])) {
-				$difficulty = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
-				directions("Difficulty", false);
-				echo "<blockquote><p>";
-				dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, $difficulty['difficulty'], "questionData", "difficulty");
-				echo "</p></blockquote>";
-			} else {
-				directions("Difficulty", false);
-				echo "<blockquote><p>";
-				dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, "Average", "questionData", "difficulty");
-				echo "</p></blockquote>";
-			}
-		} else {
-			directions("Difficulty", false, "The overall difficulty of this module");
-			echo "<blockquote><p>";
-			dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, "Average", "moduleData", "difficulty");
-			echo "</p></blockquote>";
+			echo hidden("type", "type", ltrim($valueIDs, ","));
 		}
 	}
 	
 //Display all of the descriptions in this test
 	function descriptionLink() {
-		global $connDBA, $monitor;
+		global $monitor, $userData;
 		
-		if (isset($_SESSION['currentModule']) && !isset($_GET['bankID']) && !isset($_GET['feedbackID'])) {
-			echo "<div id=\"descriptionLink\">";
+		if (isset($_SESSION['currentUnit']) && !isset($_GET['bankID']) && !isset($_GET['feedbackID'])) {
+			echo "<div id=\"descriptionLink\">\n";
 			
 			if (exist($monitor['testTable'], "type", "Description")) {
 				$descriptionGrabber = query("SELECT * FROM `{$monitor['testTable']}` WHERE `type` = 'Description' ORDER BY `position` ASC", "raw");
-				$descriptionID = ",";			
 				$descriptionName = "- Select -,";
+				$descriptionID = ",";
 				
-				while ($description = mysql_fetch_array($descriptionGrabber)) {
+				while ($description = fetch($descriptionGrabber)) {
 					if ($description['type'] == "Description" && $description['questionBank'] != "1") {
 						$descriptionID .= $description['id'] . ",";
 						$descriptionName .= $description['position'] . ". " . commentTrim(25, $description['question']) . ",";
-					}
-					
-					if ($description['questionBank'] == "1") {
-						$importID = $description['linkID'];
-						$descriptionImportGrabber = mysql_query("SELECT * FROM `questionbank_0` WHERE `id` = '{$importID}'", $connDBA);
-						$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
-						
-						if ($descriptionImport['type'] == "Description") {
-							$descriptionID .= $description['id'] . ",";
-							$descriptionName .= $description['position'] . ". " . commentTrim(25, $descriptionImport['question']) . ",";
-						}
-						
-						unset($importID);
-						unset($descriptionImportGrabber);
-						unset($descriptionImport);
+					} elseif ($description['type'] == "Description" && $description['questionBank'] == "1") {
+						$descriptionImport = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `id` = '{$description['linkID']}'");
+						$descriptionID .= $description['id'] . ",";
+						$descriptionName .= $description['position'] . ". " . commentTrim(25, $descriptionImport['question']) . ",";
 					}
 				}
 				
 				$IDs = rtrim($descriptionID, ",");
 				$values = rtrim($descriptionName, ",");
 			} else {
-				$IDs = "";			
+				$IDs = "";
 				$values = "- None -";
 			}
 			
 			directions("Link to description", false);
-			echo "<blockquote><p>";
-			dropDown("link", "link", $values, $IDs, false, false, false, false, "questionData", "link");
-			echo "</p></blockquote></div>";
+			indent(dropDown("link", "link", $values, $IDs, false, false, false, false, "questionData", "link"));
+			echo "</div>\n";
 		} else {
 			hidden("link", "link", "");
 		}
@@ -1300,73 +1310,78 @@ Create standard question types for the question generator
 //Display partial credit option
 	function partialCredit() {
 		directions("Allow partial credit");
-		echo "<blockquote><p>";
-		radioButton("partialCredit", "partialCredit", "Yes,No", "1,0", true, false, false, "0", "questionData", "partialCredit", " onchange=\"toggleFeedback(this.value)\"");
-		echo "</p></blockquote>";
+		indent(radioButton("partialCredit", "partialCredit", "Yes,No", "1,0", true, false, false, "0", "questionData", "partialCredit", " onchange=\"toggleFeedback(this.value)\""));
 	}
 	
 //Display a case sensitivity option
 	function ignoreCase() {
 		directions("Ignore case");
-		echo "<blockquote><p>";
-		radioButton("case", "case", "Yes,No", "1,0", true, false, false, "1", "questionData", "case");
-		echo "</p></blockquote>";
+		indent(radioButton("case", "case", "Yes,No", "1,0", true, false, false, "1", "questionData", "case"));
 	}
 	
 //Display a randomize option
 	function randomize() {
 		directions("Randomize values");
-		echo "<blockquote><p>";
-		radioButton("randomize", "randomize", "Yes,No", "1,0", true, false, false, "0", "questionData", "randomize");
-		echo "</p></blockquote>";
+		indent(radioButton("randomize", "randomize", "Yes,No", "1,0", true, false, false, "0", "questionData", "randomize"));
 	}
 	
 //Display search tags
 	function tags() {
 		directions("Tags (Seperate with commas)", false);
-		echo "<blockquote><p>";
-		textField("tags", "tags", false, false, false, false, false, false, "questionData", "tags");
-		echo "</p></blockquote>";
+		indent(textField("tags", "tags", false, false, false, false, false, false, "questionData", "tags"));
 	}
 	
 //Display all of the category items
 	function category() {
-		global $monitor;
+		global $monitor, $userData;
 		
-		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
-			if (isset($_SESSION['currentModule']) && isset($_SESSION['questionBank'])) {
-				$category = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
-			} elseif (isset($_SESSION['currentModule'])) {
-				$category = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
-			} elseif (isset($_SESSION['questionBank'])) {
-				$category = query("SELECT * FROM `modulecategories` WHERE `id` = '{$_SESSION['questionBank']}'");
+		if (!strstr($_SERVER['REQUEST_URI'], "wizard")) {
+			$priorEntries = query("SELECT * FROM `categories` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
+			$noRepeat = array();
+			$valuesPrep = "";
+			
+			if (isset($_SESSION['currentUnit'])) {
+				$defaultSelect = query("SELECT * FROM `learningunits` WHERE `id` = '{$_SESSION['currentUnit']}'");
+				$categoryBank = query("SELECT * FROM `learningunits` WHERE `organization` = '{$userData['organization']}' ORDER BY `category` ASC", "raw");
+				
+				while($category = fetch($categoryBank)) {
+					if (!in_array(prepare($category['category']), $noRepeat)) {
+						$valuesPrep .= prepare($category['category']) . ",";
+					}
+					
+					array_push($noRepeat, prepare($category['category']));
+				}
+			} else {
+				$defaultSelect = query("SELECT * FROM `categories` WHERE `id` = '{$_SESSION['questionBank']}'");
 			}
 			
+			while($suggestion = fetch($priorEntries)) {
+				if (!in_array(prepare($suggestion['category']), $noRepeat)) {
+					$valuesPrep .= prepare($suggestion['category']) . ",";
+				}
+				
+				array_push($noRepeat, prepare($suggestion['category']));
+			}
+			
+			$values = rtrim($valuesPrep, ",");
+			
 			directions("Category", true);
-			echo "<blockquote><p><div id=\"categoryMenu\">";
-			echo textField("category", "category", false, false, false, true, false, $category['category'], "questionData", "category");
-			echo "<div><div id=\"categorySuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{category}\">{category}</div></div></div></div></p></blockquote>";
+			indent("\n<div id=\"categoryMenu\">" . 
+			dropDown("category", "category", $values, $values, false, true, false, $defaultSelect['category'], "questionData", "category"));
 		} else {
-			echo "<div id=\"categoryMenu\">";
-			textField("category", "category", false, false, false, true, false, false, "moduleData", "category");
-			echo "<div><div id=\"categorySuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{category}\">{category}</div></div></div></div>";
+			directions("Category", true);
+			echo "\n<blockquote>\n<div id=\"categoryMenu\">" . 
+			textField("category", "category", false, false, false, true, false, false, "lessonData", "category") . 
+			"<div>\n<div id=\"categorySuggestions\" spry:region=\"data\">\n<div spry:repeat=\"data\" spry:suggest=\"{category}\">{category}</div>\n</div>\n</div>\n</div>\n</blockquote>\n";
+			echo "<script type=\"text/javascript\">
+  var dataSuggestions = new Spry.Widget.AutoSuggest(\"categoryMenu\", \"categorySuggestions\", \"data\", \"category\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});
+</script>\n";
 		}
-		
-		echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"categoryMenu\", \"categorySuggestions\", \"data\", \"category\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
-	}
-	
-//Display all of the employee types
-	function employeeTypes() {
-		echo "<div id=\"employeeMenu\">";
-		textField("employee", "employee", false, false, false, true, false, false, "moduleData", "employee");
-		echo "<div><div id=\"employeeSuggestions\" spry:region=\"data\"><div spry:repeat=\"data\" spry:suggest=\"{employee}\">{employee}</div></div></div></div>";
-		
-		echo "<script type=\"text/javascript\">var dataSuggestions = new Spry.Widget.AutoSuggest(\"employeeMenu\", \"employeeSuggestions\", \"data\", \"employee\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});</script>";
 	}
 	
 //Display the feedback
 	function feedback($hidePartial = false) {
-		global $connDBA, $questionData;
+		global $questionData;
 		
 		echo "<blockquote>\n";
 		directions("Feedback for correct answer");
@@ -1397,27 +1412,161 @@ Create standard question types for the question generator
 		echo "</blockquote>\n";
 	}
 	
+//Pull custom fields from the database
+	function customField($type, $variable) {
+		global $$variable;
+		
+		if (exist("fields")) {
+			$fieldsGrabber = query("SELECT * FROM `fields` ORDER BY `position` ASC", "raw");
+			
+			while ($fields = fetch($fieldsGrabber)) {
+				$section = unserialize($fields['section']);
+				$values = unserialize($fields['values']);
+				$selection = unserialize($fields['selected']);
+				
+				if ($fields['require'] == "1") {
+					$required = true;
+				} else {
+					$required = false;
+				}
+				
+				if (is_array($section) && in_array($type, $section)) {
+					if ($fields['showTip'] == "1" && !empty($fields['description'])) {
+						directions($fields['name'], $required, strip_tags($fields['description']));
+					} else {
+						directions($fields['name'], $required);
+					}
+					
+					switch($fields['fieldType']) {
+						case "textField" : 
+							$randomValue = randomValue("10", "alpha");
+							
+							if ($fields['autoSuggest'] == "1") {
+								echo "<blockquote>\n<div id=\"" . $randomValue . "_Menu\">" . 
+								textField($fields['id'], $fields['id'], false, false, false, $required, false, false, $variable, "field_" . $fields['id']) . 
+								"<div>\n<div id=\"" . $randomValue . "_Suggestions\" spry:region=\"data\">\n<div spry:repeat=\"data\" spry:suggest=\"{field_" . $fields['id'] . "}\">{field_" . $fields['id'] . "}</div>\n</div>\n</div>\n</div>\n</blockquote>\n";
+								echo "<script type=\"text/javascript\">
+  var " . $randomValue . "_Loader = new Spry.Widget.AutoSuggest(\"" . $randomValue . "_Menu\", \"" . $randomValue . "_Suggestions\", \"data\", \"field_" . $fields['id'] . "\", {containsString: true, moveNextKeyCode: 40, movePrevKeyCode: 38});
+</script>\n";
+							} else {
+								indent(textField($fields['id'], $fields['id'], false, false, false, $required, false, false, $variable, "field_" . $fields['id']));
+							}
+							
+							break;
+							
+						case "textArea" : 
+							indent(textArea($fields['id'], $fields['id'], "small", $required, false, false, $variable, "field_" . $fields['id'], "class=\"noEditorAdvanced\""));
+							break;
+							
+						case "dropDown" : 
+							$items = "";
+							
+							foreach ($values as $value) {
+								$items .= prepare($value, true, true) . ",";
+							}
+							
+							$selected = explode(",", $items);
+							
+							indent(dropDown($fields['id'], $fields['id'], rtrim($items, ","), rtrim($items, ","), false, $required, false, $selected[$selection['0'] - 1], $variable, "field_" . $fields['id']));
+							break;
+							
+						case "radio" : 
+							$items = "";
+							
+							foreach ($values as $value) {
+								$items .= prepare($value, true, true) . ",";
+							}
+							
+							$selected = explode(",", $items);
+							
+							if (is_array($selection)) {
+								indent(radioButton($fields['id'], $fields['id'], rtrim($items, ","), rtrim($items, ","), false, $required, false, $selected[$selection['0'] - 1], $variable, "field_" . $fields['id']));
+							} else {
+								indent(radioButton($fields['id'], $fields['id'], rtrim($items, ","), rtrim($items, ","), false, $required, false, false, $variable, "field_" . $fields['id']));
+							}
+							
+							break;
+							
+						case "checkbox" : 
+							$items = "";
+							$count = 0;
+							$checked = false;
+							
+							echo "<blockquote>\n";
+							
+							foreach ($values as $value) {
+								if (isset($$variable)) {
+									$currentItemPrep = $$variable;
+									$currentItem = unserialize($currentItemPrep["field_" . $fields['id']]);
+									
+									if (is_array($currentItem) && in_array($value, $currentItem)) {
+										$checked = true;
+									}
+								} else {
+									if (is_array($selection) && in_array($count + 1, $selection)) {
+										$checked = true;
+									}
+								}
+								
+								echo checkbox($fields['id'] . "[]", $fields['id'] . "_" . $count, $value, prepare($value, true, true), $required, "1", $checked);
+								echo "<br />\n";
+								$count++;
+								$checked = false;
+							}
+							
+							echo "</blockquote>\n";
+							
+							break;
+							
+						default : 
+							die(errorMessage("Incorrect field type selected on " . $fields['id']));
+							break;
+					}
+				}
+			}
+		}
+	}
+	
+//Process custom questions
+	function processFields($type, $table, $id) {
+		if (exist("fields")) {
+			$fieldsGrabber = query("SELECT * FROM `fields` ORDER BY `position` ASC", "raw");
+			$sql = "UPDATE `{$table}` SET";
+			
+			while ($fields = fetch($fieldsGrabber)) {
+				if (isset($_POST[$fields['id']]) && (!empty($_POST[$fields['id']]) || is_numeric($_POST[$fields['id']]))) {
+					if (is_array($_POST[$fields['id']])) {
+						$value = escape(serialize($_POST[$fields['id']]));
+					} else {
+						$value = escape($_POST[$fields['id']]);
+					}
+					
+					$sql .= " `field_{$fields['id']}` = '{$value}',";
+				} else {
+					if ($fields['require'] == "1" && in_array($type, unserialize($fields['section']))) {
+						die(errorMessage("A required field was not filled out"));
+					} else {
+						$sql .= " `field_{$fields['id']}` = '',";
+					}
+				}
+			}
+			
+			$sql = rtrim($sql, ",") . " WHERE `id` = '{$id}'";
+			
+			query($sql);
+		}
+	}
+	
 /*
-Include JavaScripts and CSS for client-side modules
+Include JavaScripts and CSS for client-side processing
 ---------------------------------------------------------
 */
-	
-//Include the uploadify readying function
-	function uploadifyTrigger($fileID, $formID) {
-		global $root, $pluginRoot;
-		
-		$fileLimit = sprintf(ereg_replace("[^0-9]", "", ini_get('upload_max_filesize')) * 1024 * 1024);
-		
-		echo "<script type=\"text/javascript\">\n\$(function() {\n\$('#" . $fileID . "').uploadify({\n'uploader' : '" . $pluginRoot . "system/flash/upload.swf', \n'script' : '" . $_SERVER['REQUEST_URI'] . "', \n'cancelImg' : '" . $root . "system/images/common/x.png', 'sizeLimit' : " . $fileLimit . "\n});\n});\n</script>";
-	}
 	
 //Include a full-size calendar script
 	function fullCalendar() {
 		global $root, $pluginRoot;
 		
-		return "<script src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_1.4.2.js\" type=\"text/javascript\"></script>
-<script src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_UI_1.8.1.js\" type=\"text/javascript\"></script>
-<script src=\"" . $pluginRoot . "system/javascripts/calendar.js\" type=\"text/javascript\"></script>
+		return "<script src=\"" . $pluginRoot . "system/javascripts/calendar.js\" type=\"text/javascript\"></script>
 <link rel=\"stylesheet\" href=\"" . $pluginRoot . "system/styles/calendar/theme.css\" type=\"text/css\">
 <link rel=\"stylesheet\" href=\"" . $pluginRoot . "system/styles/calendar/style.css\" type=\"text/css\">";
 	}
@@ -1429,8 +1578,15 @@ Include JavaScripts and CSS for client-side modules
 		return "<script src=\"" . $pluginRoot . "system/javascripts/administrativeLibrary.js\" type=\"text/javascript\"></script>";
 	}
 	
+//Include the learning unit javascript library
+	function learningUnitLibrary() {
+		global $pluginRoot;
+		
+		return "<script src=\"" . $pluginRoot . "system/javascripts/learningUnitLibrary.js\" type=\"text/javascript\"></script>";
+	}
+	
 //TinyMCE small media
-	function tinyMCEMedia () {
+	function tinyMCEMedia() {
 		global $root, $pluginRoot;
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
@@ -1438,10 +1594,45 @@ Include JavaScripts and CSS for client-side modules
 <script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/tiny_mce_media.php\"></script>";
 	}
 	
+//TinyMCE media, purposefully excludes the tiny_mce.js and editor_plugin.js scripts
+	function tinyMCEMediaConfig() {
+		global $pluginRoot;
+		
+		return "<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/tiny_mce_config.php\"></script>";
+	}
+	
 //TinyMCE question, purposefully excludes the tiny_mce.js and editor_plugin.js scripts
-	function tinyMCEQuestion () {
-		global $root, $pluginRoot;
+	function tinyMCEQuestion() {
+		global $pluginRoot;
 		
 		return "<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/tiny_mce_question.php\"></script>";
+	}
+	
+//Plug-in check script
+	function plugins() {
+		global $pluginRoot;
+		
+		return "<script src=\"" . $pluginRoot . "system/javascripts/systemCheck/browserDetect.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/systemCheck/acrobatDetect.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/systemCheck/flashDetect.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/systemCheck/quicktimeDetect.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/systemCheck/windowsMediaDetect.js\" type=\"text/javascript\"></script>";
+	}
+	
+//jQuery mini-event calendar
+	function eventCalendar() {
+		global $pluginRoot;
+		
+		return "<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/jQuery_Sparkle.js\"></script>
+<script type=\"text/javascript\" src=\"" . $pluginRoot . "system/javascripts/mini_calendar_config.js\"></script>";
+	}
+	
+//Update the contents of a field in real-time
+	function liveUpdate() {
+		global $root, $pluginRoot;
+		
+		return "<script src=\"" . $root . "system/javascripts/ajaxLibraries/SpryData_0.46.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/live_update.js\" type=\"text/javascript\"></script>
+<script src=\"" . $pluginRoot . "system/javascripts/data_set_update.js\" type=\"text/javascript\"></script>";
 	}
 ?>

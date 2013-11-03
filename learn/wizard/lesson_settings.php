@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 16th, 2010
-Last updated: December 3rd, 2010
+Last updated: December 20th, 2010
 
 This is the lesson settings page for the learning unit 
 generator.
@@ -67,17 +67,19 @@ generator.
 					PRIMARY KEY (`id`)
 				  )");
 						
-			mkdir("../" . $id, 0777);
-			mkdir("../" . $id . "/lesson", 0777);
-			mkdir("../" . $id . "/lesson/browser", 0777);
-			mkdir("../" . $id . "/lesson/browser/public", 0777);
-			mkdir("../" . $id . "/lesson/browser/secure", 0777);
-			mkdir("../" . $id . "/test", 0777);
-			mkdir("../" . $id . "/test/answers", 0777);
-			mkdir("../" . $id . "/test/responses", 0777);
+			mkdir("../unit_" . $id, 0777);
+			mkdir("../unit_" . $id . "/lesson", 0777);
+			mkdir("../unit_" . $id . "/lesson/browser", 0777);
+			mkdir("../unit_" . $id . "/lesson/browser/public", 0777);
+			mkdir("../unit_" . $id . "/lesson/browser/secure", 0777);
+			mkdir("../unit_" . $id . "/test", 0777);
+			mkdir("../unit_" . $id . "/test/answers", 0777);
+			mkdir("../unit_" . $id . "/test/responses", 0777);
 						
 			$_SESSION['currentUnit'] = $id;
 		}
+		
+		processFields("Lesson Settings", $monitor['parentTable'], $id);
 		
 		if ($_POST['submit'] == "Finish" && isset($_SESSION['currentUnit']) && isset($_SESSION['review'])) {
 			redirect("../index.php?updated=unit");
@@ -112,6 +114,7 @@ generator.
 	dropDown("timeLabel", "timeLabel", "Days,Weeks,Months,Years", "Days,Weeks,Months,Years", false, false, false, $timeLabel) . 
 	" from scheduled date");
 	category();
+	customField("Lesson Settings", "lessonData");
 	echo "</blockquote>\n";
 	
 	catDivider("Lesson Settings", "two");

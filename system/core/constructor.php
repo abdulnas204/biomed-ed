@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 3rd, 2010
+Last updated: Janurary 9th, 2011
 
 This script contains functions used to create common HTML 
 elements, and add a touch of dynamic content, while abiding
@@ -23,8 +23,22 @@ Form input elements
 */
 
 //Form initiator
-	function form($name, $method = "post", $containsFile = false, $action = false, $additionalParameters = false) {
-		$return = "\n<form name=\"" . $name . "\" method=\"" . $method . "\" id=\"validate\"";
+	function form($name, $method = false, $containsFile = false, $action = false, $id = false, $additionalParameters = false) {
+		global $root, $protocol;
+		
+		$return = "\n<form name=\"" . $name . "\"";
+		
+		if ($method == true) {
+			$return .=  " method=\"" . $method . "\"";
+		} else {
+			$return .=  " method=\"post\"";
+		}
+		
+		if ($id == true) {
+			$return .=  " id=\"" . $id . "\"";
+		} else {
+			$return .=  " id=\"validate\"";
+		}
 		
 		if ($containsFile == true) {
 			$return .= " enctype=\"multipart/form-data\"";
@@ -44,11 +58,15 @@ Form input elements
 			}
 			
 			if (isset($parameters)) {
-				$return .= $_SERVER['PHP_SELF'] . rtrim($parameters, "&");
+				$return .= str_replace(".php", ".htm", $_SERVER['PHP_SELF']) . rtrim($parameters, "&");
 			} else {
-				$return .= $_SERVER['PHP_SELF'];
+				$return .= str_replace(".php", ".htm", $_SERVER['PHP_SELF']);
 			}
 		} else {
+			if (strstr($action, $root) || !strstr($action, $protocol)) {
+				$action = str_replace(".php", ".htm", $action);
+			}
+			
 			$return .= $action;
 		}
 		
@@ -73,7 +91,13 @@ Form input elements
 	}
 	
 //Button
-	function button($name, $id, $value, $type, $URL = false, $additionalParameters = false) {		
+	function button($name, $id, $value, $type, $URL = false, $additionalParameters = false) {
+		global $root, $protocol;
+		
+		if (strstr($URL, $root) || !strstr($URL, $protocol)) {
+			$URL = str_replace(".php", ".htm", $URL);
+		}
+			
 		switch ($type) {
 			case "submit" : 
 				return "\n<input type=\"submit\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"" . ltrim($additionalParameters) . "tinyMCE.triggerSave();\">\n";
@@ -348,8 +372,8 @@ Form input elements
 			$returnClass = "";
 			$returnParameters = "";
 			
-			for($count = 0; $count <= sizeof($searchParameters); $count ++) {
-				if ($searchParameters[$count] == " class=") {
+			for($count = 0; $count <= sizeof($searchParameters) - 1; $count ++) {
+				if ($searchParameters[$count] == "class=") {
 					$returnClass = $searchParameters[sprintf($count + 1)];
 					unset($searchParameters[sprintf($count + 1)]);
 					array_merge($searchParameters);
@@ -404,7 +428,7 @@ Form input elements
 	
 //Text Fields
 	function textField($name, $id, $size = false, $limit = false, $password = false, $validate = true, $validateAddition = false, $manualValue = false, $editorTrigger = false, $arrayValue = false, $additionalParameters = false) {
-		$return .= "\n<input type=\"";
+		$return = "\n<input type=\"";
 		
 		if ($password == false) {
 			$return .= "text";
@@ -426,7 +450,7 @@ Form input elements
 			$return .= $size;
 		}
 		
-		$return .= "\" autocomplete=\"off\"";
+		$return .= "\" autocomplete=\"off\" spellcheck=\"true\"";
 		
 		if ($validateAddition == true) {
 			$validateAddition = "," . $validateAddition;
@@ -480,10 +504,10 @@ Elements used in form construction, but not actually form elements
 //Category divider for form layout and categorizing
 	function catDivider($content, $class, $first = false, $last = false, $id = false) {
 		if ($last == true) {
-			echo "</div>";
+			echo "\n</div>\n";
 		} else {
 			if ($first == false) {
-				echo "</div>";
+				echo "\n</div>\n";
 			}
 			
 			echo "<div class=\"catDivider " . $class . "\"";
@@ -492,10 +516,10 @@ Elements used in form construction, but not actually form elements
 				echo " id=\"" . $id . "\"";
 			}
 			
-			echo ">" . $content . "</div>";
+			echo ">" . $content . "</div>\n";
 			
 			if ($last == false) {
-				echo "<div class=\"stepContent\">";
+				echo "<div class=\"stepContent\">\n";
 			}
 		}
 	}
@@ -557,6 +581,12 @@ Non-form input elements
 	
 //Links
 	function URL($text, $URL, $class = false, $target = false, $toolTip = false, $delete = false, $newWindow = false, $width = false, $height = false, $additionalParameters = false) {
+		global $root, $protocol;
+		
+		if (strstr($URL, $root) || !strstr($URL, $protocol)) {
+			$URL = str_replace(".php", ".htm", $URL);
+		}
+		
 		if ($newWindow == false || $width == false || $height == false) {
 			$return = "<a href=\"" . $URL . "\"";
 			
@@ -739,7 +769,7 @@ Non-form input elements
 			$height = "350";
 		}
 		
-		echo "<div align=\"center\">\n<embed type=\"application/x-shockwave-flash\" \nsrc=\"" . $chartURL . "\" id=\"chart\" name=\"chart\" quality=\"high\" allowscriptaccess=\"always\" \nflashvars=\"chartWidth=" . $width . "&chartHeight=" . $height . "&debugMode=0&DOMId=chart&registerWithJS=0&scaleMode=noScale&lang=EN&dataURL=" . $source . "\" \nwmode=\"transparent\" width=\"" . $width . "\" height=\"" . $height . "\">\n</div>\n";
+		return "<div align=\"center\">\n<embed type=\"application/x-shockwave-flash\" align=\"center\" \nsrc=\"" . $chartURL . "\" id=\"chart\" name=\"chart\" quality=\"high\" allowscriptaccess=\"always\" \nflashvars=\"chartWidth=" . $width . "&chartHeight=" . $height . "&debugMode=0&DOMId=chart&registerWithJS=0&scaleMode=noScale&lang=EN&dataURL=" . $source . "\" \nwmode=\"transparent\" width=\"" . $width . "\" height=\"" . $height . "\">\n</div>\n";
 
 	}
 	
@@ -808,8 +838,8 @@ Elements used in data table loops
 			$return .= hidden("action", "action", "setAvaliability");
 			$return .= hidden("id", "id", $id);
 			$return .= URL("", "#option" . $id, $type . $class);
-			$return .= "<div class=\"contentHide\">\n";
-			$return .= checkbox("option", "option" . $id, false, false, false, false, $checkboxTrigger, $checkboxTrigger, "visible", "on", " onclick=\"Spry.Utils.submitForm(this.form);\"");
+			$return .= "\n<div class=\"contentHide\">\n";
+			$return .= checkbox("option", "option" . $id, false, false, false, false, false, "state", "visible", "on", " onclick=\"Spry.Utils.submitForm(this.form);\"");
 			$return .= "</div>\n";
 			$return .= closeForm(false);
 			$return .= "</div>\n";
@@ -847,29 +877,30 @@ Elements used in data table loops
 		
 		if ($additionalContent == true) {
 			$wrap = explode("{content}", $additionalContent);
+			$begin = $wrap['0'];
+			$end = $wrap['1'];
 		} else {
-			$wrap = array();
+			$begin = "";
+			$end = "";
 		}
-		
-		
 		
 		if ($doAction == true) {
 			$return = "<td width=\"" . $cellWidth . "\">\n";
-			$return .= $wrap['0'] . "\n";
+			$return .= $begin . "\n";
 			$return .= form("reorder");
 			$return .= hidden("id", "id", $id);
 			$return .= hidden("currentPosition", "currentPosition", $state['position']);
 			$return .= hidden("action", "action", "modifyPosition");
 			$return .= dropDown("position", "position", $values, $values, false, false, false, $state['position'], false, false, " onchange=\"this.form.submit();\"");
 			$return .= closeForm(false);
-			$return .= $wrap['1'] . "\n";
+			$return .= $end . "\n";
 			$return .= "</td>\n";
 			
 			return $return;
 		}
 	}
 	
-//Ppreview link
+//Preview link
 	function preview($name, $URL, $itemType = false, $width = false, $newWindow = false, $requiredPrivilege = false) {
 		if ($requiredPrivilege == true) {
 			$doAction = access($requiredPrivilege);
@@ -926,11 +957,11 @@ Elements used in data table loops
 		if ($width == false) {
 			$cellWidth = "50";
 		} else {
-			$cellWidth = " width =\"" . $width . "\"";
+			$cellWidth = $width;
 		}
 		
 		if ($doAction == true) {
-			return "<td width=\"" . $width . "\">" . URL(false, $URL, "action statistics", false, "View the <strong>" . $name . "</strong> statistics") . "</td>\n";
+			return "<td width=\"" . $cellWidth . "\">" . URL(false, $URL, "action statistics", false, "View the <strong>" . $name . "</strong> statistics") . "</td>\n";
 		}
 	}
 	
@@ -955,7 +986,7 @@ Elements used in data table loops
 		}
 		
 		if ($doAction == true) {
-			return "<td width=\"" . $width . "\">" . URL(false, $URL, "action edit", false, $tip) . "</td>\n";
+			return "<td width=\"" . $cellWidth . "\">" . URL(false, $URL, "action edit", false, $tip) . "</td>\n";
 		}
 	}
 	
@@ -988,7 +1019,7 @@ Elements used in data table loops
 		}
 		
 		if ($doAction == true) {
-			return "<td width=\"" . $width . "\">" . URL(false, $URL, "action delete", false, $tip, $autoAlert, false, false, false, $customAlert) . "</td>\n";
+			return "<td width=\"" . $cellWidth . "\">" . URL(false, $URL, "action delete", false, $tip, $autoAlert, false, false, false, $customAlert) . "</td>\n";
 		}
 	}
 ?>

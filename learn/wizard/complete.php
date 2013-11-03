@@ -38,7 +38,7 @@ has been set up, and it handles some final processing.
 	$name = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentUnit']}'");
 	
 //Title
-	navigation($monitor['title'] . "Complete", "&quot;<strong>" . $name['name'] . "</strong>&quot; has been successfully created.");
+	navigation("Complete", "&quot;<strong>" . $name['name'] . "</strong>&quot; has been successfully created.");
 	
 //Completion form
 	echo form("finish");

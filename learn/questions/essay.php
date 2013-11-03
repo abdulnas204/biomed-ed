@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: December 21st, 2010
 
 This is the essay management page for the test generator.
 */
@@ -28,8 +28,9 @@ This is the essay management page for the test generator.
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
 		$type = $_POST['type'];
-		$category = $_POST['category'];
+		$category = escape($_POST['category']);
 		$link = $_POST['link'];
+		$partialCredit = $_POST['partialCredit'];
 		$tags = escape($_POST['tags']);
 		$answer = escape($_POST['answer']);
 		$feedBackCorrect = escape($_POST['feedBackCorrect']);
@@ -37,11 +38,11 @@ This is the essay management page for the test generator.
 		$feedBackPartial = escape($_POST['feedBackPartial']);
 	
 		if (isset ($questionData)) {
-			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `link` = '{$link}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `category` = '{$category}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '{$link}', '{$partialCredit}', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Essay', '{$points}', '{$extraCredit}', '0', '{$category}', '{$partialCredit}', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -59,7 +60,9 @@ This is the essay management page for the test generator.
 	type();
 	category();
 	descriptionLink();
+	partialCredit();
 	tags();
+	customField("Question Generator", "questionData");
 	echo "</blockquote>\n";
 	
 	catDivider("Answer", "three");
@@ -69,11 +72,11 @@ This is the essay management page for the test generator.
 	echo "</blockquote>\n";
 	
 	catDivider("Feedback", "four");
-	feedback();
+	feedback(true);
 	
 	catDivider("Finish", "five");
 	formButtons();
-	closeForm(true);
+	echo closeForm();
 	
 //Include the footer
 	footer();

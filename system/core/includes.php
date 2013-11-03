@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 4th, 2010
+Last updated: December 23rd, 2010
 
 This script contains functions which will construct the 
 JavaScript and CSS callers for client-side modules.
@@ -27,8 +27,7 @@ Widgets
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.php\"></script>
-";
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.htm\"></script>";
 	}
 
 //TinyMCE simple
@@ -37,7 +36,7 @@ Widgets
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.htm\"></script>
 ";
 	}
 	
@@ -57,6 +56,16 @@ Widgets
 		
 		return "<script src=\"" . $root . "system/javascripts/common/datePicker.js\" type=\"text/javascript\"></script>
 <link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/datePicker.css\" type=\"text/css\">";
+	}
+	
+//Include a session refresher
+	function sessionControl() {
+		global $root;
+		
+		return "<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_1.4.4.js\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_UI_1.8.7.js\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/session_control.htm\"></script>
+<link rel=\"stylesheet\" href=\"" . $root . "system/styles/ajaxLibraries/jQuery_UI_1.8.7.css\" type=\"text/css\">";
 	}
 	
 /*
@@ -98,13 +107,6 @@ Pre-processor scripts
 <script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
 	}
 	
-	//Include a live update script
-	function liveUpdate() {
-		global $root;
-		
-		return "<script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveUpdate/liveUpdateOptions.js\" type=\"text/javascript\"></script>";
-	}
-	
 	//Include a show or hide script
 	function showHide() {
 		global $root;
@@ -144,7 +146,7 @@ Pre-processor scripts
 	function liveData() {
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.php\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.htm\" type=\"text/javascript\"></script>";
 	}
 	
 	
@@ -186,10 +188,10 @@ Pre-processor scripts
 		return "<script src=\"" . $root . "system/javascripts/uploader/uploaderCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/uploader/swfobject.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/uploader/runUploader.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/uploader.css\" type=\"text/css\">";
 	}
 	
-	//Include a plug-in check script
-	function plugins() {
+	//Include a javascript to print the contents of a container
+	function printContents() {
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/systemCheck/detectPlugins.js\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/common/print.htm\" type=\"text/javascript\"></script>";
 	}
 ?>

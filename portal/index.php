@@ -37,7 +37,7 @@ information relavent to the user.
 	}
 	
 //A function to calculate the number of users in a particular system
-	function userCount($role, $type) {
+	/*function userCount($role, $type) {
 		global $connDBA;	
 		
 		if ($type == true) {
@@ -340,7 +340,7 @@ information relavent to the user.
 		} else {
 			echo "<div class=\"spacer\"><p>You are not currently enrolled in any modules. " . URL("Browse the list of modules", "../modules/index.php") . ", and enroll in the one's you choose.</p></div>";
 		}
-	}
+	}*/
 
 //Include the footer
 	footer();

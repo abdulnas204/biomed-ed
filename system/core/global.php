@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: Janurary 10th, 2011
 
 This script contains user feedback, complete database 
 management, and minor code simplification functions which 
@@ -95,6 +95,30 @@ Database management functions
 			}
 		}
 	}
+	
+//Fetch an array for a loop
+	function fetch($value) {
+		global $root, $protocol;
+		
+		$result = mysql_fetch_assoc($value);
+		
+		if (is_array($result) && !empty($result)) {
+			array_merge_recursive($result);
+			$return = array();
+			
+			foreach ($result as $key => $value) {
+				if ($protocol == "https://") {	
+					$return[$key] = str_replace(str_replace("https://", "http://", $root), $root, prepare($value));
+				} else {
+					$return[$key] = prepare($value);
+				}
+			}
+			
+			return $return;
+		} else {
+			return false;
+		}
+	}
 
 //Run a mysql_query
 	function query($query, $returnType = false, $showError = true) {
@@ -118,16 +142,9 @@ Database management functions
 				//Fetch the array, and clean-up each value for display, DEFAULT BEHAVIOR
 					case false : 
 					case "array" : 
-						$result = mysql_fetch_array($action);
+						$result = fetch($action);
 						
 						if (is_array($result) && !empty($result)) {
-							array_merge_recursive($result);
-							$return = array();
-							
-							foreach ($result as $key => $value) {
-								$return[$key] = prepare($value, false, true);
-							}
-							
 							return $result;
 						} else {
 							return false;
@@ -158,11 +175,11 @@ Database management functions
 					case "selected" : 
 						$return = array();
 					
-						while ($result = mysql_fetch_array($action)) {
+						while ($result = fetch($action)) {
 							array_push($return, $result);
 						} 
-					
-						return flatten($return,array());
+						
+						return flatten($return);
 						break;
 						
 				//Return an error if an unsupported return-type is requested
@@ -200,11 +217,6 @@ Database management functions
 		} else {
 			return false;
 		}
-	}
-	
-//Fetch an array for a loop
-	function fetch($value) {
-		return mysql_fetch_array($value);
 	}
 	
 //Escape a string to store values into a database
@@ -285,7 +297,13 @@ Code simplification
 */
 
 //Redirect to page
-	function redirect($URL) {
+	function redirect($URL, $fixPHP = true) {
+		if (strstr($URL, $root) || !strstr($URL, $protocol)) {
+			if ($fixPHP == true) {
+				$URL = str_replace(".php", ".htm", $URL);
+			}
+		}
+		
 		header("Location: " . $URL);
 		exit;
 	}

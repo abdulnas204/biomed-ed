@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 4th, 2010
+Last updated: December 10th, 2010
 
 This is the test settings page for the test and learning 
 generators.
@@ -153,12 +153,12 @@ generators.
 	indent(radioButton("randomizeAll", "randomizeAll", "Sequential Order,Randomize", "Sequential Order,Randomize", false, false, false, false, "testData", "randomizeAll"));
 	
 	if (access("Edit Unowned Learning Units")) {
-		directions("Automatically pull questions from bank", false, "Set whether questions will be automatically pulled from <br />the question bank with the same questions in the same category when new ones are added");
+		directions("Automatically pull questions from bank", false, "Set whether or not questions will be <br />automatically pulled from the question bank <br />when a new question in the same category <br />is added");
 		echo "<blockquote><p>\n";
-		radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
+		echo radioButton("questionBank", "questionBank", "Yes,No", "1,0", true, false, false, false, "testData", "questionBank");
 		echo "<br /><br />\n";
 		
-		if (exist("questionbank", "category", $testData['category']) == true) {
+		if (exist("questionbank_{$userData['organization']}", "category", $testData['category'])) {
 			echo "The question bank has test questions for this category.";
 		} else {
 			echo "The question bank does not have any test questions for this category.";

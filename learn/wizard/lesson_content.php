@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 3rd, 2010
+Last updated: Janurary 10th, 2011
 
 This is the lesson content page for the learning unit 
 generator.
@@ -30,7 +30,7 @@ generator.
 		if (exist($monitor['lessonTable'], "id", $_GET['id'])) {
 			$delete = query("SELECT * FROM `{$monitor['lessonTable']}` WHERE `id` = '{$_GET['id']}'");
 			
-			if (empty($delete['attachment'])) {
+			if (!empty($delete['attachment'])) {
 				delete($monitor['lessonTable'], "lesson_content.php", false, true, $monitor['directory'] . "lesson/" . $delete['attachment']);
 			} else {
 				delete($monitor['lessonTable'], "lesson_content.php", false, true);
@@ -44,7 +44,7 @@ generator.
 //Admin toolbar
 	echo "<div class=\"toolBar\">\n";
 	echo toolBarURL("Add New Page", "manage_content.php", "toolBarItem new");
-	echo "</div>\n<br />\n";
+	echo "</div>\n";
 	
 //Display message updates
 	message("inserted", "page", "success", "The page was successfully inserted");
@@ -69,7 +69,7 @@ generator.
 			echo preview(commentTrim(30, $lessonData['title']), "preview_page.php?page=" . $lessonData['position'], "page", "250", true);
 			echo cell(commentTrim(100, $lessonData['content']));
 			echo editURL("manage_content.php?id=" . $lessonData['id'], $lessonData['title'], "page");	
-			echo deleteURL("lesson_content.php?action=delete&id=" . $lessonData['id'], $lessonData['title'], "page");		
+			echo deleteURL("lesson_content.php?action=delete&id=" . $lessonData['id'], $lessonData['title'], "page");
 			echo "</tr>\n";
 		}
 		

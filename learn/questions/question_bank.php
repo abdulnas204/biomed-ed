@@ -1,77 +1,59 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: August 21st, 2010
+Last updated: December 10th, 2010
+
+This is the question selection page for importing questions 
+from the question bank.
+*/
+
 //Header functions
-	require_once('../../system/connections/connDBA.php');
+	require_once('../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	$monitor = monitor("Question Bank", "liveSubmit");
-	require_once('functions.php');
-	
-//Select all categories
-	if (exist("modulecategories")) {
-	//Use the URL to narrow the categories down on request
+		
+//Check access to category
+	if (exist("categories")) {
 		if (isset ($_GET['id'])) {
-			$id = $_GET['id'];
+			$category = query("SELECT * FROM `categories` WHERE `id` = '{$_GET['id']}'");
 			
-		//Display any questions from categories whose questions may have been deleted
-			if ($_GET['id'] == "0") {
-				$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
-				$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
-				$count = 0;
-				$sql = "";
-				
-				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (in_array($otherQuestions['category'], $currentCategories)) {
-						if ($count == 0) {
-							$sql .= " WHERE`category` != '" . $otherQuestions['category'] . "'";
-						} else {
-							$sql .= " AND `category` != '" . $otherQuestions['category'] . "' ";
-						}
-						
-						$count ++;
-					}
-				}
-				
-				$testImport = query("SELECT * FROM `questionbank`{$sql}ORDER BY id ASC", "raw");
-					
-				if (!$testImport) {
-					redirect("index.php");
-				}
+			if ($category['organization'] !== $userData['organization']) {
+				redirect("question_bank.php");
 			} else {
-				$testImport = query("SELECT * FROM `questionbank` WHERE `category` = '{$id}' ORDER BY id ASC", "raw");
-				
-				if (!exist("modulecategories", "id", $id)) {
-					redirect("index.php");
-				} else {
-					$bankTitle = query("SELECT * FROM `modulecategories` WHERE `id` = '{$id}'");
-				}
+				$bankTitle = query("SELECT * FROM `categories` WHERE `id` = '{$id}'");
 			}
 		}
-	
-		$categoryResult = 1;
-	} else {
-		$categoryResult = 0;
 	}
 
 //Process the form
 	if (isset($_POST['id'])) {
 		if ($_POST['import']) {
-			if (exist("questionbank", "id", $_POST['id'])) {
+			if (exist("questionbank_{$userData['organization']}", "id", $_POST['id'])) {
+				$questionData = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `id` = '{$_POST['id']}'");
 				$id = $_POST['id'];
-				$questionData = query("SELECT * FROM `questionbank` WHERE `id` = '{$id}'");
 				$type = $questionData['type'];
 				$lastQuestion = lastItem($monitor['testTable']);
 				
-				insertQuery("Module", "NULL, '1', '{$id}', '{$lastQuestion}', '{$type}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
-				
-				redirect("../module_wizard/test_content.php");
+				insertQuery("Learning Unit", "NULL, '1', '{$id}', '{$lastQuestion}', '{$type}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
+				redirect("../wizard/test_content.php");
 			}
 		} else {
-			$id = $_POST['id'];
-			$questionPositionArray = query("SELECT * FROM `{$monitor['testTable']}` WHERE `linkID` = '{$id}'");
+			$questionPositionArray = query("SELECT * FROM `{$monitor['testTable']}` WHERE `linkID` = '{$_POST['id']}'");
 			$questionPosition = $questionPositionArray['position'];
 			
-			mysql_query("DELETE FROM `{$monitor['testTable']}` WHERE `linkID` = '{$id}'", $connDBA);
-			mysql_query("UPDATE `{$monitor['testTable']}` SET position = position-1 WHERE position > '{$questionPosition}'", $connDBA);
-			
-			redirect("../module_wizard/test_content.php");
+			query("DELETE FROM `{$monitor['testTable']}` WHERE `linkID` = '{$_POST['id']}'");
+			query("UPDATE `{$monitor['testTable']}` SET `position` = position - 1 WHERE `position` > '{$questionPosition}'");
+			redirect("../wizard/test_content.php");
 		}
 	}
 	
@@ -80,117 +62,101 @@
 
 //Admin toolbar
 	if (isset ($_GET['id'])) {
-		echo "<div class=\"toolBar\">";
-		echo URL("Back to Module Categories", "question_bank.php", "toolBarItem back");
-		echo URL("Edit Questions", "../question_bank/index.php?id=" . $_GET['id'], "toolBarItem editTool", false, false, false, true, "800", "600");
-		echo "</div>";
+		echo "<div class=\"toolBar\">\n";
+		echo toolBarURL("Back to Categories", "question_bank.php", "toolBarItem back");
+		echo toolBarURL("Edit Questions", "../question_bank/index.php?id=" . $_GET['id'], "toolBarItem editTool", false, false, false, true, "800", "600");
+		echo "</div>\n<br />\n";
 	}
 
-	if ($categoryResult != 0) {
+	if (exist("categories", "organization", $userData['organization'])) {
 		if (!isset ($_GET['id'])) {
-			echo "<p>Please select a category from the list below.</p><blockquote>";
-			$categoryGrabber = query("SELECT * FROM `modulecategories` ORDER BY position ASC", "raw");
+			echo "<p>Please select a category from the list below.</p>\n";
+			echo "<blockquote>\n";
+			$categoryGrabber = query("SELECT * FROM `categories` ORDER BY `id` ASC", "raw");
 			
-			while ($category = mysql_fetch_array($categoryGrabber)) {
-				$currentCategory = $category['id'];
-				$questionValue = query("SELECT * FROM `questionbank` WHERE `category` = '{$currentCategory}'", "num");
+			while ($category = fetch($categoryGrabber)) {
+				$name = escape($category['category']);
+				$questionValue = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `category` = '{$name}'", "num");
 				
 				echo URL($category['category'], "question_bank.php?id=" . $category['id']) . " : ";
 				
 				if ($questionValue == 1) {
-					echo $questionValue . " Question<br /><br />";
+					echo $questionValue . " Question\n<br /><br />\n";
 				} else {
-					echo $questionValue . " Questions<br /><br />";
+					echo $questionValue . " Questions\n<br /><br />\n";
 				}
 			}
 			
-		//Display any questions from categories whose questions may have been deleted
-			$currentCategories = query("SELECT `id` FROM `modulecategories` ORDER BY position ASC", "selected");
-			$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
-			$count = 0;
-			
-			if ($otherQuestionsGrabber) {
-				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (!inArray($otherQuestions['category'], $currentCategories)) {
-						$count++;
-					}
-				}
-			}
-			
-			if ($count > 0) {
-				echo URL ("Uncategorized", "question_bank.php?id=0") . " : ";
+			echo "<br /><br />\n";
+			echo button("cancel", "cancel", "Back to Test Questions", "cancel", "../wizard/test_content.php");
+			echo "</blockquote>\n";
+		} else {
+			$name = escape($category['category']);
 				
-				if ($count == 1) {
-					echo $count . " Question<br /><br />";
-				} else {
-					echo $count . " Questions<br /><br />";
-				}
-			}
-			
-			echo "<br /><br />";
-			button("cancel", "cancel", "Back to Test Questions", "cancel", "../module_wizard/test_content.php");
-			echo "</blockquote>";
-		}
-		
-		if (isset ($_GET['id'])) {	
-			echo "<br />";
-			if ($testImport) {
-				catDivider("Select Questions", "one", true);
-				echo "<blockquote><table class=\"dataTable\"><tbody><tr><th width=\"50\" class=\"tableHeader\">Import</th><th width=\"150\" class=\"tableHeader\">Type</th><th width=\"100\" class=\"tableHeader\">Point Value</th><th class=\"tableHeader\">Question</th></tr>";
+			if (exist("questionbank_{$userData['organization']}", "category", $name)) {
+				$testImport = query("SELECT * FROM `questionbank_{$userData['organization']}` WHERE `category` = '{$name}'", "raw");
 				$count = 1;	
 				
-				while ($testData = mysql_fetch_array($testImport)) {
+				catDivider("Select Questions", "one", true);
+				echo "<blockquote>\n";
+				echo "<table class=\"dataTable\">\n<tr>\n";
+				echo column("Import", "50");
+				echo column("Type", "150");
+				echo column("Point Value", "100");
+				echo column("Question");
+				echo "</tr>";
+				
+				while ($testData = fetch($testImport)) {
 					$checkboxImport = query("SELECT * FROM `{$monitor['testTable']}` WHERE `linkID` = '{$testData['id']}'", "raw");
 					
 					echo "<tr";
 					if ($count++ & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-					echo "<td width=\"50\">";
-					form("importForm");
-					hidden("id", "id_" . $testData['id'], $testData['id']);
+					
+					$content = form("importForm");
+					$content .= hidden("id", "id_" . $testData['id'], $testData['id']);
 					
 					if ($checkboxImport) {
-						checkbox("import", "import_" . $testData['id'], false, false, false, false, "on", false, false, false, " onclick=\"Spry.Utils.submitForm(this.form);\"");
+						$content .= checkbox("import", "import_" . $testData['id'], false, false, false, false, "on", false, false, false, " onclick=\"Spry.Utils.submitForm(this.form);\"");
 					} else {
-						checkbox("import", "import_" . $testData['id'], false, false, false, false, false, false, false, false, " onclick=\"Spry.Utils.submitForm(this.form);\"");
+						$content .= checkbox("import", "import_" . $testData['id'], false, false, false, false, false, false, false, false, " onclick=\"Spry.Utils.submitForm(this.form);\"");
 					}
 					
-					closeForm(false, false);
-					echo "</td>";
-					echo "<td width=\"150\">" . URL($testData['type'], "preview.php?id=" . $testData['id'], false, false, "Preview this <strong>" . $testData['type'] . "</strong> question", false, true, "640", "480") . "</td>";
+					$content .= closeForm(false);
 					
-					echo "<td width=\"100\"><div";
+					echo cell($content, "50");
+					echo preview(commentTrim(30, $testData['type']), "preview.php?id=" . $testData['id'], "question", "150", true);
 					
 					if ($testData['extraCredit'] == "on") {
-						echo " class=\"extraCredit\"";
+						$class = " class=\"extraCredit\"";
+					} else {
+						$class = "";
 					}
-					
-					echo ">" . $testData['points'];
 					
 					if ($testData['points'] == "1") {
-						echo " Point";
+						$point = " Point";
 					} else {
-						echo " Points";
+						$point = " Points";
 					}
 					
-					echo "</div></td>";
-					echo "<td>" . commentTrim(85, $testData['question']) . "</td></tr>";
+					echo cell("<div" . $class  . ">" . $testData['points'] . $point . "</div>", "100");
+					echo cell(commentTrim(85, $testData['question']));
+					echo "</tr>\n";
 				}
 				
-				echo "</tbody></table></blockquote>";
+				echo "</table>\n</blockquote>\n";
 				
 				catDivider("Submit", "two");
-				echo "<blockquote><p>";
-				button("submit", "submit", "Submit", "cancel", "../module_wizard/test_content.php");
-				button("cancel", "cancel", "Cancel", "cancel", "../module_wizard/test_content.php");
-				echo "</blockquote></p></div>";
+				indent(button("submit", "submit", "Submit", "cancel", "../wizard/test_content.php") . "\n" . 
+				button("cancel", "cancel", "Cancel", "cancel", "../wizard/test_content.php"));
+				echo "</div>\n";
 			} else {
-				echo "<div class=\"noResults\">There are no questions in this bank.</div>";
+				echo "<div class=\"noResults\">There are no questions in this bank.</div>\n";
 			}
 		}
 	} else {
-		echo "<div class=\"noResults\">There are no categories in the question bank.</div></br /><br /><blockquote>";
-		button("cancel", "cancel", "Cancel", "cancel", "../module_wizard/test_content.php");
-		echo "</blockquote>";
+		echo "<div class=\"noResults\">There are no categories in the question bank.</div>\n</br /><br />\n<blockquote>";
+		echo button("cancel", "cancel", "Back to Test Questions", "cancel", "../wizard/test_content.php");
+		echo "</blockquote>\n";
 	}
 	
 //Include the footer

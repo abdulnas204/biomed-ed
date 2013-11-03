@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 28th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: December 15th, 2010
 
 This script contains additional functions relevent to this 
 plugin only.
@@ -20,25 +20,6 @@ plugin only.
 Server-side functions
 ---------------------------------------------------------
 */
-
-//Restrict access to developer-only parts of the site
-	function developerAccess() {
-		global $root;
-		
-		if (!strstr($_SERVER['PHP_SELF'], "login.php")) {
-			if (!loggedIn() || !isset($_SESSION['developerAdministration'])) {
-				redirect($root . "admin/login.php");
-			}
-		} else {
-			if (loggedIn() && isset($_SESSION['developerAdministration'])) {
-				redirect($root . "admin/index.php");
-			}
-		}
-	}
-	
-	if (strstr($_SERVER['PHP_SELF'], "/admin")) {
-		developerAccess();
-	}
 	
 /*
 Include JavaScripts and CSS for client-side modules
