@@ -84,21 +84,20 @@
 			$total = gzinflate(base64_decode($_GET['value']));
 			
 			if (strcmp ($res, "VERIFIED") == 0) {
-				if ($payment_status === "Completed" && exist("billing", "transactionID", $txn_id) == false && $payment_amount === $total && $payment_currency === "USD" && $paymentData['business'] === $receiver_email && $payer_email === $userData['emailAddress1']) {
+				if ($payment_status === "Completed" && exist("billing", "transactionID", $txn_id) == false && intval($payment_amount) === intval($total) && $payment_currency === "USD" && $paymentData['business'] === $receiver_email && $payer_email === $userData['emailAddress1']) {
 					$currentModules = unserialize($userData['modules']);
 					$userModules = unserialize(gzinflate(base64_decode($_GET['product'])));
 					
-					if (is_array($currentModules)) {
-						foreach ($userModules as $item) {
-							$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C");
-							$currentModules[$item] = $module;
-						}
-						
-						$modules = serialize($currentModules);
-					} else {
-						$modules = serialize($userModules);
+					if (!is_array($currentModules)) {
+						$currentModules = array();
 					}
 					
+					foreach ($userModules as $item) {
+						$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C");
+						$currentModules[$item] = $module;
+					}
+					
+					$modules = serialize($currentModules);
 					$purchasedModules = serialize($userModules); 					
 					$userID = $userData['id'];
 					

@@ -1,4 +1,4 @@
-F/***
+/***
  *** Core
  ***/
 
@@ -872,7 +872,7 @@ a.skip:focus, a.skip:active {
 	}
 /* End form layout */
 
-/* Begin data table and table contents */
+/* Begin data table and table contents */	
 	div.noResults, div.spacer {
 		padding: 30px 0px 80px 0px;
 		text-align:center;
@@ -1200,6 +1200,11 @@ a.skip:focus, a.skip:active {
 		text-align:center;
 	}
 	
+	ul.search li {
+		list-style:none;
+		display:inline;
+	}
+	
 	a.searchNumber, span.searchNumber {
 		padding: 0px 5px 0px 5px;	
 	}
@@ -1211,6 +1216,14 @@ a.skip:focus, a.skip:active {
 	
 	.searchKeywords {
 		font-weight:bolder;
+	}
+	
+	a.spacerLeft {
+		padding-right:10px;
+	}
+	
+	a.spacerRight {
+		padding-left:10px;
 	}
 /* End naviagtion styles */
 

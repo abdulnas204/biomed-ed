@@ -1,16 +1,16 @@
 <?php 
 //Header functions
 	require_once('../system/connections/connDBA.php');
-	headers("Communication", "Site Administrator", "liveSubmit,customVisible", true); 
+	headers("Communication", "Organization Administrator,Site Administrator", "liveSubmit,customVisible", true); 
 
-//Reorder pages	
-	reorder("pages", "index.php");
+//Reorder announcements	
+	reorder("announcements", "index.php");
 
-//Set page avaliability
-	avaliability("pages", "index.php");
+//Set announcement avaliability
+	avaliability("announcements", "index.php");
 	
-//Delete a page
-	delete("pages", "index.php");
+//Delete an announcement
+	delete("announcements", "index.php");
 	
 //Title
 	title("Communication", "Communication can be established to registered users and organizations via announcements and mass emails.");
@@ -22,17 +22,14 @@
 	echo "</div>";
 	
 //Display message updates
-	message("added", "announcement", "success", "The annoumcement was successfully added");
+	message("inserted", "announcement", "success", "The annoumcement was successfully added");
 	message("updated", "announcement", "success", "The annoumcement was successfully updated");
 	message("email", "success", "success", "The email was successfully sent");
-	message("updated", "icon", "success", "The browser icon was successfully updated. It may take a few moments to update across the system.");
-	message("updated", "siteInfo", "success", "The site information was successfully updated");
-	message("updated", "page", "theme", "The theme was successfully updated");
 
 //Announcements table
 	if (exist("announcements") == true) {
 		$announcementGrabber = mysql_query("SELECT * FROM `announcements` ORDER BY `position` ASC", $connDBA);
-		$currentDate = date("m/d/y g:i a");
+		$currentDate = strtotime(date("m/d/y g:i a"));
 		
 		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Display To</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
 	
@@ -74,41 +71,31 @@
 					echo "<td width=\"25\"><span onmouseover=\"Tip('This announcement is currently being displayed')\" onmouseout=\"UnTip()\" class=\"action current\"></span></td>";
 				}
 			} else {
-				echo "<td width=\"25\"><div align=\"center\"><form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $announcementData['id'] . "\" class=\"visible"; if ($announcementData['visible'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $announcementData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $announcementData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($announcementData['visible'] == "on") {echo " checked=\"checked\"";} echo "></div></form></div></td>";
+				echo "<td width=\"25\">"; option($announcementData['id'], $announcementData['visible'], "announcementData", "visible"); echo "</td>";
 			}
 			
-			echo "<td width=\"75\"><form name=\"announcements\" action=\"index.php\"><input type=\"hidden\" name=\"id\" value=\"" . $announcementData['id'] . "\"><input type=\"hidden\" name=\"currentPosition\" value=\"" .  $announcementData['position'] .  "\"><input type=\"hidden\" name=\"action\" value=\"modifySettings\"><select name=\"position\" onchange=\"this.form.submit();\">";
+			echo "<td width=\"75\">"; reorderMenu($announcementData['id'], $announcementData['position'], "announcementData", "announcements"); echo "</td>";
 			
-			$announcementCount = mysql_num_rows($announcementGrabber);
-			for ($count=1; $count <= $announcementCount; $count++) {
-				echo "<option value=\"{$count}\"";
-				if ($announcementData ['position'] == $count) {
-					echo " selected=\"selected\"";
-				}
-				echo ">" . $count . "</option>";
-			}
-			
-			echo "</select></form></td><td width=\"200\">" . $announcementData['display'] . "</td>";
-			echo "<td width=\"200\">" . stripslashes($announcementData['title']) . "</td>";
+			echo "<td width=\"200\">" . $announcementData['display'] . "</td>";
+			echo "<td width=\"200\">" . commentTrim(30,$announcementData['title']) . "</td>";
 			echo "<td>" . commentTrim(60, $announcementData['content']) . "</td>";
-			echo "<td width=\"50\"><a class=\"action edit\" href=\"manage_announcement.php?id=" . $announcementData['id'] . "";
-			
+						
 			switch($announcementData['display']) {
-				case "Selected Users" : echo "&type=users"; break;
-				case "All Users" : echo "&type=all"; break;
-				case "Selected Organizations" : echo "&type=organizations"; break;
-				case "All Organizations" : echo "&type=allOrganizations"; break;
-				case "Selected Roles" : echo "&type=roles"; break;
+				case "Selected Users" : $URL = "users"; break;
+				case "All Users" : $URL = "all"; break;
+				case "Selected Organizations" : $URL = "organizations"; break;
+				case "All Organizations" : $URL = "allOrganizations"; break;
+				case "Selected Roles" : $URL = "roles"; break;
 			}
 			
-			echo "\" onmouseover=\"Tip('Edit the <strong>" . htmlentities($announcementData['title']) . "</strong> announcement')\" onmouseout=\"UnTip()\"></a></td>"; 
-			echo "<td width=\"50\"><a class=\"action delete\" href=\"index.php?action=delete&announcement=" . $announcementData['position'] . "&id=" . $announcementData['id'] . "\" onclick=\"return confirm ('This action cannot be undone. Continue?');\" onmouseover=\"Tip('Delete the <strong>" . htmlentities($announcementData['title']) . "</strong> announcement')\" onmouseout=\"UnTip()\"></a></td>";
+			echo "<td width=\"50\">" . URL("", "manage_announcement.php?id=" . $announcementData['id'] . "&type=" . $URL, "action edit", false, "Edit the <strong>" . $announcementData['title'] . "</strong> announcement") . "</td>"; 
+			echo "<td width=\"50\">" . URL("", "index.php?action=delete&id=" . $announcementData['id'], "action delete", false, "Delete the <strong>" . $announcementData['title'] . "</strong> announcement", true) . "</td>";
 			}
 		echo "</tr></tbody></table>";
 	 } else {
 		echo "<div class=\"noResults\">This site has no announcements. <a href=\"manage_announcement.php\">Create a new announcement now</a>.</div>";
 	 } 
+	 
+//Include the footer
+	footer();
 ?>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>

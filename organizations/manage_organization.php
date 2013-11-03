@@ -141,7 +141,7 @@
 	dropDown("toList", "toList", $adminValues, $adminIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferLeft()\"");
 	echo "<br /><br />";
 	button("left", "left", "&lt;&lt;", "button", false, " onclick=\"opt.transferLeft()\"");
-	echo "</div></div></div> </blockquote></blockquote>";
+	echo "</div></div></div></blockquote></blockquote>";
 	
 	catDivider("Submit", "three");
 	echo "<blockquote><p>";

@@ -1,10 +1,12 @@
 <?php
 //Header functions
 	require_once('../system/connections/connDBA.php');	
-	headers("Home", "Student,Site Administrator", false, true);
+	headers("Home", "Organization Administrator,Site Administrator,Student", false, true);
 	
 //Title
-	switch ($_SESSION['MM_UserGroup']) {
+	switch($_SESSION['MM_UserGroup']) {
+		case "Organization Administrator" :
+			$title = "Welcome to the administration home page. This page contains a quick reference to major information about your organization. Major parts of this organization can be administered by navigating the links above."; break;
 		case "Site Administrator" :
 			$title = "Welcome to the administration home page. This page contains a quick reference to major information about this site. Major parts of this site can be administered by navigating the links above."; break;
 		case "Student" : 
@@ -12,6 +14,87 @@
 	}
 	
 	title("Home", $title, false);
+	
+//A function to calculate the number of users in a particular system
+	function userCount($role, $type) {
+		global $connDBA;	
+		
+		if ($type == true) {
+			$sql = " AND `organization` = '{$type}'";
+		} else {
+			$sql = "";
+		}
+		
+		$userGrabber = mysql_query("SELECT * FROM `users` WHERE `role` = '{$role}'{$sql}", $connDBA);
+		$userNumber = mysql_num_rows($userGrabber);
+		return "<strong>" . $userNumber . "</strong>";
+	}
+	
+	function users($type = false) {
+		global $connDBA;
+		
+		//Count all users
+		if ($type == true) {
+			$sql = " WHERE `organization` = '{$type}'";
+		} else {
+			$sql = "";
+		}
+		
+		$userGrabber = mysql_query("SELECT * FROM `users`{$sql}", $connDBA);
+		$userNumber = mysql_num_rows($userGrabber);
+		
+		//Construct the box
+		$content = "Number of registered users:<br /><ul>";
+			if (!is_numeric($type)) {
+				$content .= "<li>Site Admin: " . userCount("Site Administrator", $type) . "</li>
+				<li>Site Managers: " . userCount("Site Manager", $type) . "</li>";
+			}
+			
+		$content .= "<li>Organization Admin: " . userCount("Organization Administrator", $type) . "</li>
+			<li>Admin Assistants: " . userCount("Administrative Assistant", $type) . "</li>
+			<li>Instructors: " . userCount("Instructor", $type) . "</li>
+			<li>Instructorial Assisstants: " . userCount("Instructorial Assisstant", $type) . "</li>
+			<li>Students: " . userCount("Student", $type) . "</li>
+		</ul>
+		<hr />
+		Total Users: <strong>" . $userNumber . "</strong>";
+		
+		sideBox("Registered Users", "Custom Content", $content);
+	}
+	
+//A function to display the active users in a particular system
+	function active($type = false) {
+		global $connDBA;
+		
+		//Grab correct users
+		if ($type == true) {
+			$sql = " AND `organization` = '{$type}'";
+		} else {
+			$sql = "";
+		}
+		
+		$currentTime = time();
+		$activityTime = time() - 1800;
+		$activeCheck = mysql_query("SELECT * FROM `users` WHERE `active` BETWEEN '{$activityTime}' AND '{$currentTime}'{$sql} ORDER BY `lastName` ASC", $connDBA);
+		$count = 0;
+		
+		if (mysql_fetch_array($activeCheck)) {
+			$activeGrabber = mysql_query("SELECT * FROM `users` WHERE `active` BETWEEN '{$activityTime}' AND '{$currentTime}'{$sql} ORDER BY `lastName` ASC", $connDBA);
+			
+			$content = "<div style=\"max-height:250px; overflow:auto;\"><p>Active users within the last 30 min.</p><ul>";
+			
+			while($activeUsers = mysql_fetch_array($activeGrabber)) {
+				$content .= "<li>" . $activeUsers['firstName'] . " " . $activeUsers['lastName'] . "</li>";
+				$count++;
+			}
+			
+			$content .= "</ul></div><hr />Total Active Users: <strong>" . $count . "</strong>";
+		} else {
+			$content = "<div align=\"center\"><p><i>None</i></p></div>";
+		}
+		
+		sideBox("Active Users", "Custom Content", $content);
+	}
 	
 //Display annoumcements
 	$announcementsCheck = mysql_query("SELECT * FROM `announcements`", $connDBA);
@@ -51,7 +134,7 @@
 								echo "<p class=\"homeDivider\">Announcements</p>";
 							}
 							
-							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . $announcements['title'] . "</p>" . $announcements['content'] . "</div>";
+							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . prepare($announcements['title'], false, true) . "</p>" . prepare($announcements['content'], false, true) . "</div>";
 						}
 					} break;
 					
@@ -60,7 +143,7 @@
 						echo "<p class=\"homeDivider\">Announcements</p>";
 					}
 							
-					echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . $announcements['title'] . "</p>" . $announcements['content'] . "</div>";
+					echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . prepare($announcements['title'], false, true) . "</p>" . prepare($announcements['content'], false, true) . "</div>";
 					break;
 						
 				case "Selected Organizations" : 
@@ -73,7 +156,7 @@
 								echo "<p class=\"homeDivider\">Announcements</p>";
 							}
 							
-							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . $announcements['title'] . "</p>" . $announcements['content'] . "</div>";
+							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . prepare($announcements['title'], false, true) . "</p>" . prepare($announcements['content'], false, true) . "</div>";
 						}
 					} break;
 					
@@ -83,7 +166,7 @@
 							echo "<p class=\"homeDivider\">Announcements</p>";
 						}
 						
-						echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . $announcements['title'] . "</p>" . $announcements['content'] . "</div>";
+						echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . prepare($announcements['title'], false, true) . "</p>" . prepare($announcements['content'], false, true) . "</div>";
 					} break;
 					
 				case "Selected Roles" : 
@@ -96,7 +179,7 @@
 								echo "<p class=\"homeDivider\">Announcements</p>";
 							}
 							
-							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . $announcements['title'] . "</p>" . $announcements['content'] . "</div>";
+							echo "<div class=\"announcementContent\"><p class=\"announcementTitle\">" . prepare($announcements['title'], false, true) . "</p>" . prepare($announcements['content'], false, true) . "</div>";
 						}
 					} break;
 			}
@@ -123,6 +206,26 @@
 	}
 
 	switch($_SESSION['MM_UserGroup']) {
+		case "Organization Administrator" : 
+		//Site layout
+			echo "<p>&nbsp;</p><p class=\"homeDivider\">Organization Data</p><div class=\"layoutControl\"><div class=\"contentLeft\">";
+			
+		//Render the chart
+			chart("line", "overall");
+		
+		//Site layout
+		   	echo"</div><div class=\"dataRight\">";
+		   
+		//Select all users from the site
+			users($userData['organization']);
+			  
+		//Show active users
+			active($userData['organization']);
+			
+		//Close the site layout
+			echo "</div></div>";
+			break;
+		
 		case "Site Administrator" : 
 		//Site layout
 			echo "<p>&nbsp;</p><p class=\"homeDivider\">Site Data</p><div class=\"layoutControl\"><div class=\"contentLeft\">";
@@ -134,56 +237,10 @@
 		   echo"</div><div class=\"dataRight\">";
 		   
 		//Select all users from the site
-			  //Find the number of specific users
-			  function userCount($role) {
-				  global $connDBA;
-				  $userGrabber = mysql_query("SELECT * FROM `users` WHERE `role` = '{$role}'", $connDBA);
-				  $userNumber = mysql_num_rows($userGrabber);
-				  return "<strong>" . $userNumber . "</strong>";
-			  }
-			  
-			  //Count all users
-			  $userGrabber = mysql_query("SELECT * FROM users", $connDBA);
-			  $userNumber = mysql_num_rows($userGrabber);
-			  
-			  //Construct the box
-			  $content = "Number of registered users:<br /><ul>
-				<li>Site Admin: " . userCount("Site Administrator") . "</li>
-				<li>Site Managers: " . userCount("Site Manager") . "</li>
-				<li>Organization Admin: " . userCount("Organization Administrator") . "</li>
-				<li>Admin Assistants: " . userCount("Administrative Assistant") . "</li>
-				<li>Instructors: " . userCount("Instructor") . "</li>
-				<li>Instructorial Assisstants: " . userCount("Instructorial Assisstant") . "</li>
-				<li>Students: " . userCount("Student") . "</li>
-			  </ul>
-			  <hr />
-			  Total Users: <strong>" . $userNumber . "</strong>";
-			  
-			  sideBox("Registered Users", "Custom Content", $content);
+			users();
 			  
 		//Show active users
-			//Select all active users from the site
-			$currentTime = time();
-			$activityTime = time() - 1800;
-			$activeCheck = mysql_query("SELECT * FROM `users` WHERE `active` BETWEEN '{$activityTime}' AND '{$currentTime}' ORDER BY `lastName` ASC", $connDBA);
-			$count = 0;
-			
-			if (mysql_fetch_array($activeCheck)) {
-				$activeGrabber = mysql_query("SELECT * FROM `users` WHERE `active` BETWEEN '{$activityTime}' AND '{$currentTime}' ORDER BY `lastName` ASC", $connDBA);
-				
-				$content = "<div style=\"max-height:250px; overflow:auto;\"><p>Active users within the last 30 min.</p><ul>";
-				
-				while($activeUsers = mysql_fetch_array($activeGrabber)) {
-					$content .= "<li>" . $activeUsers['firstName'] . " " . $activeUsers['lastName'] . "</li>";
-					$count++;
-				}
-				
-				$content .= "</ul></div><hr />Total Active Users: <strong>" . $count . "</strong>";
-			} else {
-				$content = "<div align=\"center\"><p><i>None</i></p></div>";
-			}
-			
-			sideBox("Active Users", "Custom Content", $content);
+			active();
 			
 		//Close the site layout
 			echo "</div></div>";

@@ -1,57 +1,43 @@
-<?php require_once('../system/connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
-<?php
-//Grant access to this page an it is defined and the user exists
-	if (isset ($_GET['id'])) {
-		$id = $_GET['id'];
-		$userGrabber = mysql_query("SELECT * FROM users WHERE id = '{$id}'", $connDBA);
-		if ($userCheck = mysql_fetch_array($userGrabber)) {
-			$user = $userCheck;
-		} else {
-			$user = false;
-			header("Location: index.php");
-			exit;
-		}
-	} else {
-		header("Location: index.php");
-		exit;
-	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title($user['firstName'] . " " . $user['lastName']); ?>
-<?php headers(); ?>
-<script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
-<script src="../../javascripts/common/warningDelete.js" type="text/javascript"></script>
-</head>
-
-<body>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2><?php echo $user['firstName'] . " " . $user['lastName']; ?></h2>
-<p>&nbsp;</p>
 <?php 
-	echo "<div class=\"toolBar\">";
+//Header functions
+	require_once('../system/connections/connDBA.php');
 	
-	if ($user['role'] != "Site Administrator" && $user['role'] != "Site Manager" && $user['organization'] == "") {
-		echo "<a class=\"toolBarItem user\" href=\"assign_user.php?id=" . $user['id'] . "\">Assign to Organization</a>";
-	}
-	
-	echo "<a class=\"toolBarItem editTool\" href=\"manage_user.php?id=" . $user['id'] . "\">Edit this User</a>";
-	
-	if ($user['userName'] != $_SESSION['MM_Username']) {
-		echo "<a class=\"toolBarItem deleteTool\" a href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&id=" . $user['id'] . "', 'user')\">Delete this User</a>";
-	}
-	
-	echo "</div>";
-?>
-<?php
-	if ($user['organization'] == "1" && $user['role'] !== "Site Administrator" && $user['role'] !== "Site Manager") {
-		errorMessage($user['firstName'].  " needs assigned to an organization. <a href=\"assign_user.php?id=" . $user['id'] . "\">Assign " . $user['firstName'] . " now</a>.");
+//Grant access to this page a user is defined and the user exists
+	if (access("manageThisUser") && exist("users", "id", $_GET['id'])) {
+		$user = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'");
 	} else {
-		echo "<br />";
+		redirect("../portal/index.php");
+	}
+	
+//Create a function to easily create table rows
+	function row($lebel, $content, $contentExists = false) {
+		if ($contentExists == true) {
+			if (!empty($contentExists)) {
+				echo "<tr><td width=\"200\"><div align=\"right\">" . $label . ":</div></td><td>" .  $content . "</td></tr>";
+			}
+		} else {
+			echo "<tr><td width=\"200\"><div align=\"right\">" . $label . ":</div></td><td>" .  $content . "</td></tr>";
+		}
+	}
+	
+	headers($user['firstName'] . " " . $user['lastName'], "Student,Organization Administrator,Site Administrator");
+
+//Title
+	title($user['firstName'] . " " . $user['lastName'], false, false);
+	
+//Admin toolbar
+	if (access("manageThisUser") && $_SESSION['MM_UserGroup'] != "Student") {
+		echo "<div class=\"toolBar\">";
+		echo URL("Edit this User", "manage_user.php?id=" . $user['id'], "toolBarItem editTool");
+		
+		if ($user['userName'] != $_SESSION['MM_Username']) {
+			echo URL("Edit this User", "index.php?action=delete&id=" . $user['id'], "toolBarItem deleteTool", false, false, true);
+		}
+		
+		echo "</div><br />";
 	}
 ?>
+
 <div class="catDivider one">User Information</div>
 <div class="stepContent">
 <table width="100%">

@@ -92,7 +92,7 @@
 			
 			while ($category = mysql_fetch_array($categoryGrabber)) {
 				$currentCategory = $category['id'];
-				$questionValue = query("SELECT * FROM `questionBank` WHERE `category` = '{$currentCategory}'", "num");
+				$questionValue = query("SELECT * FROM `questionbank` WHERE `category` = '{$currentCategory}'", "num");
 				
 				echo URL($category['category'], "question_bank.php?id=" . $category['id']) . " : ";
 				

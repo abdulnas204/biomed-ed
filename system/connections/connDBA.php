@@ -267,6 +267,49 @@ ob_start();
 					}
 					break;
 					
+			//If this is the organization administrator navigation bar
+				case "Organization Administrator" : 
+					echo "<li><a class=\"";
+					if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "portal/index.php";
+					echo "\">Home</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/users")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "users/index.php";
+					echo "\">Users</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/organizations")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "organizations/index.php";
+					echo "\">Organization</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/communication")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "communication/index.php";
+					echo "\">Communication</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/modules")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "modules/index.php";
+					echo "\">Modules</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"";
+					if (strstr($requestURL, "/statistics")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
+					echo "\" href=\"";
+					echo $root . "statistics/index.php";
+					echo "\">Statistics</a></li><span class=\"arrow sep\">&#x25BA;</span>";
+					
+					echo "<li><a class=\"topPageNav\" href=\"";
+					echo $root . "logout.php"; 
+					echo "\">Logout</a></li>";
+					break;
+					
 			//If this is the site administrator navigation bar
 				case "Site Administrator" : 
 					echo "<li><a class=\"";
@@ -408,6 +451,49 @@ ob_start();
 								}
 							}
 						}
+						break;
+						
+				//If this is the site administrator footer bar
+					case "Organization Administrator" : 
+						echo "<a class=\"";
+						if (!strstr($requestURL, "/users") && !strstr($requestURL, "/organizations") && !strstr($requestURL, "/communication") && !strstr($requestURL, "/modules") && !strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "portal/index.php";
+						echo "\">Home</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/users")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "users/index.php";
+						echo "\">Users</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/organizations")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "organizations/index.php";
+						echo "\">Organization</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/communication")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "communication/index.php";
+						echo "\">Communication</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "modules/index.php";
+						echo "\">Modules</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/statistics")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "statistics/index.php";
+						echo "\">Statistics</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"bottomPageNav\" href=\"";
+						echo $root . "logout.php"; 
+						echo "\">Logout</a>";
 						break;
 					
 				//If this is the site administrator footer bar
@@ -827,7 +913,7 @@ ob_start();
 		$valuesLimit = sizeof($valuesArray) - 1;
 		
 		if (sizeof($valuesArray) != sizeof($valuesIDArray)) {
-			die(errorMessage("The values and IDs of the " . $name . " dropdown menu to not match"));
+			die(errorMessage("The values and IDs of the " . $name . " dropdown menu do not match"));
 		} else {
 			echo "<select name=\"" . $name . "\" id=\"" . $id . "\"";
 			
@@ -846,28 +932,30 @@ ob_start();
 			
 			echo $additionalParameters . ">";
 			
-			for ($count = 0; $count <= $valuesLimit; $count ++) {
-				global $$editorTrigger;
-				
-				echo "<option value=\"" . $valuesIDArray[$count] . "\"";
-				
-				if (($manualSelect == true || $manualSelect == "0") && ($editorTrigger == false || !isset($$editorTrigger))) {
-					if ($manualSelect == $valuesIDArray[$count]) {
-						echo " selected=\"selected\"";
-					}
-				} else {
-					if ($editorTrigger == true && isset($$editorTrigger)) {
-						$value = $$editorTrigger;
-						
-						if (isset($$editorTrigger)) {
-							if ($value[$arrayValue] == $valuesIDArray[$count]) {
-								echo " selected=\"selected\"";
+			if ($values == true && $valuesID == true) {
+				for ($count = 0; $count <= $valuesLimit; $count ++) {
+					global $$editorTrigger;
+					
+					echo "<option value=\"" . $valuesIDArray[$count] . "\"";
+					
+					if (($manualSelect == true || $manualSelect == "0") && ($editorTrigger == false || !isset($$editorTrigger))) {
+						if ($manualSelect == $valuesIDArray[$count]) {
+							echo " selected=\"selected\"";
+						}
+					} else {
+						if ($editorTrigger == true && isset($$editorTrigger)) {
+							$value = $$editorTrigger;
+							
+							if (isset($$editorTrigger)) {
+								if ($value[$arrayValue] == $valuesIDArray[$count]) {
+									echo " selected=\"selected\"";
+								}
 							}
 						}
 					}
+					
+					echo ">" . $valuesArray[$count] . "</option>";
 				}
-				
-				echo ">" . $valuesArray[$count] . "</option>";
 			}
 			
 			echo "</select>";
@@ -988,7 +1076,7 @@ ob_start();
 				$value = $$editorTrigger;
 				
 				if (isset($$editorTrigger)) {
-					echo $value[$arrayValue];
+					echo prepare($value[$arrayValue], false, true);
 				}
 			}
 		}
@@ -1271,7 +1359,7 @@ ob_start();
 		
 	//Display the content		
 		if ($lesson['type'] == "Custom Content") {
-			echo $lesson['content'];
+			echo prepare($lesson['content'], false, true);
 		}
 		
 		if ($lesson['type'] == "Embedded Content") {
@@ -1329,8 +1417,15 @@ ob_start();
 	//Test content
 	function test($table, $fileURL, $preview = false) {
 		global $connDBA, $testValues, $monitor;
+		$attempt = lastItem($testTable, "testID", $testID, "attempt");
 		
-		form("test", "post", true, true);
+		if ($attempt - 1 == 0) {
+			$currentAttempt = 1;
+		} else {
+			$currentAttempt = $attempt - 1;
+		}
+		
+		form("test", "post", true);
 		echo "<table width=\"100%\" class=\"dataTable\">";
 		
 		if ($preview == true) {
@@ -1351,7 +1446,7 @@ ob_start();
 				$additionalSQLConstruct .= "`id` = '{$selection['questionID']}' OR ";
 			}
 			
-			$additionalSQL = rtrim($additionalSQLConstruct, " OR ");
+			$additionalSQL = rtrim($additionalSQLConstruct, " OR ") . " AND `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 			$limit = "";
 		}
 		
@@ -1377,7 +1472,6 @@ ob_start();
 		}
 		
 		if (!is_numeric($preview)) {
-			$testID = str_replace("moduletest_", "", $table);
 			$moduleInfo = query("SELECT * FROM	`moduledata` WHERE `id` = '{$testID}'");
 		}
 		
@@ -2047,7 +2141,14 @@ ob_start();
 	function liveData() {
 		global $root;
 		
-		echo "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.js\" type=\"text/javascript\"></script>";
+		echo "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.php\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include an auto suggest script
+	function autoSuggest() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/autoSuggest/runAutoSuggest.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/autoSuggest/autoSuggestOptions.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/autoSuggest/autoSuggestCore.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/autoSuggest.css\" type=\"text/css\">";
 	}
 	
 	//Include an option transfer script
@@ -2055,6 +2156,13 @@ ob_start();
 		global $root;
 		
 		echo "<script src=\"" . $root . "system/javascripts/common/optionTransfer.js\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include a calendar popup script
+	function calendar() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/common/datePicker.js\" type=\"text/javascript\"></script><link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/datePicker.css\" type=\"text/css\">";
 	}
 /* End page scripting functions */
 	
@@ -2721,19 +2829,6 @@ ob_start();
 
 	}
 	
-	//A function to prevent access to question question types if certain sessions are set
-	function questionAccess() {
-		if (isset($_SESSION['currentModule'])) {
-			die(errorMessage("The question bank cannot be opened while the module wizard is open. Please finish the module before opening the question bank."));
-		}
-		
-		if (isset($_SESSION['feedback'])) {
-			die(errorMessage("The question bank cannot be opened while the feedback generator is open. Please finish the close the feedback generator before opening the question bank."));
-		}
-		
-		//$_SESSION['currentModule']
-	}
-	
 	//A function to regulate the how questions are inserted and updated
 	function insertQuery($type, $moduleQuery, $bankQuery = false, $feedbackQuery = false) {
 		global $connDBA, $monitor;
@@ -2788,51 +2883,107 @@ ob_start();
 		
 	}
 	
-	//Live check if data exists
-	function checkName($label, $table, $column) {
-		global $connDBA;
-		
-		if (isset($_GET['checkName'])) {
-			$inputNameSpaces = $_GET['checkName'];
-			$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-			$checkName = mysql_query("SELECT * FROM `{$table}` WHERE `{$column}` = '{$inputNameSpaces}'", $connDBA);
+	//A function to check if a name exists
+	function validateName($table, $column) {
+		if (isset($_POST['validateValue']) && isset($_POST['validateId']) && isset($_POST['validateError'])) {
+			$value = $_POST['validateValue'];
+			$id = $_POST['validateId'];
+			$message = $_POST['validateError'];
 			
-			if ($name = mysql_fetch_array($checkName)) {					
-				if (isset($_SESSION['currentModule'])) {
-					if (strtolower($name['name']) != strtolower($_SESSION['currentModule'])) {
-						echo "<div class=\"error\" id=\"errorWindow\">A " . $label . " with this name already exists</div>";
+			$return = array();
+			$return[0] = $id;
+			$return[1] = $message;
+		
+			if (!query("SELECT * FROM `{$table}` WHERE `{$column}` = '{$value}'", "raw")) {
+				$return[2] = "true";
+				echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
+			} else {
+				if (isset($_GET['id'])) {
+					$data = query("SELECT * FROM `{$table}` WHERE `id` = '{$_GET['id']}'");
+					
+					if ($data[$column] === $value) {
+						$return[2] = "true";
+						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
 					} else {
-						echo "<p>&nbsp;</p>";
+						$return[2] = "false";
+						echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
 					}
 				} else {
-					echo "<div class=\"error\" id=\"errorWindow\">A " . $label . " with this name already exists</div>";
+					$return[2] = "false";
+					echo "{\"jsonValidateReturn\":" . json_encode($return) . "}";
 				}
-			} else {
-				echo "<p>&nbsp;</p>";
 			}
 			
-			echo "<script type=\"text/javascript\">validateName()</script>";
-			die();
+			exit;
 		}
 	}
 	
 	//Check the user's access to a particular item
-	function access($access = false) {
-		//modifyModule
-		//moduleStatistics
-		
+	function access($access) {		
 		if (isset($_SESSION['MM_UserGroup'])) {
 			switch ($_SESSION['MM_UserGroup']) {
+				case "Organization Administrator" :
+					$allowedArray = array("modifyModule", "moduleStatistics", "moduleAvailability", "moduleDetails", "manageThisUser");
+					
+					if (in_array($access, $allowedArray)) {
+						if ($access == "manageThisUser") {
+							$currentUser = userData();
+							$userDataGrabber = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'", "raw");
+							
+							if ($userData = mysql_fetch_array($userDataGrabber) && $userData['organization'] == $currentUser['organization']) {
+								return true;
+							} else {
+								return false;
+							}
+						} else {
+							return true;
+						}
+					} else {
+						return false;
+					}
+					
+					return false;
+					break;
+				
 				case "Site Administrator" :
-					return true;
+					$allowedArray = array("assignOrganization","modifyModule", "moduleStatistics", "manageAllUsers", "manageThisUser", "manageAllOrganizations");
+					
+					if (in_array($access, $allowedArray)) {
+						return true;
+					} else {
+						return false;
+					}
+					
 					break;
 				
 				case "Student" :
-					return false;
+					$allowedArray = array("buyModule", "moduleDetails", "manageThisUser");
+					
+					if (in_array($access, $allowedArray)) {
+						if ($access == "manageThisUser") {
+							$currentUser = userData();
+							
+							if ($_GET['id'] == $currentUser['id']) {
+								return true;
+							} else {
+								return false;
+							}
+						} else {
+							return true;
+						}
+					} else {
+						return false;
+					}
 					break;
 			}
 		} else {
-			return false;
+			$allowedArray = array("buyModule", "moduleDetails");
+			
+			if (in_array($access, $allowedArray)) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 	
@@ -2918,6 +3069,136 @@ ob_start();
 		$userInfo = mysql_fetch_array($userInfoGrabber);
 		return $userInfo;
 	}
+	
+	//A function to write the ajax navigation for a page
+	function navigate($dataSource, $type) {
+		if ($type == "bottom") {
+			echo "<br />";
+		}
+		
+		echo "<div class=\"pagesBox\">";
+		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\">";
+		echo URL("Previous Page", "javascript:void", "spacerLeft previousPage", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 1 != '1'\" onclick=\"" . $dataSource . ".previousPage(); return false;\"");
+		echo URL("1", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} >= 13 && {ds_PageCount} > 25\" onclick=\"" . $dataSource . ".goToPage('1'); return false;\"");
+		echo "<span spry:if=\"{ds_CurrentRowNumber} >= 14 && {ds_PageCount} > 25 && {ds_PageCount} != 26\" class=\"currentSearchNumber\">...</span>";
+		echo "</span>";
+		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\" spry:repeatchildren=\"" . $dataSource . "PagedInfo\" class=\"search\">";
+		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 <= 13 && {ds_PageNumber} <= 25 && {ds_CurrentRowNumber} + 13 < {ds_PageCount}\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
+		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 1 > 13 && {ds_CurrentRowNumber} + 13 < {ds_PageCount} && ({ds_CurrentRowNumber} < {ds_PageNumber} + 12 && {ds_CurrentRowNumber} > {ds_PageNumber} - 14)\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
+		echo "<span>" . URL("{ds_PageNumber}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} != {ds_RowNumber} && {ds_CurrentRowNumber} + 13 >= {ds_PageCount} && {ds_PageNumber} >= {ds_PageCount} - 24\" onclick=\"" . $dataSource . ".goToPage('{ds_PageNumber}'); return false;\"") . "</span>";
+		echo "<span>" . "<span spry:if=\"{ds_CurrentRowNumber} == {ds_RowNumber}\" class=\"currentSearchNumber\">{ds_PageNumber}</span></span>";
+		echo "</span>";
+		echo "<span spry:region=\"" . $dataSource . "PagedInfo\" spry:if=\"{ds_UnfilteredRowCount} > 0\">";
+		echo "<span spry:if=\"{ds_CurrentRowNumber} + 14 < {ds_PageCount} && {ds_PageCount} > 25 && {ds_PageCount} != 26\" class=\"currentSearchNumber\">...</span>";
+		echo URL("{ds_PageCount}", "javascript:void", "searchNumber", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 14 <= {ds_PageCount} && {ds_PageCount} > 25\" onclick=\"" . $dataSource . ".goToPage('{ds_PageCount}'); return false;\"");
+		echo URL("Next Page", "javascript:void", "spacerRight nextPage", false, false, false, false, false, false, " spry:if=\"{ds_CurrentRowNumber} + 2 <= {ds_PageCount}\" onclick=\"" . $dataSource . ".nextPage(); return false;\"");
+		echo "</span></div>";
+		
+		if ($type == "top") {
+			echo "<br />";
+		}
+	}
+	
+	//Find the difference between two dates
+	function dateDifference($firstDate, $secondDate, $precision = false) {
+		$date = $firstDate - $secondDate;
+		$return = "";
+		
+		if ($date >= 31556926) {
+			$return .= floor($date/31556926);
+			
+			if (floor($date/31556926) == "1") {
+				$return .= " Year ";
+			} else {
+				$return .= " Years ";
+			}
+			
+			$date = ($date%31556926);
+		}
+		
+		if (strtolower($precision) == "years") {
+			return $return;
+			exit;
+		}
+		
+		if ($date >= 2629744) {
+			$return .= floor($date/2629744);
+			
+			if (floor($date/2629744) == "1") {
+				$return .= " Month ";
+			} else {
+				$return .= " Months ";
+			}
+			
+			$date = ($date%2629744);
+		}
+		
+		if (strtolower($precision) == "months") {
+			return $return;
+			exit;
+		}
+		
+		if ($date >= 86400) {
+			$return .= floor($date/86400);
+			
+			if (floor($date/86400) == "1") {
+				$return .= " Day ";
+			} else {
+				$return .= " Days ";
+			}
+			
+			$date = ($date%86400);
+		}
+		
+		if (strtolower($precision) == "days") {
+			return $return;
+			exit;
+		}
+		
+		if ($date >= 3600) {
+			$return .= floor($date/3600);
+			
+			if (floor($date/3600) == "1") {
+				$return .= " Hour ";
+			} else {
+				$return .= " Hours ";
+			}
+			
+			$date = ($date%3600);
+		}
+		
+		if (strtolower($precision) == "hours") {
+			return $return;
+			exit;
+		}
+		
+		if ($date >= 60) {
+			$return .= floor($date/60);
+			
+			if (floor($date/60) == "1") {
+				$return .= " Min ";
+			} else {
+				$return .= " Mins ";
+			}
+			
+			$date = ($date%60);
+		}
+		
+		if (strtolower($precision) == "minutes") {
+			return $return;
+			exit;
+		}
+		
+		$return .= $date;
+		
+		if ($date == "1") {
+			$return .= " Sec ";
+		} else {
+			$return .= " Secs ";
+		}
+		
+		return $return;
+	}
 /* End system functions */
 	
 /* Begin statistics tracker */
@@ -2941,6 +3222,7 @@ ob_start();
 		if ($doAction == "true") {
 			$date = date("M-d-Y");
 			$statisticsCheck = mysql_query("SELECT * FROM `overallstatistics` WHERE `date` = '{$date}' LIMIT 1", $connDBA);
+			
 			if ($result = mysql_fetch_array($statisticsCheck)) {
 				$newHit = $result['hits']+1;
 				mysql_query("UPDATE `overallstatistics` SET `hits` = '{$newHit}' WHERE `date` = '{$date}' LIMIT 1", $connDBA);
@@ -2950,6 +3232,25 @@ ob_start();
 							) VALUES (
 							NULL, '{$date}', '1'
 							)");
+			}
+			
+			if (loggedIn()) {
+				$userData = userData();
+					
+				if ($userData['organization'] != "0") {
+					$statisticsCheck = mysql_query("SELECT * FROM `organizationstatistics_{$userData['organization']}` WHERE `date` = '{$date}' LIMIT 1", $connDBA);
+					
+					if ($result = mysql_fetch_array($statisticsCheck)) {
+						$newHit = $result['hits']+1;
+						mysql_query("UPDATE `organizationstatistics_{$userData['organization']}` SET `hits` = '{$newHit}' WHERE `date` = '{$date}' LIMIT 1", $connDBA);
+					} else {
+						mysql_query("INSERT INTO `organizationstatistics_{$userData['organization']}` (
+									`id`, `date`, `hits`
+									) VALUES (
+									NULL, '{$date}', '1'
+									)");
+					}
+				}
 			}
 		}
 	}

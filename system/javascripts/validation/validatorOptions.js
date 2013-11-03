@@ -1,5 +1,3 @@
-
-
 (function($) {
 	$.fn.validationEngineLanguage = function() {};
 	$.validationEngineLanguage = {
@@ -43,13 +41,13 @@
 						"regex":"/^[0-9a-zA-Z]+$/",
 						"alertText":"* No special characters allowed"},	
 					"ajaxUser":{
-						"file": document.location.href + "?validate=true",
+						"file": document.location.href,
 						"extraData":"name=eric",
 						"alertTextOk":"* This user is available",	
 						"alertTextLoad":"* Loading, please wait",
 						"alertText":"* This user is already taken"},	
 					"ajaxName":{
-						"file": document.location.href + "?validate=true",
+						"file": document.location.href,
 						"alertText":"* This name is already taken",
 						"alertTextOk":"* This name is available",	
 						"alertTextLoad":"* Loading, please wait"},		

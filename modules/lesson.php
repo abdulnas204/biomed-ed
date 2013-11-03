@@ -8,11 +8,12 @@
 		$lessonID = $_GET['id'];
 		$userData = userData();
 		$userID = $userData['id'];
+		$modules = unserialize($userData['modules']);
 		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$lessonID}' LIMIT 1");
 		$lessonUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}' LIMIT 1");
 		$lessonUpdateArray = unserialize($lessonUpdateGrabber['modules']);
 		
-		if (exist("moduledata", "id", $_GET['id']) == false || ($_SESSION['MM_UserGroup'] != "Site Administrator" && empty($moduleInfo['visible']))) {
+		if (exist("moduledata", "id", $lessonID) == false || ($_SESSION['MM_UserGroup'] != "Site Administrator" && empty($moduleInfo['visible']))) {
 			redirect("index.php");
 		}
 		
@@ -27,6 +28,16 @@
 		}
 	} else {
 		redirect("index.php");
+	}
+	
+//Allow access to the test
+	if (loggedIn() && isset($_GET['action']) && $_GET['action'] == "retake") {		
+		if ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['testStatus'] == "F" && $attempts['attempt'] < $moduleInfo['attempts']) {
+			$modules[$lessonID]['testStatus'] = "O";
+			$update = serialize($modules);
+			query("UPDATE `users` SET `modules` = '{$update}' WHERE `id` = '{$userID}'");
+			redirect("test.php?id=" . $lessonID);
+		}
 	}
 
 //Top content
@@ -82,20 +93,15 @@
 	
 //Display the lesson
 	if (isset($_GET['page'])) {
-		lesson($_GET['id'], $moduleLesson, false);
-	} else {
-		if (loggedIn()) {
-			$userData = userData();
-			$modules = unserialize($userData['modules']);
-		}
-		
+		lesson($lessonID, $moduleLesson, false);
+	} else {		
 		echo $moduleInfo['comments'] . "<div class=\"spacer\">";
 		
-		if (loggedIn() == false && $_SESSION['MM_UserGroup'] != "Site Administrator" && (!is_array($modules) || !array_key_exists($moduleInfo['id'], $modules))) {
+		if (!loggedIn() || (loggedIn() && $_SESSION['MM_UserGroup'] != "Site Administrator" && (!is_array($modules) || !array_key_exists($moduleInfo['id'], $modules)))) {
 			$price = str_replace(".", "", $moduleInfo['price']);
 			
 			if (!empty($moduleInfo['enablePrice']) && !empty($moduleInfo['price']) && $price > 0) {
-				form("purchase", "post", false, false, "enroll/cart.php");
+				form("purchase", "post", false, "enroll/cart.php");
 				hidden("cart[]", "cart", $moduleInfo['id']);
 				button("submit", "submit", false, "image", "../system/images/common/cartAdd.png");
 				closeForm(false, false);
@@ -108,8 +114,21 @@
 					button("continueLesson", "continueLesson", "Continue Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
 				} elseif ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['testStatus'] != "F") {
 					button("Test", "continueTest", "Continue Test", "button", "test.php?id=" . $lessonID);
-				} elseif ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['moduleStatus'] == "F") {
+				} elseif ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['testStatus'] == "F") {
 					button("reviewLesson", "reviewLesson", "Review Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+					
+					$attempts = query("SELECT * FROM `testdata_{$userID}` WHERE `testID` = '{$lessonID}' ORDER BY `attempt` DESC LIMIT 1");
+					
+					if ($attempts['attempt'] < $moduleInfo['attempts']) {
+						if($moduleInfo['attempts'] == "999") {
+							$message = "You make take this test an unlimited number of times. Click &quot;OK&quot; to continue.";
+						} else {
+							$attemptsLeft = $moduleInfo['attempts'] - $attempts['attempt'];
+							$message = "You make take this test " . $attemptsLeft . " more times. Click &quot;OK&quot; to continue.";
+						}
+						
+						button("submit", "submit", "Retake Test", "button", "lesson.php?id=" . $lessonID . "&action=retake", " onclick=\"return confirm('" . $message . "')\"");
+					}
 				}
 			} else {
 				button("previewLesson", "previewLesson", "Preview Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");

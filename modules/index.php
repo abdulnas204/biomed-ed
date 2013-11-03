@@ -94,22 +94,18 @@
 //Modules table
 	if (exist("moduledata") == true) {	
 		 if (access("modifyModule") == false) {
-			 form("purchaseModules", "post", true, false, "enroll/cart.php");
+			 form("purchaseModules", "post", true, "enroll/cart.php");
 		 }
 		 
 		 echo "<table class=\"dataTable\"><tbody><tr>";
 		 
-		 if (access("modifyModule")) {
-			 echo "<th width=\"25\" class=\"tableHeader\"></th>";
-		 }
-		
-		 if (access("modifyModule")) {	 
-			 echo "<th width=\"50\" class=\"tableHeader\">Order</th>";
+		 if (access("modifyModule") || access("moduleAvailability")) {
+			 echo "<th width=\"25\" class=\"tableHeader\"></th><th width=\"50\" class=\"tableHeader\">Order</th>";
 		 }
 		 
 		 echo "<th width=\"200\" class=\"tableHeader\">Module Name</th>";
 		 
-		 if (access("moduleStatistics") == false) {
+		 if (access("moduleDetails")) {
 			 echo "<th width=\"200\" class=\"tableHeader\">Category</th>";
 		 }
 		 
@@ -147,7 +143,7 @@
 				  echo "<td width=\"75\">"; reorderMenu($moduleData['id'], $moduleData['position'], "moduleData", "moduledata"); echo "</td>";
 			  }
 			  
-			  echo "<td width=\"200\"><a href=\"lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . commentTrim(30, $moduleData['name']) . "</a></td>";
+			  echo "<td width=\"200\">" . URL(commentTrim(30, $moduleData['name']), "lesson.php?id=" . $moduleData['id'], false, false, "Launch the <strong>" . $moduleData['name'] . "</strong> module')") . "</td>";
 			  
 			  if (access("moduleStatistics") == false) {
 				  $categoryGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$moduleData['category']}'", $connDBA);
@@ -167,7 +163,7 @@
 				  echo "<td width=\"50\">" . URL(false, "index.php?action=delete&id=" . $moduleData['id'], "action delete", false, "Delete the <strong>" . $moduleData['name'] . "</strong> module", true) . "</td>";
 			  }
 			  
-			  if (access("modifyModule") == false && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
+			  if (access("buyModule") && (sizeof($modules) < $moduleNumber || !is_array($modules))) {
 				 echo "<td width=\"100\">";
 				 $price = str_replace(".", "", $moduleData['price']);
 				 
@@ -177,10 +173,11 @@
 					 }
 				 } else {
 					 if (!is_array($modules) || !array_key_exists($moduleData['id'], $modules)) {
-						 checkbox("cart[]", "option" . $moduleData['id'], " No Charge", $moduleData['id'], true, "1"); echo "</td>";
+						 echo URL("No Charge", "index.php?id=" . $moduleData['id'] . "&action=enroll", false, false, "Click to enroll");
 					 }
 				 }
 			  }
+			  
 			echo "</tr>";
 		 }
 		 

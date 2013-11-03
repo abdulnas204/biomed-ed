@@ -70,6 +70,7 @@
 	echo "<blockquote>";
 	textArea("content", "content1", "large", true, false, false, "pageData", "content");
 	echo "</blockquote></blockquote>";
+	
 	catDivider("Content", "two");
 	echo "<blockquote><p>";
 	button("submit", "submit", "Submit", "submit");

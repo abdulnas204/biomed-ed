@@ -1,58 +1,103 @@
-<?php require_once('../system/connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
 <?php
+//Header functions
+	require_once('../system/connections/connDBA.php');
+	headers("Send an Email", "Site Administrator", "tinyMCEAdvanced,validate,optionTransfer", true, " onload=\"opt.init(document.forms[0])\"");
+	
+//Grab the required values for the selection fields
+	if (isset($_GET['type'])) {
+		$potentialValuesPrep = "";
+		$potentialIDsPrep = "";
+		
+		switch ($_GET['type']) {
+			case "users" :                       
+				$notToUsersGrabber = query("SELECT * FROM `users` ORDER BY `lastName` ASC", "raw");
+				$toUsersGrabber = query("SELECT * FROM `users` ORDER BY `lastName` ASC", "raw");
+				
+				while($users = mysql_fetch_array($notToUsersGrabber)) {
+					$potentialValuesPrep .= $users['firstName'] . " " . $users['lastName'] . ",";
+					$potentialIDsPrep .= $users['firstName'] . " " . $users['lastName'] . " <" . $users['emailAddress1'] . ">,";
+				}
+				
+				break;
+			
+			case "organizations" :                       
+				$notToOrganizationsGrabber = query("SELECT * FROM `organizations` ORDER BY `organization` ASC", "raw");
+				$toOrganizationsGrabber = query("SELECT * FROM `organizations` ORDER BY `organization` ASC", "raw");
+				
+				while($organizations = mysql_fetch_array($notToOrganizationsGrabber)) {
+					$potentialValuesPrep .= $organizations['organization'] . ",";
+					$potentialIDsPrep .= $organizations['billingEmail'] . ",";
+				}
+				
+				break;
+			
+			case "roles" :
+				$potentialValuesPrep = "Administrative Assistants,Instructorial Assisstants,Instructors,Organization Administrators,Site Administrators,Site Managers,Students,";
+				$potentialIDsPrep = "Administrative Assistant,Instructorial Assisstant,Instructor,Organization Administrator,Site Administrator,Site Manager,Student,";
+				
+				break;
+		}
+		
+		if (empty($potentialValuesPrep) || empty($potentialIDsPrep)) {
+			$potentialValues = false;
+			$potentialIDs = false;
+		} else {
+			$potentialValues = rtrim($potentialValuesPrep, ",");
+			$potentialIDs = rtrim($potentialIDsPrep, ",");
+		}
+	}
+	
 //Process the form
-	if (isset ($_POST['submit']) && !empty ($_POST['from']) && !empty ($_POST['toImport']) && !empty ($_POST['subject']) && !empty ($_POST['priority']) && !empty ($_POST['message'])) {
+	if (isset ($_POST['submit']) && !empty($_POST['from']) && !empty($_POST['toDetirmine']) && !empty($_POST['toImport']) && !empty($_POST['subject']) && !empty($_POST['priority']) && !empty($_POST['message'])) {
 	//Get all of the form fields
 		$from = $_POST['from'];
 		$toDetirmine = $_POST['toDetirmine'];
-		$toImport = $_POST['toImport'];
+		$toList = $_POST['toImport'];
 		$subject = stripslashes($_POST['subject']);
 		$priority = $_POST['priority'];
-		$bodyGrabber = "<html><head><title>" . $subject . "</title></head><body>" . stripslashes($_POST['message']) . "</body></html>";
+		$bodyGrabber = "<html><head><title>" . $subject . "</title></head><body>" . prepare($_POST['message'], false, true) . "</body></html>";
 		$body = str_ireplace("\"" . $strippedRoot, "\"" . $root, $bodyGrabber);
 		
 	//Select the site name to conceal the "to" list
-		$siteNameGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
-		$siteName = mysql_fetch_array($siteNameGrabber);
+		$siteName = query("SELECT * FROM `siteprofiles` WHERE `id` = '1'");
 		
 	//Detirmine what kind of mass email is being sent
 		if ($toDetirmine == "users") {
-			$to = $toImport;
+			$to = $toList;
 		} elseif ($toDetirmine == "all") {
-			$toGrabber = mysql_query("SELECT * FROM `users` ORDER BY `firstName` ASC", $connDBA);
+			$toGrabber = query("SELECT * FROM `users` ORDER BY `firstName` ASC", "raw");
 			$to = "";
 			
 			while($toData = mysql_fetch_array($toGrabber)) {
 				$to .= $toData['firstName'] . " " . $toData['lastName'] . " <" . $toData['emailAddress1'] . ">,";
 			}
 		} elseif ($toDetirmine == "organizations") {
-			$toArray = explode(",", $toImport);
+			$toArray = explode(",", $toList);
 			$toArraySize = sizeof($toArray);
 			$to = "";
 			
 			for ($count = 0; $count <= $toArraySize; $count++) {
 				$organization = $toArraySize[$count];
-				$toGrabber = mysql_query("SELECT * FROM `users` WHERE `organization` = '{$organization}'", $connDBA);
+				$toGrabber = query("SELECT * FROM `users` WHERE `organization` = '{$organization}'", "raw");
 				
 				while($toData = mysql_fetch_array($toGrabber)) {
 					$to .= $toData['firstName'] . " " . $toData['lastName'] . " <" . $toData['emailAddress1'] . ">,";
 				}
 			}
 		} elseif ($toDetirmine == "allOrganizations") {
-			$toGrabber = mysql_query("SELECT * FROM `users` WHERE `organization` != '1'", $connDBA);
+			$toGrabber = query("SELECT * FROM `users` WHERE `organization` != '1'", "raw");
 			
 			while($toData = mysql_fetch_array($toGrabber)) {
 				$to .= $toData['firstName'] . " " . $toData['lastName'] . " <" . $toData['emailAddress1'] . ">,";
 			}
 		} elseif ($toDetirmine == "roles") {
-			$toArray = explode(",", $toImport);
+			$toArray = explode(",", $toList);
 			$toArraySize = sizeof($toArray);
 			$to = "";
 			
 			for ($count = 0; $count <= $toArraySize; $count++) {
 				$role = $toArraySize[$count];
-				$toGrabber = mysql_query("SELECT * FROM `users` WHERE `role` = '{$role}'", $connDBA);
+				$toGrabber = query("SELECT * FROM `users` WHERE `role` = '{$role}'", "raw");
 				
 				while($toData = mysql_fetch_array($toGrabber)) {
 					$to .= $toData['firstName'] . " " . $toData['lastName'] . " <" . $toData['emailAddress1'] . ">,";
@@ -65,20 +110,20 @@
 		$mimeBoundary = "==Multipart_Boundary_x{$random}x";
 		
 		$header = "From: " . $from . "\n" .
-					  "Reply-To: " . $from . "\n"  .
-					  "X-Mailer: PHP/" . phpversion() . "\n" .
-					  "X-Priority: " . $priority . "\n" .
-					  "MIME-Version: 1.0\n" .
-					  "Content-Type: multipart/mixed;\n" .
-					  " boundary=\"{$mimeBoundary}\"";
+				  "Reply-To: " . $from . "\n"  .
+				  "X-Mailer: PHP/" . phpversion() . "\n" .
+				  "X-Priority: " . $priority . "\n" .
+				  "MIME-Version: 1.0\n" .
+				  "Content-Type: multipart/mixed;\n" .
+				  " boundary=\"{$mimeBoundary}\"";
 				  
-		//The message of the email
-			$message = "--{$mimeBoundary}\n" .
-					   "Content-Type: text/html; charset=\"iso-8859-1\"\n" .
-					   "Content-Transfer-Encoding: 7bit\n\n" .
-					   $body . "\n\n";
+	//The message of the email
+		$message = "--{$mimeBoundary}\n" .
+				   "Content-Type: text/html; charset=\"iso-8859-1\"\n" .
+				   "Content-Transfer-Encoding: 7bit\n\n" .
+				   $body . "\n\n";
 		
-	if (is_uploaded_file($_FILES['attachment']['tmp_name'])) {
+		if (is_uploaded_file($_FILES['attachment']['tmp_name'])) {
 		//Grab the attachment
 			$fileTempName = $_FILES['attachment']['tmp_name'];
 			$fileType = $_FILES['attachment']['type'];
@@ -97,212 +142,170 @@
 						"Content-Transfer-Encoding: base64\n\n" . 
 						$data . "\n\n" .    
 						"--{$mimeBoundary}--\n";
-	} else {
-		$message .= "--{$mimeBoundary}\n" .
-					"Content-Type:  text/html;\n" . 
-					" name = \"{$fileName}\"\n" . 
-					"Content-Transfer-Encoding: base64\n\n" . 
-					chunk_split(base64_encode($body)) . "\n\n" .    
-					"--{$mimeBoundary}--\n";
-	}
+		} else {
+			$message .= "--{$mimeBoundary}\n" .
+						"Content-Type:  text/html;\n" . 
+						" name = \"{$fileName}\"\n" . 
+						"Content-Transfer-Encoding: base64\n\n" . 
+						chunk_split(base64_encode($body)) . "\n\n" .    
+						"--{$mimeBoundary}--\n";
+		}
 		
 	//Processor
 		$mailTo = explode(",", $to);
 		
 		foreach ($mailTo as $to) {
-		 	mail($to, $subject, $message, $header);
+			mail($to, $subject, $message, $header);
 		}
 			
 	//Display a confirmation
-		header ("Location: index.php?email=success");
-		exit;
+		redirect("index.php?email=success");
 	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
-<head>
-<?php title("Send an Email"); ?>
-<?php headers(); ?>
-<?php validate(); ?>
-<?php tinyMCEAdvanced(); ?>
-<script src="../../javascripts/common/optionTransfer.js" type="text/javascript"></script>
-<script src="../../javascripts/common/popupConfirm.js" type="text/javascript"></script>
-<script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
-</head>
-
-<body<?php bodyClass(); ?><?php if (isset($_GET['type']) && !isset($_GET['id'])) {if ($_GET['type'] == "user" || $_GET['type'] == "organization" || $_GET['type'] == "roles") {echo " onload=\"opt.init(document.forms[0])\"";}} ?>>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2>Send an Email</h2>
-<p>Send an email to multiple users, or organizations within this system. Please note that this is not an online email system. This is only used to send a mass email.</p>
-<p>&nbsp;</p>
-<?php
-//If the type of user is being selected
-	if (!isset($_GET['type']) && !isset($_GET['id'])) {
-		echo "<blockquote><p><a href=\"send_email.php?type=user\">Selected Users</a> - Only selected users will recieve this email<br /><a href=\"send_email.php?type=all\">All Users</a> - All registered users will recieve this email<br /><a href=\"send_email.php?type=organization\">Selected Organizations</a> - All users within selected organizations will recieve this email<br /><a href=\"send_email.php?type=allOrganizations\">All Organizations</a> - All registered organizations will recieve this email<br /><a href=\"send_email.php?type=roles\">Selected Roles</a> - All users with a selected role will recieve this email</p></blockquote>";
-	} else {
-?>
-<form action="send_email.php?type=<?php echo $_GET['type']; ?>" method="post" enctype="multipart/form-data" name="sendEmail" id="validate" onsubmit="return errorsOnSubmit(this, true, 'attachment', false);">
-<div class="catDivider one">Settings</div>
-<div class="stepContent">
-<blockquote>
-  <p>From:</p>
-  <blockquote>
-    <?php
-	//Select the from email address
-		$userName = $_SESSION['MM_Username'];
-		$fromGrabber = mysql_query("SELECT * FROM `users` WHERE `userName` = '{$userName}' LIMIT 1", $connDBA);
-		$from = mysql_fetch_array($fromGrabber);
+	
+//Title
+	title("Send an Email", "Send an email to multiple users, or organizations within this system. Please note that this is not an online email system. This is only used to send a mass email.");
+	
+//Show if the type of email is not set
+	if (!isset($_GET['type']) && !isset($_GET['id'])) {		
+	//List of possible values
+		echo "<blockquote><p>";
+		echo URL("Selected Users", "send_email.php?type=users") . " - Only selected users will recieve this email<br />";
+		echo URL("All Users", "send_email.php?type=all") . " - All registered users will recieve this email<br />";
+		echo URL("Selected Organizations", "send_email.php?type=organizations") . " - All users within selected organizations will recieve this email<br />";
+		echo URL("All Organizations", "send_email.php?type=allOrganizations") . " - All registered organizations will recieve this email<br />";
+		echo URL("Selected Roles", "send_email.php?type=roles") . " - All users with a selected role will recieve this email<br />";
+		echo "</p></blockquote>";
+//Show if the type of email is selected
+	} elseif ($_GET['type'] == ("users" || "all" || "organizations" || "allOrganizations" || "roles") || isset($_GET['id'])) {
+		function singleEmail($type) {
+			if ($type == "from") {
+				$userData = userData();
+			} else {
+				$userData = query("SELECT * FROM `users` WHERE `id` = '{$_GET['id']}'");
+				
+				if (!$userData) {
+					redirect("send_email.php");
+				}
+			}
+			
+			if ($userData['emailAddress2'] == "" && $userData['emailAddress3'] == "") {
+				hidden("toList", "toList", $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">");
+				hidden("userData", "userData", $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">");
+				echo "<strong>" . $userData['firstName'] . " " . $userData['lastName'] . " &lt;" . $userData['emailAddress1'] . "&gt;</strong>";
+			} else {
+				$userDataValuesPrep = $userData['firstName'] . " " . $userData['lastName'] . " &lt;" . $userData['emailAddress1'] . "&gt;,";
+				$userDataIDsPrep = $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">,";
+				$selected = $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress1'] . ">";
+				
+				if ($userData['emailAddress2'] != "") {
+					$userDataValuesPrep .= $userData['firstName'] . " " . $userData['lastName'] . " &lt;" . $userData['emailAddress2'] . "&gt;,";
+					$userDataIDsPrep .= $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress2'] . ">,";
+					
+					if (isset($_GET['address']) && $_GET['address'] == "2") {
+						$selected = $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress2'] . ">";
+					}
+				}
+				
+				if ($userData['emailAddress3'] != "") {
+					$userDataValuesPrep .= $userData['firstName'] . " " . $userData['lastName'] . " &lt;" . $userData['emailAddress3'] . "&gt;,";
+					$userDataIDsPrep .= $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress3'] . ">,";
+					
+					if (isset($_GET['address']) && $_GET['address'] == "3") {
+						$selected = $userData['firstName'] . " " . $userData['lastName'] . " <" . $userData['emailAddress3'] . ">";
+					}
+				}
+				
+				$userDataValues = rtrim($userDataValuesPrep, ",");
+				$userDataIDs = rtrim($userDataIDsPrep, ",");
+				
+				dropDown($type, $type, $userDataValues, $userDataIDs, false, false, false, $selected);
+			}
+		}
 		
-		if ($from['emailAddress2'] == "" && $from['emailAddress3'] == "") {
-			echo "<input type=\"hidden\" name=\"from\" id=\"from\" value=\"" . $from['firstName'] . " " . $from['lastName'] . " <" . $from['emailAddress1'] . ">\" /><p><strong>" . $from['firstName'] . " " . $from['lastName'] . " &lt;" . $from['emailAddress1'] . "&gt;</strong></p>";
+		form("sendEmail", "post", true);
+		catDivider("Settings", "one", true);
+		echo "<blockquote>";
+		directions("From", true);
+		echo "<blockquote><p>";
+		singleEmail("from");
+		echo "</p></blockquote>";
+		
+		if (!isset($_GET['id'])) {
+			if ($_GET['type'] == "users" || $_GET['type'] == "organizations" || $_GET['type'] == "roles") {
+				hidden("toDetirmine", "toDetirmine", $_GET['type']);
+				directions("To", true);
+				echo "<blockquote><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential options:</h3><div class=\"collapseElement\">";
+				textField("placeHolder", "placeHolder", false, false, false, false);
+				echo "</div><div align=\"center\">";
+				dropDown("notToList", "notToList", $potentialValues, $potentialIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferRight()\"");
+				echo "<br /><br />";
+				button("allRight", "allRight", "All &gt;&gt;", "button", false, " onclick=\"opt.transferAllRight()\"");
+				echo " ";
+				button("right", "right", "&gt;&gt;", "button", false, " onclick=\"opt.transferRight()\"");
+				echo "</div></div><div class=\"halfRight\"><h3>Selected options:</h3><div class=\"collapseElement\">";
+				textField("toImport", "toImport", false, false, false, true, false, false, false, false, " readonly=\"readonly\"");
+				echo "</div><div align=\"center\">";
+				dropDown("toList", "toList", $selectedValues, $selectedIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferLeft()\"");
+				echo "<br /><br />";
+				button("left", "left", "&lt;&lt;", "button", false, " onclick=\"opt.transferLeft()\"");
+				echo " ";
+				button("allLeft", "allLeft", "&lt;&lt; All", "button", false, " onclick=\"opt.transferAllLeft()\"");
+				echo "</div></div></div></blockquote>";
+			} else {
+				$type = str_replace("all", "", $_GET['type']);
+				
+				if (empty($type)) {
+					$type = "users";
+				}
+				
+				directions("To", false);
+				hidden("toDetirmine", "toDetirmine", $_GET['type']);
+				hidden("toList", "toList", "all" . ucfirst($type));
+				echo "<blockquote><p><strong>This email will be sent to all registered " . strtolower($type) . ".</strong></p></blockquote>";
+			}
 		} else {
-			echo "<select name=\"from\" id=\"from\"><option value=\"" . $from['firstName'] . " " . $from['lastName'] . " <" . $from['emailAddress1'] . ">\" selected=\"selected\">" . $from['firstName'] . " " . $from['lastName'] . " &lt;" . $from['emailAddress1'] . "&gt;</option>";
-			
-			if ($from['emailAddress2'] != "") {
-				echo "<option value=\"" . $from['firstName'] . " " . $from['lastName'] . " <" . $from['emailAddress2'] . ">\">" . $from['firstName'] . " " . $from['lastName'] . " &lt;" . $from['emailAddress2'] . "&gt;</option>";
-			}
-			
-			if ($from['emailAddress3'] != "") {
-				echo "<option value=\"" . $from['firstName'] . " " . $from['lastName'] . " <" . $from['emailAddress3'] . ">\">" . $from['firstName'] . " " . $from['lastName'] . " &lt;" . $from['emailAddress3'] . "&gt;</option>";
-			}
-			
-			echo "</select>";
+			directions("To", false);
+			hidden("toDetirmine", "toDetirmine", "Selected " . ucfirst($_GET['type']));
+			echo "<blockquote><p>";
+			singleEmail("toList");
+			echo "</p></blockquote>";
 		}
-	?>
-  </blockquote>
-  <p>To<?php if (isset($_GET['type']) && !isset($_GET['id'])) {if ($_GET['type'] == "user" || $_GET['type'] == "organization" || $_GET['type'] == "roles") {echo "<span class=\"require\">*</span>";}} ?>:</p>
-  <blockquote>
-    <?php
-    //Grab all required values
-		if (isset($_GET['type'])) {
-			switch ($_GET['type']) {
-				case "user" : 
-					if (isset($_GET['id'])) {
-						$id = $_GET['id'];
-						$emailCheckGrabber = mysql_query("SELECT * FROM `users` WHERE `id` = '{$id}'", $connDBA); 
-						
-						if ($emailCheck = mysql_fetch_array($emailCheckGrabber)) {
-							if ($emailCheck['emailAddress2'] == "" && $emailCheck['emailAddress3'] == "") {
-								echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"users\" /><input type=\"hidden\" name=\"toImport\" id=\"toImport\" value=\"" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " <" . $emailCheck['emailAddress1'] . ">\" /><p><strong>" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " &lt;" . $emailCheck['emailAddress1'] . "&gt;</strong></p>";
-							} else {
-								echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"users\" /><select name=\"toImport\" id=\"toImport\"><option value=\"" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " <" . $emailCheck['emailAddress1'] . ">\""; if (isset($_GET['address']) && $_GET['address'] == "1") {echo " selected=\"selected\"";} echo ">" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " &lt;" . $emailCheck['emailAddress1'] . "&gt;</option>";
-								
-								if ($emailCheck['emailAddress2'] != "") {
-									echo "<option value=\"" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " <" . $emailCheck['emailAddress2'] . ">\""; if (isset($_GET['address']) && $_GET['address'] == "2") {echo " selected=\"selected\"";} echo ">" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " &lt;" . $emailCheck['emailAddress2'] . "&gt;</option>";
-								}
-								
-								if ($emailCheck['emailAddress3'] != "") {
-									echo "<option value=\"" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " <" . $emailCheck['emailAddress3'] . ">\""; if (isset($_GET['address']) && $_GET['address'] == "3") {echo " selected=\"selected\"";} echo ">" . $emailCheck['firstName'] . " " . $emailCheck['lastName'] . " &lt;" . $emailCheck['emailAddress3'] . "&gt;</option>";
-								}
-								
-								echo "</select>";
-							}
-						} else {
-							header("Location: send_email.php");
-							exit;
-						}
-					} else {
-						$usersGrabber = mysql_query("SELECT * FROM `users` ORDER BY `firstName` ASC", $connDBA);
-						
-						echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"users\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential users:</h3><div class=\"collapseElement\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notToList\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
-						while($users = mysql_fetch_array($usersGrabber)) {
-							echo "<option value=\"" . $users['firstName'] . " " . $users['lastName'] . " <" . $users['emailAddress1'] . ">\">" . $users['firstName'] . " " . $users['lastName'] . "</option>";
-						}
-						echo "</select><br /><br /><input type=\"button\" name=\"right\" value=\"All &gt;&gt;\" onclick=\"opt.transferAllRight()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&gt;&gt;\" onclick=\"opt.transferRight()\"></div></div><div class=\"halfRight\"><h3>Selected users:</h3><div class=\"collapseElement\"><input type=\"text\" name=\"toImport\" id=\"toImport\" class=\"validate[required]\" readonly=\"readonly\"></div><div align=\"center\"><select name=\"toList\" id=\"toList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferLeft()\"></select><br /><br /><input type=\"button\" name=\"right\" value=\"&lt;&lt;\" onclick=\"opt.transferLeft()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&lt;&lt; All\" onclick=\"opt.transferAllLeft()\"></div></div></div>";
-					}
-					break;
-					
-				case "all" : echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"all\" /><input type=\"hidden\" name=\"toImport\" id=\"toImport\" value=\"all\" /><p><strong>This email will be sent to all registered users.</strong></p>"; break;
-				
-				case "organization" : 
-					if (isset($_GET['id'])) {
-						$id = $_GET['id'];
-						$emailCheckGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$id}'", $connDBA); 
-						
-						if ($emailCheck = mysql_fetch_array($emailCheckGrabber)) {
-							echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"organizations\" /><input type=\"hidden\" name=\"toImport\" id=\"toImport\" value=\"" . $emailCheck['organization'] . " <" . $emailCheck['billingEmail'] . ">\" /><p><strong>" . $emailCheck['organization'] . " &lt;" . $emailCheck['billingEmail'] . "&gt;</strong></p>";
-						} else {
-							header("Location: send_email.php");
-							exit;
-						}
-					} else {
-						$organizationsGrabber = mysql_query("SELECT * FROM `organizations` ORDER BY `organization` ASC", $connDBA);
-						
-						echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"organizations\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential organizations:</h3><div class=\"collapseElement\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notToList\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\">";
-						while($organizations = mysql_fetch_array($organizationsGrabber)) {
-							echo "<option value=\"" . $organizations['organization'] . "\">" . $organizations['organization'] . "</option>";
-						}
-						echo "</select><br /><br /><input type=\"button\" name=\"right\" value=\"All &gt;&gt;\" onclick=\"opt.transferAllRight()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&gt;&gt;\" onclick=\"opt.transferRight()\"></div></div><div class=\"halfRight\"><h3>Selected organizations:</h3><div align=\"center\"><div class=\"collapseElement\"><input type=\"text\" name=\"toImport\" id=\"toImport\" class=\"validate[required]\" readonly=\"readonly\"></div><select name=\"toList\" id=\"toList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferLeft()\"></select><br /><br /><input type=\"button\" name=\"right\" value=\"&lt;&lt;\" onclick=\"opt.transferLeft()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&lt;&lt; All\" onclick=\"opt.transferAllLeft()\"></div></div></div>";
-					}
-					break;
-					
-				case "allOrganizations" : echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"allOrganizations\" /><input type=\"hidden\" name=\"toImport\" id=\"toImport\" value=\"allOrganizations\" /><p><strong>This email will be sent to all registered organizations.</strong></p>"; break;
-				
-				case "roles" : 
-					echo "<input type=\"hidden\" name=\"toDetirmine\" id=\"toDetirmine\" value=\"roles\" /><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential roles:</h3><div class=\"collapseElement\"><input type=\"text\" name=\"placeHolder\" id=\"placeHolder\"></div><div align=\"center\"><select name=\"notToList\" id=\"notToList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferRight()\"><option value=\"Administrative Assistant\">Administrative Assistants</option><option value=\"Instructor\">Instructors</option><option value=\"Instructorial Assisstant\">Instructorial Assisstants</option><option value=\"Organization Administrator\">Organization Administrators</option><option value=\"Site Administrator\">Site Administrators</option><option value=\"Site Manager\">Site Managers</option><option value=\"Student\">Students</option></select><br /><br /><input type=\"button\" name=\"right\" value=\"All &gt;&gt;\" onclick=\"opt.transferAllRight()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&gt;&gt;\" onclick=\"opt.transferRight()\"></div></div><div class=\"halfRight\"><h3>Selected roles:</h3><div class=\"collapseElement\"><input type=\"text\" name=\"toImport\" id=\"toImport\" class=\"validate[required]\" readonly=\"readonly\"></div><div align=\"center\"><select name=\"toList\" id=\"toList\" class=\"multiple\" multiple=\"multiple\" ondblclick=\"opt.transferLeft()\"></select><br /><br /><input type=\"button\" name=\"right\" value=\"&lt;&lt;\" onclick=\"opt.transferLeft()\">&nbsp;&nbsp;<input type=\"button\" name=\"right\" value=\"&lt;&lt; All\" onclick=\"opt.transferAllLeft()\"></div></div></div>"; break;
-			}
-		}
-    ?>
-    </blockquote>
-  <p>Subject<span class="require">*</span>:</p>
-  <blockquote>
-    <p>
-      <input name="subject" type="text" id="subject" autocomplete="off" size="50" class="validate[required]" />
-    </p>
-    </blockquote>
-  <p>Priority:</p>
-  <blockquote>
-    <p>
-      <select name="priority" id="priority">
-        <option value="5">Low</option>
-        <option value="3" selected="selected">Normal</option>
-        <option value="1">High</option>
-        </select>
-    </p>
-  </blockquote>
-</blockquote>
-</div>
-<div class="catDivider two">Message</div>
-<div class="stepContent">
-  <blockquote>
-    <p>
-      Enter the message of the email below<span class="require">*</span>:</p>
-    <blockquote>
-      <p><span id="contentCheck">
-        <textarea name="message" id="message" cols="45" rows="5" style="width:640px; height:320px;" /></textarea>
-       <span class="textareaRequiredMsg"></span></span></p>
-    </blockquote>
-  </blockquote>
-</div>
-<div class="catDivider three">Attachment</div>
-<div class="stepContent">
-  <blockquote>
-      <p>Add an attachment:</p>
-      <blockquote>
-      	<input type="file" name="attachment" id="attachment" size="50" />
-      </blockquote>
-  </blockquote>
-</div>
-<div class="catDivider four">Submit</div>
-<div class="stepContent">
-  <blockquote>
-    <p>
-      <?php submit("submit", "Submit"); ?>
-      <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-      <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-    </p>
-    <?php formErrors(); ?>
-  </blockquote>
-</div>
-</form>
-<?php
+		
+		directions("Subject", true);
+		echo "<blockquote><p>";
+		textField("subject", "subject");
+		echo "</p></blockquote>";
+		directions("Priority", false);
+		echo "<blockquote><p>";
+		dropDown("priority", "priority", "Low,Normal,High", "5,3,1", false, false, false, "3");
+		echo "</p></blockquote></blockquote>";
+		
+		catDivider("Message", "two");
+		echo "<blockquote>";
+		directions("Enter the message of the email below", true);
+		echo "<blockquote><p>";
+		textArea("message", "message", "large");
+		echo "</p></blockquote></blockquote>";
+		
+		catDivider("Attachment", "three");
+		echo "<blockquote>";
+		directions("Add an attachment", false);
+		echo "<blockquote><p>";
+		fileUpload("attachment", "attachment", false, false);
+		echo "</p></blockquote></blockquote>";
+		
+		catDivider("Finish", "four");
+		echo "<blockquote><p>";
+		button("submit", "submit", "Submit", "submit");
+		button("reset", "reset", "Reset", "reset");
+		button("cancel", "cancel", "Cancel", "cancel", "index.php");
+		echo "</p>";
+		closeForm(true, true);
+//Redirect if the requested type doesn't exist
+	} else {
+		redirect("send_email.php");
 	}
+	
+//Include the footer
+	footer();
 ?>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-<script type="text/javascript">
-<!--
-var sprytextarea1 = new Spry.Widget.ValidationTextarea("contentCheck");
-//-->
-</script>
-</body>
-</html>

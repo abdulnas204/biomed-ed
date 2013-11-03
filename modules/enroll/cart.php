@@ -29,7 +29,7 @@
 		$paymentArray = array();
 		$total = 0.00;
 		
-		form("checkout", "post", false, false, "https://www.sandbox.paypal.com/cgi-bin/webscr");
+		form("checkout", "post", false, "https://www.sandbox.paypal.com/cgi-bin/webscr");
 		hidden("business", "business", $paymentData['business']);
 		hidden("currency_code", "currency_code", "USD");
 		hidden("for_auction", "for_auction", "false");

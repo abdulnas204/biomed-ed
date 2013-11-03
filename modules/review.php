@@ -200,7 +200,7 @@
 				
 				break;
 			case "Essay" : 
-				if ($selectedAnswers == true) {
+				if (empty($testData['score']) || $selectedAnswers == true) {
 					echo "<p>Selected Answer: </p><blockquote>";
 					
 					if (!empty ($testData['userAnswer'])) {
@@ -212,7 +212,7 @@
 					echo "</blockquote>";
 				}
 				
-				if ($correctAnswers == true && !empty($testData['testAnswer'])) {
+				if (!empty($testData['testAnswer']) && (empty($testData['score']) || $correctAnswers == true)) {
 					echo "<p>Correct Answer: </p><blockquote>" . $testData['testAnswer'] . "</blockquote>";
 				}
 					
@@ -221,7 +221,7 @@
 			case "File Response" : 
 				$fillValue = unserialize($testData['userAnswer']);
 				
-				if ($selectedAnswers == true && !empty($testData['userAnswer'])) {
+				if (empty($testData['score']) || ($selectedAnswers == true && !empty($testData['userAnswer']))) {
 					echo "<p>Selected Answers: </p><ol>";
 					
 					foreach ($fillValue as $file) {
@@ -237,11 +237,13 @@
 					echo "<p>Selected Answer: </p><span class=\"notAssigned\">None Given</span>";
 				}
 				
-				if ($correctAnswers == true && !empty($testData['testAnswer'])) {
+				if (!empty($testData['testAnswer']) && (empty($testData['score']) || $correctAnswers == true)) {
 					echo "<p>Correct Answer: </p><blockquote>";
 					
 					if (file_exists($_GET['id'] . "/test/answers/" . $testData['testAnswer'])) {
 						echo "<a href=\"../gateway.php/modules/" . $_GET['id'] . "/test/answers/" . urlencode($testData['testAnswer']) . "\" target=\"_blank\">" . $testData['testAnswer'] . "</a>";
+					} elseif (file_exists("QuestionBank/test/answers/" . $testData['testAnswer'])) {
+						echo "<a href=\"../gateway.php/modules/QuestionBank/test/answers/" . urlencode($testData['testAnswer']) . "\" target=\"_blank\">" . $testData['testAnswer'] . "</a>";
 					} else {
 						echo $testData['testAnswer'] . " <span class=\"notAssigned\">File deleted</span>";
 					}
@@ -256,7 +258,7 @@
 				$correctAnswer = unserialize($testData['testAnswer']);
 				$userAnswer = unserialize($testData['userAnswer']);
 				
-				if ($selectedAnswers == true) {
+				if (empty($testData['score']) || $selectedAnswers == true) {
 					echo "<p>Selected Answer: </p><blockquote>";
 					
 					for ($list = 0; $list <= sizeof($sentenceValues) - 1; $list ++) {
@@ -274,7 +276,7 @@
 					echo "</blockquote>";
 				}
 				
-				if ($correctAnswers == true) {
+				if (empty($testData['score']) || $correctAnswers == true) {
 					echo "<p>Correct Answer: </p><blockquote>";
 					
 					for ($list = 0; $list <= sizeof($sentenceValues) - 1; $list ++) {
@@ -296,14 +298,14 @@
 				$answerValues = unserialize($testData['answerValueScrambled']);
 				$correctAnswer = unserialize($testData['testAnswer']);
 				
-				if ($selectedAnswers == true || $correctAnswers == true) {
+				if (empty($testData['score']) || $selectedAnswers == true || $correctAnswers == true) {
 					echo "<table width=\"100%\" class=\"dataTable\"><tr><th class=\"tableHeader\" width=\"200\">Question</th>";
 					
-					if ($selectedAnswers == true) {
+					if (empty($testData['score']) || $selectedAnswers == true) {
 						echo "<th class=\"tableHeader\" width=\"200\">Selected Answers</th>";
 					}
 					
-					if ($correctAnswers == true) {
+					if (empty($testData['score']) || $correctAnswers == true) {
 						echo "<th class=\"tableHeader\" width=\"200\">Correct Answers</th>";
 					}
 					
@@ -315,11 +317,11 @@
 						
 						echo "<td width=\"200\"><p>" . $questionValue[$list] . "</p></td>";
 						
-						if ($selectedAnswers == true) {
+						if (empty($testData['score']) || $selectedAnswers == true) {
 							echo "<td width=\"200\"><p>" . $answerValues[sprintf($userAnswer[$list] - 1)] . "</p></td>";
 						}
 						
-						if ($correctAnswers == true) {
+						if (empty($testData['score']) || $correctAnswers == true) {
 							echo "<td width=\"200\"><p>" . $correctAnswer[$list] . "</p></td>";
 						}
 						
@@ -341,7 +343,7 @@
 					$choices = unserialize($testData['answerValue']);
 				}
 								
-				if ($selectedAnswers == true) {					
+				if (empty($testData['score']) || $selectedAnswers == true) {				
 					if (is_array($answers) && sizeof($answers) > 1) {
 						echo "<p>Selected Answers: </p>";
 						echo "<ul>";
@@ -362,7 +364,7 @@
 					}
 				}
 				
-				if ($correctAnswers == true) {					
+				if (empty($testData['score']) || $correctAnswers == true) {				
 					if (is_array($choices) && sizeof($correctAnswer) > 1) {
 						echo "<p>Correct Answers: </p>";
 						echo "<ul>";
@@ -381,11 +383,11 @@
 				break;
 				
 			case "Short Answer" : 
-				if ($selectedAnswers == true) {
+				if (empty($testData['score']) || $selectedAnswers == true) {
 					echo "<p>Selected Answer: </p><blockquote><p><strong>" . unserialize($testData['userAnswer']) . "</strong></p></blockquote>";
 				}
 				
-				if ($correctAnswers == true) {					
+				if (empty($testData['score']) || $correctAnswers == true) {				
 					if (is_array(unserialize($testData['testAnswer']))) {
 						echo "<p>Correct Answers: </p>";
 						echo "<ul>";
@@ -405,7 +407,7 @@
 				
 			case "True False" : 
 				if ($selectedAnswers == true) {
-					echo "<p>Selected Answer: </p><blockquote><p><strong>";
+					echo "<p>Selected Answer: </p><blockquote><p>";
 					
 					if (unserialize($testData['userAnswer']) == "1") {
 						echo "True";
@@ -413,11 +415,11 @@
 						echo "False";
 					}
 					
-					echo "</strong></p></blockquote>";
+					echo "</p></blockquote>";
 				}
 				
 				if ($correctAnswers == true) {
-					echo "<p>Correct Answer: </p><blockquote><p><strong>";
+					echo "<p>Correct Answer: </p><blockquote><p>";
 					
 					if ($testData['testAnswer'] == "1") {
 						echo "True";
@@ -425,7 +427,7 @@
 						echo "False";
 					}
 					
-					echo "</strong></p></blockquote>";
+					echo "</p></blockquote>";
 				}
 				
 				break;

@@ -18,9 +18,9 @@
 	}
 	
 	if ($accessArray[$testID]['testStatus'] == "C") {
-		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$attempt}'";
-		$accessArray[$testID]['testStatus'] = "O";
+		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 		$updateArray = serialize($accessArray);
+		query("UPDATE `users` SET `modules` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
 	} else {
 		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 	}
@@ -180,7 +180,7 @@
 		}
 		
 	//Process the form
-		if (isset($_POST['submit']) && isset($_POST['difficulty']) && isset($_POST['questions'])) {
+		if (isset($_POST['setup']) && isset($_POST['difficulty']) && isset($_POST['questions'])) {
 			$totalQuestions = query("SELECT * FROM `{$parentTable}` WHERE `type` != 'Description'", "num");
 			$questionsPercentage = number_format(sprintf($_POST['questions']/$totalQuestions), 2);
 			$totalDescriptions = query("SELECT * FROM `{$parentTable}` WHERE `type` = 'Description'", "num");
@@ -191,7 +191,7 @@
 			$count = 1;
 			
 			if ($difficulty == "All Levels" || $difficulty == urlencode("All Levels")) {
-				$testDataGrabber = query("SELECT * FROM `{$parentTable}` ORDER BY RAND() LIMIT {$limit}", "raw");
+				$testDataGrabber = query("(SELECT * FROM `{$parentTable}` WHERE `type` != 'Description' ORDER BY RAND() LIMIT {$questions}) UNION (SELECT * FROM `{$parentTable}` WHERE `type` = 'Description' ORDER BY RAND() LIMIT {$descriptionNumber})", "raw");
 			} else {
 				$testDataGrabber = query("(SELECT * FROM `{$parentTable}` WHERE `difficulty` = '{$difficulty}' AND `type` != 'Description' ORDER BY RAND() LIMIT {$questions}) UNION (SELECT * FROM `{$parentTable}` WHERE `type` = 'Description' ORDER BY RAND() LIMIT {$descriptionNumber})", "raw");
 			}
@@ -242,7 +242,7 @@
 				
 				if (!in_array($testDataLoop['id'], $restrictImport)) {
 					$questionID = $testDataLoop['id'];
-					$type = $testData['type'];
+					$type = $testDataLoop['type'];
 					$randomPosition = $count ++;
 					
 					if ($testData['type'] == "Matching" || $testData['type'] == "Multiple Choice" || $testData['type'] == "True False") {
@@ -268,19 +268,15 @@
 						$answerValueScrambled = "";
 					}
 					
-					
-					
 					query("INSERT INTO `{$testTable}` (
 						  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
 						  ) VALUES (
 						  '{$testID}', '{$questionID}', '{$attempt}', '{$type}', '', '', '{$randomPosition}', '', '', '', '', '', '', '{$questionValue}', '{$answerValue}', '{$answerValueScrambled}', '', '', ''
 						  )");
-						  
+					
 					array_push($restrictImport, $testDataLoop['id']);
 				}
 			}
-			
-			query("UPDATE `users` SET `modules` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
 			
 			redirect($_SERVER['REQUEST_URI']);
 		}
@@ -305,7 +301,7 @@
 		
 		catDivider("Submit", "two");
 		echo "<blockquote><p>";
-		button("submit", "submit", "Submit", "submit");
+		button("setup", "setup", "Submit", "submit");
 		button("cancel", "cancel", "Cancel", "cancel", "index.php");
 		echo "</p></blockquote>";
 		closeForm(true, false);

@@ -520,7 +520,7 @@ px
             <p>
               <select name="timeZone" id="timeZone">
                 <option value="America/New_York"<?php if ($siteInfo['timeZone'] == "America/New_York") {echo " selected=\"selected\"";} ?>>Eastern Time Zone</option>
-                <option value="America/Chicago"<?php if ($siteInfo['timeZone'] == "Central Time Zone") {echo " selected=\"selected\"";} ?>>Central Time Zone</option>
+                <option value="America/Chicago"<?php if ($siteInfo['timeZone'] == "America/Chicago") {echo " selected=\"selected\"";} ?>>Central Time Zone</option>
                 <option value="America/Denver"<?php if ($siteInfo['timeZone'] == "America/Denver") {echo " selected=\"selected\"";} ?>>Mountain Time Zone</option>
                 <option value="America/Los_Angeles"<?php if ($siteInfo['timeZone'] == "America/Los_Angeles") {echo " selected=\"selected\"";} ?>>Pacific Time Zone</option>
                 <option value="America/Juneau"<?php if ($siteInfo['timeZone'] == "America/Juneau") {echo " selected=\"selected\"";} ?>>Alaskan Time Zone</option>
