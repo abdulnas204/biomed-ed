@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Janurary 9th, 2011
+Last updated: February 14th, 2011
 
 This script contains functions used to create common HTML 
 elements, and add a touch of dynamic content, while abiding
@@ -337,6 +337,7 @@ Form input elements
 				}
 			}
 		}
+
 		
 		return $return;
 	}
@@ -584,7 +585,9 @@ Non-form input elements
 		global $root, $protocol;
 		
 		if (strstr($URL, $root) || !strstr($URL, $protocol)) {
-			$URL = str_replace(".php", ".htm", $URL);
+			if (!strstr($URL, "gateway.php") && !strstr($URL, "preview.php")) {
+				$URL = str_replace(".php", ".htm", $URL);
+			}
 		}
 		
 		if ($newWindow == false || $width == false || $height == false) {
@@ -686,19 +689,17 @@ Non-form input elements
 	}
 	
 //Sideboxes
-	function sideBox($title, $type, $text, $allowRoles = false, $editID = false) {
+	function sideBox($title, $type, $text, $editID = false) {
 		//Display the title
 		echo "\n<div class=\"block_course_list sideblock\">\n<div class=\"header\">\n<div class=\"title\">" . $title;
 		
 		//Detirimine whether or not the edit link should be displayed
 		$premitted = false;
 		
-		if (loggedIn() && $allowRoles == true) {
-			foreach (explode(",", $allowRoles) as $role) {
-				if ($_SESSION['role'] == $role) {
-					$premitted = true;
-				}
-			}
+		if (access("Edit Sidebar Items")) {
+			$premitted = true;
+		} else {
+			$premitted = false;
 		}
 		
 		//Display the content
@@ -706,7 +707,7 @@ Non-form input elements
 			case "Custom Content" :				
 				if (!loggedIn()) {
 					echo "</div>\n</div>\n<div class=\"content\">\n" . $text . "\n</div>\n";
-				} elseif (loggedIn() && $premitted == true) {
+				} elseif ($premitted == true) {
 					echo "&nbsp;" . URL("", "cms/manage_sidebar.php?id=" . $editID, "smallEdit") . "</div>\n</div>\n<div class=\"content\">" . $text . "\n</div>\n";
 				} else {
 					echo "</div>\n</div>\n<div class=\"content\">\n" . $text . "\n</div>\n";
@@ -715,10 +716,9 @@ Non-form input elements
 				break;
 				
 			case "Login" :
-				$roles = explode(",", $allowRoles);
-			
 				if (!loggedIn()) {
 					echo "</div>\n</div>\n<div class=\"content\">";
+					echo $text . "\n";
 					echo form("login");
 					echo "<p>User name: <br />";
 					echo textField("userName", "userName", "25");
@@ -729,7 +729,7 @@ Non-form input elements
 					echo "</p>";
 					echo closeForm(false, false);
 					echo "</div>";
-				} elseif (loggedIn() && $premitted == true) {
+				} elseif ($premitted == true) {
 					echo "&nbsp;" . URL("", "cms/manage_sidebar.php?id=" . $editID, "smallEdit") . "</div>\n</div>\n";
 				} else {
 					echo "</div>\n</div>\n";
@@ -738,13 +738,11 @@ Non-form input elements
 				break;
 				
 			case "Register" :
-				$roles = explode(",", $allowRoles);
-			
 				if (!loggedIn()) {
 					echo "</div>\n</div>\n<div class=\"content\">\n" . $text;
-					echo button("register", "register", "Register", "cancel", "register.php");
+					echo button("register", "register", "Register", "cancel", "users/register.php");
 					echo "</div>\n";
-				} elseif (loggedIn() && $premitted == true) {
+				} elseif ($premitted == true) {
 					echo "&nbsp;" . URL("", "cms/manage_sidebar.php?id=" . $editID, "smallEdit") . "</div>\n</div>\n";
 				} else {
 					echo "</div>\n</div>\n";
@@ -839,7 +837,7 @@ Elements used in data table loops
 			$return .= hidden("id", "id", $id);
 			$return .= URL("", "#option" . $id, $type . $class);
 			$return .= "\n<div class=\"contentHide\">\n";
-			$return .= checkbox("option", "option" . $id, false, false, false, false, false, "state", "visible", "on", " onclick=\"Spry.Utils.submitForm(this.form);\"");
+			$return .= checkbox("option", "option" . $id, false, false, false, false, false, "state", "visible", "on");
 			$return .= "</div>\n";
 			$return .= closeForm(false);
 			$return .= "</div>\n";

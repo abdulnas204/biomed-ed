@@ -81,6 +81,7 @@
 				theme_advanced_resize_horizontal : 1,
 				theme_advanced_resizing_use_cookie : 1,
 				theme_advanced_font_sizes : "1,2,3,4,5,6,7",
+				theme_advanced_font_selector : "span",
 				readonly : ed.settings.readonly
 			}, ed.settings);
 
@@ -119,13 +120,13 @@
 			if (s.theme_advanced_statusbar_location == 'none')
 				s.theme_advanced_statusbar_location = 0;
 
+			if (ed.settings.content_css !== false)
+				ed.contentCSS.push(ed.baseURI.toAbsolute(url + "/skins/" + ed.settings.skin + "/content.css"));
+
 			// Init editor
 			ed.onInit.add(function() {
 				if (!ed.settings.readonly)
 					ed.onNodeChange.add(t._nodeChanged, t);
-
-				if (ed.settings.content_css !== false)
-					ed.dom.loadCSS(ed.baseURI.toAbsolute(url + "/skins/" + ed.settings.skin + "/content.css"));
 			});
 
 			ed.onSetProgressState.add(function(ed, b, ti) {
@@ -230,9 +231,10 @@
 
 					// Toggle off the current format
 					matches = ed.formatter.matchAll(formatNames);
-					if (!name || matches[0] == name)
-						ed.formatter.remove(matches[0]);
-					else
+					if (!name || matches[0] == name) {
+						if (matches[0]) 
+							ed.formatter.remove(matches[0]);
+					} else
 						ed.formatter.apply(name);
 
 					ed.undoManager.add();
@@ -492,7 +494,7 @@
 			n = o.targetNode;
 
 			// Add classes to first and last TRs
-			nl = DOM.stdMode ? sc.getElementsByTagName('tr') : sc.rows; // Quick fix for IE 8
+			nl = sc.rows;
 			DOM.addClass(nl[0], 'mceFirst');
 			DOM.addClass(nl[nl.length - 1], 'mceLast');
 
@@ -944,7 +946,9 @@
 				if (n.nodeName === 'SPAN') {
 					if (!cl && n.className)
 						cl = n.className;
+				}
 
+				if (ed.dom.is(n, s.theme_advanced_font_selector)) {
 					if (!fz && n.style.fontSize)
 						fz = n.style.fontSize;
 
@@ -983,7 +987,7 @@
 				getParent(function(n) {
 					var na = n.nodeName.toLowerCase(), u, pi, ti = '';
 
-					/*if (n.getAttribute('_mce_bogus'))
+					/*if (n.getAttribute('data-mce-bogus'))
 						return;
 */
 					// Ignore non element and hidden elements

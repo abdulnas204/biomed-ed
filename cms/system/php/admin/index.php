@@ -28,7 +28,7 @@ This is the CMS settings overview page.
 //Admin toolbar
 	echo "<div class=\"toolBar\">";
 	echo toolBarURL("Add Template", "manage_template.php", "toolBarItem new");
-	echo toolBarURL("Site Settings", "site_settings.php", "toolBarItem settings");
+	echo toolBarURL("Site Settings", "site_settings/index.php", "toolBarItem settings");
 	echo "</div>\n";
 	
 //Display all avaliable fields

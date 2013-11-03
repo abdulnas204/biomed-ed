@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 21st, 2010
+Last updated: Janurary 25th, 2011
 
 This is the fill in the blank management page for the 
 test generator.
@@ -95,7 +95,7 @@ test generator.
 		echo "<tr id=\"1\" align=\"center\">\n";
 		echo cell(textField("questionValue[]", "questionValue1"));
 		echo cell(textField("answerValue[]", "answerValue2", false, false, false, false));
-		echo cell("<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" . $value . "', '1')\"></span>", "50");
+		echo cell("<span class=\"action smallDelete\" onclick=\"deleteObject('items', '1', '1')\"></span>", "50");
 		echo "</tr>\n";
 	}
 	

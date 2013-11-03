@@ -27,14 +27,14 @@ lesson prior to deployment.
 	$testCheck = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$monitor['currentUnit']}'");
 	
 //Title
-	navigation("Verify Content", "Content may be reviewed in the section below. Changes can be made to the lesson by clicking the &quot;Make Changes&quot; button.");
+	navigation("Verify Content", "Content may be reviewed in the section below. Changes can be made to the lesson by clicking the &quot;Previous Step&quot; button.");
 	
 //Lesson preview
 	lesson($monitor['currentUnit'], $monitor['lessonTable']);
 	
 //Display navigation buttons
 	echo "<blockquote><p>\n";
-	echo button("back", "back", "&lt;&lt;  Make Changes", "button", "lesson_content.php");
+	echo button("back", "back", "&lt;&lt; Previous Step", "button", "lesson_content.php");
 	
 	if ($testCheck['test'] == "1") {
 		echo button("next", "next", "Next Step &gt;&gt;", "button", "test_settings.php");

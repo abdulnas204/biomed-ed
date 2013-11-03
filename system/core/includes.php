@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 23rd, 2010
+Last updated: Feburary 13th, 2011
 
 This script contains functions which will construct the 
 JavaScript and CSS callers for client-side modules.
@@ -36,8 +36,7 @@ Widgets
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.htm\"></script>
-";
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.htm\"></script>";
 	}
 	
 //Auto-suggest
@@ -63,9 +62,9 @@ Widgets
 		global $root;
 		
 		return "<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_1.4.4.js\"></script>
-<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_UI_1.8.7.js\"></script>
+<script type=\"text/javascript\" src=\"" . $root . "system/javascripts/ajaxLibraries/jQuery_UI_1.8.9.js\"></script>
 <script type=\"text/javascript\" src=\"" . $root . "system/javascripts/session_control.htm\"></script>
-<link rel=\"stylesheet\" href=\"" . $root . "system/styles/ajaxLibraries/jQuery_UI_1.8.7.css\" type=\"text/css\">";
+<link rel=\"stylesheet\" href=\"" . $root . "system/styles/ajaxLibraries/jQuery_UI_1.8.9.css\" type=\"text/css\">";
 	}
 	
 /*
@@ -96,15 +95,13 @@ Pre-processor scripts
 	function customVisible() {
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script>
-<script src=\"" . $root . "system/javascripts/customCheckbox/runVisible.js\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/customCheckbox/runVisible.js\" type=\"text/javascript\"></script>";
 	}
 	
 	function customCheckbox() {
 		global $root;
 		
-		return "<script src=\"" . $root . "system/javascripts/customCheckbox/checkboxCore.js\" type=\"text/javascript\"></script>
-<script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
+		return "<script src=\"" . $root . "system/javascripts/customCheckbox/runCheckbox.js\" type=\"text/javascript\"></script>";
 	}
 	
 	//Include a show or hide script
@@ -119,13 +116,6 @@ Pre-processor scripts
 		global $root;
 		
 		return "<script src=\"" . $root . "system/javascripts/common/enableDisable.js\" type=\"text/javascript\"></script>";
-	}
-	
-	//Include a navigation menu style
-	function navigationMenu() {
-		global $root;
-		
-		return "<link rel=\"stylesheet\" href=\"" . $root . "system/styles/common/navigationMenu.css\" type=\"text/css\">";
 	}
 	
 	//Include a new object script
@@ -149,16 +139,12 @@ Pre-processor scripts
 		return "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.htm\" type=\"text/javascript\"></script>";
 	}
 	
-	
-	
 	//Include an option transfer script
 	function optionTransfer() {
 		global $root;
 		
 		return "<script src=\"" . $root . "system/javascripts/common/optionTransfer.js\" type=\"text/javascript\"></script>";
 	}
-	
-	
 	
 	//Include a tabbed panel script
 	function tabbedPanels() {

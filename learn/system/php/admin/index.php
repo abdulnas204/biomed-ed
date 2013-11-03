@@ -49,8 +49,11 @@ administration overview page.
 	echo "<div class=\"toolBar\">";
 	echo toolBarURL("Add Form Field", "manage_field.php", "toolBarItem new");
 	echo toolBarURL("Setup Payment", "payment.php", "toolBarItem billing");
-	echo toolBarURL("Back to Overview", "../index.php", "toolBarItem back");
+	echo toolBarURL("Back to Overview", "../../../../admin/index.php", "toolBarItem back");
 	echo "</div>\n";
+	
+//Display message updates
+	message("updated", "payment", "success", "The payment settings were successfully updated");
 	
 //Display all avaliable fields
 	if (exist("fields")) {

@@ -80,7 +80,7 @@ function addShortAnswer(tableID, cellOneStart, cellOneEnd) {
 	newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('items', '" + currentID + "', '1', true)\">";
 }
 
-function addFile(tableID, totalFiles) {
+function addFile(tableID, uniqueID, totalFiles) {
 	var table = document.getElementById(tableID);
 	var newRow = table.insertRow(table.rows.length);
 	var previousID = document.getElementById(tableID).getElementsByTagName("tr")[table.rows.length - 2].id;
@@ -89,7 +89,7 @@ function addFile(tableID, totalFiles) {
 	
 	if (table.rows.length <= totalFiles) {
 		var newCell1 = newRow.insertCell(0);
-		newCell1.innerHTML = "<input id='36_" + currentID + "' name='36_" + currentID + "' type='file' size='50' class='validate[required]' />"
+		newCell1.innerHTML = "<input id='" + uniqueID + "_" + currentID + "' name='" + uniqueID + "_" + currentID + "' type='file' size='50' class='validate[required]' />"
 		var newCell2 = newRow.insertCell(1);
 		newCell2.innerHTML = "<span class=\"action smallDelete\" onclick=\"deleteObject('" + tableID + "', '" + currentID + "', '1', true)\">";
 	} else {

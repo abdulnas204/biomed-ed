@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 28th, 2010
-Last updated: Novemeber 28th, 2010
+Last updated: Feburary 5th, 2011
 
 This script contains user commonly used functions to process 
 simple requests, such as reordering a list, deleting an item, 
@@ -59,14 +59,15 @@ or setting its availability.
 		
 		if ($doAction == true && isset($_POST['id']) && $_POST['action'] == "setAvaliability") {			
 			$id = $_POST['id'];
+			$toggleData = query("SELECT * FROM `{$table}` WHERE `id` = '{$id}'");
 			
-			if (!$_POST['option']) {
+			if ($toggleData['visible'] == "on") {
 				$option = "";
 			} else {
-				$option = $_POST['option'];
+				$option = "on";
 			}
 			
-			query("UPDATE `{$table}` SET `visible` = '{$option}' WHERE id = '{$id}'");
+			query("UPDATE `{$table}` SET `visible` = '{$option}' WHERE `id` = '{$id}'");
 			redirect($redirect);
 		}
 	}
@@ -124,9 +125,9 @@ or setting its availability.
 				$itemPosition = query("SELECT * FROM `{$table}` WHERE `id` = '{$deleteItem}'");
 				
 				query("UPDATE `{$table}` SET `position` = position - 1 WHERE `position` > '{$itemPosition['position']}'");
-				query("DELETE FROM `{$table}` WHERE `id` = '{$deleteItem}'");
+				query("DELETE FROM `{$table}` WHERE `id` = '{$deleteItem}'", false, false);
 			} else {
-				query("DELETE FROM `{$table}` WHERE `id` = '{$deleteItem}'");
+				query("DELETE FROM `{$table}` WHERE `id` = '{$deleteItem}'", false, false);
 			}
 			
 			if ($file == true) {

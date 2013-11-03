@@ -10,13 +10,17 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: December 11th, 2010
-Last updated: December 11th, 2010
+Last updated: February 5th, 2010
 
 This is the payment setup page.
 */
 
 //Header functions
+	require_once('../../../../system/core/index.php');
+	require_once(relativeAddress("learn/system/php") . "index.php");
+	require_once(relativeAddress("learn/system/php") . "functions.php");
 	headers("Payment Setup", "validate", true);
+	lockAccess();	
 	
 //Grab the payment information
 	$paymentInfo = query("SELECT * FROM `payment` WHERE `id` = '1'");

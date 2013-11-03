@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: July 30th, 2010
-Last updated: December 11th, 2010
+Last updated: February 14th, 2011
 
 This is the home page of the site, which contains content 
 from the CMS portion of the site, as well as a customizeable 
@@ -26,6 +26,20 @@ sidebar.
 		$pageInfo = query("SELECT * FROM `pages` WHERE `position` = '1'");
 	} else {		
 		$pageInfo = query("SELECT * FROM `pages` WHERE `id` = {$_GET['page']}");	
+	}
+	
+//Show or hide the pages
+	if (isset($_POST['option']) && isset($_POST['id']) && $_POST['action'] == "setAvaliability" && access("Edit Page")) {
+		$id = $_POST['id'];
+		
+		if (!$_POST['option'] || empty($_POST['option'])) {
+			$option = "";
+		} else {
+			$option = $_POST['option'];
+		}
+		
+		query("UPDATE `pages` SET `visible` = '{$option}' WHERE id = '{$id}'");
+		redirect($_SERVER['REQUEST_URI']);
 	}
 	
 //Detirmine whether or not to show the sidebar
@@ -73,7 +87,7 @@ sidebar.
 
 //Admin toolbar
 	if (loggedIn() && !empty($pageInfo['content'])) {
-		echo form("pages", "post", false, "cms/index.php");
+		echo form("pages");
 		echo "<div class=\"toolBar noPadding\">\n<div align=\"center\">";
 		echo URL("Edit This Page", "cms/manage_page.php?id=" . $pageInfo['id']);
 		echo " | Visible: ";
@@ -82,7 +96,7 @@ sidebar.
 		echo hidden("redirect", "redirect", "true");
 		echo dropDown("option", "option", "Yes,No", "on,", false, false, false, false, "pageInfo", "visible", " onchange=\"this.form.submit();\"");
 		echo " | ";
-		echo URL("Back to Staff Home Page", "portal/index.php");
+		echo URL("Back to User's Portal", "portal/index.php");
 		echo " | ";
 		echo URL("Back to Pages", "cms/index.php");
 		echo " | ";
@@ -124,7 +138,7 @@ sidebar.
 		echo "\">\n";
 		
 		while ($sideBar = fetch($sideBarCheck)) {
-			sideBox($sideBar['title'], $sideBar['type'], $sideBar['content'], "Site Administrator,Site Manager", $sideBar['id']);
+			sideBox($sideBar['title'], $sideBar['type'], $sideBar['content'], $sideBar['id']);
 		}
 		
 		echo "</div>\n</div>\n";

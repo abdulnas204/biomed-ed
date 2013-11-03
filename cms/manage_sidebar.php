@@ -1,14 +1,32 @@
 <?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: September 9th, 2010
+Last updated: Feburary 4th, 2010
+
+This is the page for managing the sidebars on the public 
+website.
+*/
+
 //Header functions
-	require_once('../system/connections/connDBA.php');
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("cms/system/php") . "index.php");
+	require_once(relativeAddress("cms/system/php") . "functions.php");
 	
 //Check to see if the item is being edited
 	if (isset ($_GET['id'])) {
 		if ($itemData = exist("sidebar", "id", $_GET['id'])) {
 			//Do nothing
 		} else {
-			header("Location: index.php");
-			exit;
+			redirect("sidebar.php");
 		}
 	}
 	
@@ -18,34 +36,27 @@
 		$title =  "Create a New Box";
 	}
 	
-	headers($title, "Site Administrator", "tinyMCESimple,validate,showHide", true);
+	headers($title, "tinyMCESimple,validate", true);
 	
 //Process the form
-	if (isset($_POST['submit']) && !empty ($_POST['title']) && !empty($_POST['type'])) {
-		$title = mysql_real_escape_string($_POST['title']);
-		$content = mysql_real_escape_string($_POST['content']);
+	if (isset($_POST['submit']) && !empty ($_POST['title']) && !empty($_POST['type']) && !empty($_POST['content'])) {
+		$title = escape($_POST['title']);
+		$content = escape($_POST['content']);
 		$type = $_POST['type'];
 			
 		if (!isset ($itemData)) {			
-			$positionGrabber = mysql_query ("SELECT * FROM sidebar ORDER BY position DESC", $connDBA);
-			$positionArray = mysql_fetch_array($positionGrabber);
-			$position = $positionArray{'position'}+1;
+			$position = lastItem("sidebar");
 				
-			$newItemQuery = "INSERT INTO sidebar (
-								`id`, `position`, `visible`, `type`, `title`, `content`
-							) VALUES (
-								NULL, '{$position}', 'on', '{$type}', '{$title}', '{$content}'
-							)";
+			query("INSERT INTO `sidebar` (
+				  `id`, `position`, `visible`, `type`, `title`, `content`
+				  ) VALUES (
+				  NULL, '{$position}', 'on', '{$type}', '{$title}', '{$content}'
+				  )");
 			
-			mysql_query($newItemQuery, $connDBA);
-			header ("Location: sidebar.php?added=item");
-			exit;
+			redirect("sidebar.php?added=item");
 		} else {
-			$item = $_GET['id'];
-			
-			mysql_query("UPDATE sidebar SET type = '{$type}', title = '{$title}', content = '{$content}' WHERE `id` = '{$item}'", $connDBA);
-			header ("Location: sidebar.php?updated=item");
-			exit;
+			query("UPDATE sidebar SET type = '{$type}', title = '{$title}', content = '{$content}' WHERE `id` = '{$_GET['id']}'");
+			redirect("sidebar.php?updated=item");
 		}
 	}
 	
@@ -53,7 +64,7 @@
 	$description = "Use this page to ";
 	
 	if (isset ($pageData)) {
-		$description .= "edit the content of the &quot;<strong>" . prepare($pageData['title']) . "</strong>&quot; box.";
+		$description .= "edit the content of the &quot;<strong>" . prepare($itemData['title']) . "</strong>&quot; box.";
 	} else {
 		$description .= "create a new box.";
 	}
@@ -61,53 +72,24 @@
 	title($title, $description); 
 	
 //Sidebar form
-	form("manageItem");
+	echo form("manageItem");
 	catDivider("Settings", "one", true);
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	directions("Title", true, "The text that will display on the top-left of each box.");
-	echo "<blockquote><p>";
-	textField("title", "title", false, false, false, true, false, "itemData", "itemData", "title");
-	echo "</p></blockquote>";
+	indent(textField("title", "title", false, false, false, true, false, false, "itemData", "title"));
 	directions("Type", false, "The type of content that will be displayed in the text box.<br />Different ones will be avaliable at different times, <br />depending on their current use.<br /><br /><strong>Custom Content</strong> - A box which can contain any desired content.<br /><strong>Login</strong> - A box with a pre-built form to log in a user.<br /><strong>Register</strong> - A box which will link a visitor to the site registration page.");
-	echo "<blockquote><p>";
-	dropDown("type", "type", "Custom Content,Login,Register", "Custom Content,Login,Register", "Custom Content", false, true, false, "itemData", "itemData", "type", " onchange=\"toggleType(this.value);\"");
-	echo "</p></blockquote></blockquote>";
+	indent(dropDown("type", "type", "Custom Content,Login,Register", "Custom Content,Login,Register", false, true, false, false, "itemData", "type"));
+	echo "</blockquote>\n";
+	
 	catDivider("Content", "two");
-	echo "<div id=\"contentAdvanced\"";
+	echo "<blockquote>\n";
+	directions("Content", true, "The main content or body of the box");
+	indent(textArea("content", "content1", "small", true, false, false, "itemData", "content"));
+	echo "</blockquote>\n";
 	
-	if (isset ($itemData)) {
-		if ($itemData['type'] != "Login") {
-			echo " class=\"contentShow\"";
-		} else {
-			echo " class=\"contentHide\"";
-		}
-	}
-	
-	echo "><blockquote>";
-	directions("Content", false, "The main content or body of the box");
-	echo "<blockquote>";
-	textArea("content", "content1", "small", false, false, "itemData", "itemData", "content");
-	echo "</blockquote></blockquote></div>";
-	echo "<div id=\"contentMessage\"";
-	
-	if (isset ($itemData)) {
-		if ($itemData['type'] == "Login") {
-			echo " class=\"noResults contentShow\">";
-		} else {
-			echo " class=\"contentHide\">";
-		}
-	} else {
-		echo " class=\"contentHide\">";
-	}
-	
-	echo "<p>The system has filled out the rest of the needed information. No further input is needed.</p></div>";
 	catDivider("Finish", "three");
-	echo "<blockquote><p>";
-	button("submit", "submit", "Submit", "submit");
-	button("reset", "reset", "Reset", "reset");
-	button("cancel", "cancel", "Cancel", "cancel", "sidebar.php");
-	echo "</p>";
-	closeForm(true, true);
+	formButtons();
+	echo closeForm();
 
 //Include the footer
 	footer();

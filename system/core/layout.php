@@ -12,7 +12,7 @@ open source, freeware, nor commercial/closed source.
 /* 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 23rd, 2010
+Last updated: Feburary 5th, 2011
 
 This script is used to construct the layout of a page.
 */
@@ -201,35 +201,36 @@ This script is used to construct the layout of a page.
 			
 		//Public website navigation bar
 			if ($URL == "Public") {
-				$pageData = query("SELECT * FROM pages ORDER BY position ASC", "raw");	
-				$lastPageCheck = query("SELECT * FROM pages ORDER BY position DESC LIMIT 1");
+				$pageData = query("SELECT * FROM `pages` WHERE `visible` = 'on' ORDER BY `position` ASC", "raw");	
 				
 				if (isset ($_GET['page'])) {
 					$currentPage = $_GET['page'];
 				}
 				
-				while ($pageInfo = fetch($pageData)) {
-					if (isset ($currentPage)) {
-						if ($pageInfo['visible'] == "on") {
-							if ($currentPage == $pageInfo['id']) {
-								$class = "topCurrentPageNav";
-							} else {
-								$class = "topPageNav";
+				if ($pageData) {
+					while ($pageInfo = fetch($pageData)) {
+						if (isset ($currentPage)) {
+							if ($pageInfo['visible'] == "on") {
+								if ($currentPage == $pageInfo['id']) {
+									$class = "topCurrentPageNav";
+								} else {
+									$class = "topPageNav";
+								}
+							}
+						} else {
+							if ($pageInfo['visible'] == "on") {
+								if ($pageInfo['position'] == "1") {
+									$class = "topCurrentPageNav";
+								} else {
+									$class = "topPageNav";
+								}
 							}
 						}
-					} else {
-						if ($pageInfo['visible'] == "on") {
-							if ($pageInfo['position'] == "1") {
-								$class = "topCurrentPageNav";
-							} else {
-								$class = "topPageNav";
-							}
-						}
-					}
-					
-					$HTML .= "
-              <li> " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . " </li>";
-				 }
+						
+						$HTML .= "
+				  <li> " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . " </li>";
+					 }
+				}
 		//Generate the navigation bar based on the user's privileges
 			} else {
 				$HTML .= "
@@ -322,7 +323,14 @@ Third-party works are accredited where necessary.
 <!-- Include JavaScripts and StyleSheets //-->
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/common/universal.css\" />
 <link rel=\"stylesheet\" type=\"text/css\" href=\"" . $root . "system/styles/themes/" . $siteInfo['style'] . "\" />
-" . $scripts . $script . "
+";
+
+if (isset($pluginRoot)) {
+	echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"" . $pluginRoot . "system/styles/style.css\" />
+";
+}
+
+echo $scripts . $script . "
 </head>
 <body" . $bodyParameters . ">" . $toolTipScript . $HTML;
 	}
@@ -394,39 +402,42 @@ Third-party works are accredited where necessary.
 			switch ($URL) {
 			//Public website footer bar
 				case "Public" :
-					$pageData = query("SELECT * FROM pages ORDER BY position ASC", "raw");	
-					$lastPageCheck = query("SELECT * FROM pages ORDER BY position DESC LIMIT 1");
+					$pageData = query("SELECT * FROM `pages` WHERE `visible` = 'on' ORDER BY `position` ASC", "raw");	
 					
 					if (isset ($_GET['page'])) {
 						$currentPage = $_GET['page'];
 					}
 				
-					while ($pageInfo = fetch($pageData)) {
-						if (isset ($currentPage)) {
-							if ($pageInfo['visible'] != "") {
-								if ($currentPage == $pageInfo['id']) {
-									$class = "bottomCurrentPageNav";
-								} else {
-									$class = "bottomPageNav";
-								}
-							}
-						} else {
-							if ($pageInfo['visible'] != "") {
-								if ($pageInfo['position'] == "1") {
-									$class = "bottomCurrentPageNav";
-								} else {
-									$class = "bottomPageNav";
-								}
-							}
-						}
+					if ($pageData) {
+						$lastPageCheck = query("SELECT * FROM `pages` WHERE `visible` = 'on' ORDER BY `position` DESC LIMIT 1");
 						
-						if ($lastPageCheck['position'] != $pageInfo['position'] && $lastPageCheck['visible'] != "") {
-							echo "
-      " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . "
-      <span class=\"arrow sep\">&bull;</span>";
-						} else {
-							echo "
-      " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class);
+						while ($pageInfo = fetch($pageData)) {
+							if (isset ($currentPage)) {
+								if ($pageInfo['visible'] != "") {
+									if ($currentPage == $pageInfo['id']) {
+										$class = "bottomCurrentPageNav";
+									} else {
+										$class = "bottomPageNav";
+									}
+								}
+							} else {
+								if ($pageInfo['visible'] != "") {
+									if ($pageInfo['position'] == "1") {
+										$class = "bottomCurrentPageNav";
+									} else {
+										$class = "bottomPageNav";
+									}
+								}
+							}
+							
+							if ($lastPageCheck['position'] != $pageInfo['position'] && $lastPageCheck['visible'] != "") {
+								echo "
+		  " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class) . "
+		  <span class=\"arrow sep\">&bull;</span>";
+							} else {
+								echo "
+		  " . URL($pageInfo['title'], "index.php?page=" . $pageInfo['id'], $class);
+							}
 						}
 					}
 					
@@ -483,8 +494,11 @@ Third-party works are accredited where necessary.
 </div>
 <br />";
 		}
-			echo "
+		
+		echo "
 </body>
 </html>";
+
+		ob_end_flush();
 	}
 ?>

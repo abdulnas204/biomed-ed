@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 28th, 2010
-Last updated: December 23rd, 2010
+Last updated: February 7th, 2011
 
 This script is used for data processing for the portal 
 plugin.
@@ -55,25 +55,35 @@ plugin.
 		if (is_array($units)) {
 			foreach($units as $key => $value) {
 				if (is_array($value) && $value['lessonStatus'] == "F") {
-					$completionPrep = $completionPrep + 2;
+					if (exist("test_" . $key)) {
+						$completionPrep = $completionPrep + 2;
+					} else {
+						$completionPrep = $completionPrep + 4;
+					}
 				} elseif (is_array($value) && $value['lessonStatus'] == "C") {
 					$completionPrep = $completionPrep + 0;
 				} elseif (is_array($value) && $value['lessonStatus'] == "O") {
-					$completionPrep = $completionPrep + 1;
+					if (exist("test_" . $key)) {
+						$completionPrep = $completionPrep + 1;
+					} else {
+						$completionPrep = $completionPrep + 2;
+					}
 				} else {
 					$completionPrep = $completionPrep + 0;
 				}
 				
-				if (is_array($value) && $value['testStatus'] == "F") {
-					$completionPrep = $completionPrep + 2;
-				} elseif (is_array($value) && $value['testStatus'] == "C") {
-					$completionPrep = $completionPrep + 0;
-				} elseif (is_array($value) && $value['testStatus'] == "A") {
-					$completionPrep = $completionPrep + 1;
-				} elseif (is_array($value) && $value['testStatus'] == "O") {
-					$completionPrep = $completionPrep + 1;
-				} else {
-					$completionPrep = $completionPrep + 0;
+				if (exist("test_" . $key)) {
+					if (is_array($value) && $value['testStatus'] == "F") {
+						$completionPrep = $completionPrep + 2;
+					} elseif (is_array($value) && $value['testStatus'] == "C") {
+						$completionPrep = $completionPrep + 0;
+					} elseif (is_array($value) && $value['testStatus'] == "A") {
+						$completionPrep = $completionPrep + 1;
+					} elseif (is_array($value) && $value['testStatus'] == "O") {
+						$completionPrep = $completionPrep + 1;
+					} else {
+						$completionPrep = $completionPrep + 0;
+					}
 				}
 			}
 		}

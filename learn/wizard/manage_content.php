@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 4th, 2010
-Last updated: December 11th, 2010
+Last updated: February 9th, 2010
 
 This is the lesson content management page for the learning 
 unit generator.
@@ -58,7 +58,7 @@ unit generator.
 	title($monitor['title'] . "Page Content", "This page will manage the content of the pages within this lesson. The text editor below can be used to add text, images, and files to the lesson. <i>If you are using the editor to upload images or other files, ensure that they are uploaded inside the &quot;secure&quot; folder. This will prevent users from accessing these files when they are not permitted.</i> Multimedia, PDFs, and other documents can be uploaded under the &quot;Embedded Content&quot; section. These files will be securely embedded inside the content of the page, directly below the content placed inside of the text editor.", "error");
 	
 //Display message updates
-	message("error", "fileType", "error", "This is an unsupported file type. Supported types have one of the following extensions: \".PDF\", \".DOC\", \".DOCX\", \".XLS\", \".XLSX\", \".PPT\", \".PPTX\", \".TXT\", \".RTF\", \".WAV\", \".MP3\", \".AVI\", \".WMV\", \".FLV\", \".MOV\", \".MP4\", or \".SWF\".");
+	message("error", "fileType", "error", "This is an unsupported file type. Supported types have one of the following extensions: &quot;.PDF&quot;, &quot;.DOC&quot;, &quot;.DOCX&quot;, &quot;.XLS&quot;, &quot;.XLSX&quot;, &quot;.PPT&quot;, &quot;.PPTX&quot;, &quot;.TXT&quot;, &quot;.RTF&quot;, &quot;.WAV&quot;, &quot;.MP3&quot;, &quot;.AVI&quot;, &quot;.WMV&quot;, &quot;.FLV&quot;, &quot;.MOV&quot;, &quot;.MP4&quot;, or &quot;.SWF&quot;.");
 	message("error", "upload", "error", "There was an error when uploading the file. Ensure you did not cancel the upload before it was finished, and be sure your file is smaller than the maxmium file size displayed below the file field.");
 	
 //Embedded content form	

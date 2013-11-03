@@ -1,0 +1,61 @@
+/* ================================================================ 
+This copyright notice must be kept untouched in the stylesheet at all times.
+Copyright (c) 2010 Stu Nicholls. All rights reserved.
+http://www.cssplay.co.uk/menus/css3-fade-menu.html
+=================================================================== */
+
+
+#menu ul {
+	display:inline;
+}
+#menu a {
+	padding:0 20px 0 10px;
+	margin-right:0;
+}
+#menu li.left ul li a {
+	padding:0 10px 0 20px;
+	margin-right:0;
+	margin-left:0;
+}
+#menu ul li.level1-li:hover {
+	padding-bottom:0;
+	margin-bottom:0;
+}
+#menu ul li:hover > ul {
+	visibility:visible;
+	left:0;
+	top:35px;
+	opacity:1;
+	margin-top:0;
+}
+#menu ul ul li:hover > ul {
+	visibility:visible;
+	left:100%;
+	top:auto;
+	margin-top:-35px;
+	opacity:1;
+	margin-left:0;
+}
+#menu li.left:hover > ul {
+	visibility:visible;
+	left:auto;
+	right:-10px;
+	top:35px;
+	opacity:1;
+	margin-right:0;
+}
+#menu li.left ul li:hover > ul {
+	visibility:visible;
+	left:auto;
+	right:100%;
+	top:auto;
+	margin-top:-35px;
+	margin-right:0;
+	opacity:1;
+}
+#menu li a.fly {
+	background:transparent url(../../images/menu/arrow.gif) no-repeat 96% center;
+}
+#menu li.left ul a.fly {
+	background:transparent url(../../images/menu/arrow-left.gif) no-repeat 6px center;
+}

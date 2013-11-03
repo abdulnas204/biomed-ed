@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: Janurary 10th, 2011
-Last updated: Janurary 10th, 2011
+Last updated: February 9th, 2011
 
 This is the preview script, which will selectively allow 
 access to secured filed based on the user's credentials, 
@@ -24,7 +24,7 @@ access to the subject, and other conditions.
 	
 //Register a magic access key for external access
 	function registerKey() {
-		$time = strtotime("now");
+		$time = time();
 		$key = session_id() . $time . randomValue(15);
 		
 		query("INSERT INTO `magickeys` (
@@ -38,6 +38,16 @@ access to the subject, and other conditions.
 	
 //If a file was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {	
+	//Generate the URL to the file	
+		if ($protocol == "https://") {
+			$gatewayFilePrep = explode("?", "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+		} else {
+			$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+		}
+		
+		$gatewayFile = urldecode(str_replace($pluginRoot . "preview.php/", "", $gatewayFilePrep['0']));
+		
+	//Generate the preview URL, with necessary parameters
 		$requestedURL = "";
 		$parameters = explode("/", $_SERVER['PHP_SELF']);
 		$limit = sizeof($parameters);
@@ -47,50 +57,24 @@ access to the subject, and other conditions.
 		}
 		
 		$requestedURL = rtrim($requestedURL, "/");
-			
-		if ($protocol == "https://") {
-			$gatewayFilePrep = explode("?", "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-		} else {
-			$gatewayFilePrep = explode("?", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-		}
-		
-		$gatewayFile = urldecode(str_replace($pluginRoot . "preview.php/", "", $gatewayFilePrep['0']));
-		
-	//Expose the directory path and file type
-		$directoryArray = explode("/", $gatewayFile);
-		$directoryDepth = sizeof($directoryArray) - 1;
-		$filePath = explode("/", $gatewayFile);
-		$fileDepth = sizeof($filePath) - 1;
-		$fileSize = filesize($gatewayFile);
-		
-		for ($count = 0; $count <= $fileDepth; $count++) {
-			if ($count == $directoryDepth) {
-				$fileName = $filePath[$count];
-			}
-		}
 		
 	//Check to see if the file exists
 		if (!file_exists($gatewayFile) || is_dir($gatewayFile)) {
-			//redirect($root . "system/deny/index.php?error=404");
+			redirect($root . "system/deny/index.php?error=404");
 		}
 		
-	//Site administrators will have access to lesson and answer files from modules
-		if ($_SESSION['role'] == "Site Administrator") {
-			for ($count = 0; $count <= $directoryDepth; $count++) {
-				if ($count == "1") {
-					if ($directoryArray['1'] == "lesson" || $directoryArray['1'] == "test") {
-						if($protocol == "https://") {
-							redirect("https://docs.google.com/viewer?url=" . urlencode(str_replace($pluginRoot . "preview.php", $pluginRoot . "gateway.php", "https://" . $_SERVER['HTTP_HOST'] . $requestedURL) . "/" . session_id() . "/" . registerKey() . "/" . $parameters[$limit - 1]) . "&embedded=true", false);
-						} else {
-							redirect("http://docs.google.com/viewer?url=" . urlencode(str_replace($pluginRoot . "preview.php", $pluginRoot . "gateway.php", "http://" . $_SERVER['HTTP_HOST'] . $requestedURL) . "/" . session_id() . "/" . registerKey() . "/" . $parameters[$limit - 1]) . "&embedded=true", false);
-						}
-					}
-				}
-			}
+	//Check to see if a supported file type is being requested
+		if (!in_array(extension(end(explode("/", $_SERVER['PHP_SELF']))), array("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"))) {
+			redirect(str_replace("preview.php", "gateway.php", "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']), false);
 		}
 		
-		redirect($root . "system/deny/index.php?error=403");
+	//Send the request to display the document, the gateway will decide whether or not access should be granted
+		if ($protocol == "https://") {
+			redirect("https://docs.google.com/viewer?url=" . urlencode(str_replace($pluginRoot . "preview.php", $pluginRoot . "gateway.php", "https://" . $_SERVER['HTTP_HOST'] . $requestedURL) . "/" . session_id() . "/" . registerKey() . "/" . $parameters[$limit - 1]) . "&embedded=true", false);
+		} else {
+			redirect("http://docs.google.com/viewer?url=" . urlencode(str_replace($pluginRoot . "preview.php", $pluginRoot . "gateway.php", "http://" . $_SERVER['HTTP_HOST'] . $requestedURL) . "/" . session_id() . "/" . registerKey() . "/" . $parameters[$limit - 1]) . "&embedded=true", false);
+		}
 	} else {
-		die(centerDiv("A file was not provided."));
+		die(errorMessage("A file was not provided."));
 	}
 ?>

@@ -43,7 +43,8 @@
 /* Begin layout control */
 	.layoutControl {
 		clear: both;
-		overflow: hidden;
+		display:table;
+		width:100%;
 		*display:inline-block;
 		_display:inline-block;
 	}
@@ -140,10 +141,6 @@
 		background:url(../../images/admin_icons/load.png) no-repeat left;
 	}
 	
-	a.bank {
-		background:url(../../images/admin_icons/bank.png) no-repeat left;
-	}
-	
 	a.settings {
 		background:url(../../images/admin_icons/settings.png) no-repeat left;
 	}
@@ -174,10 +171,6 @@
 	
 	a.billing {
 		background:url(../../images/admin_icons/dollar_sign.png) no-repeat left;
-	}
-	
-	a.print {
-		background:url(../../images/admin_icons/print.png) no-repeat left;
 	}
 /* End tool bar and menu options */
 
@@ -456,17 +449,6 @@
 		cursor:not-allowed;
 	}
 	
-	.questionBank {
-		background:url(../../images/admin_icons/bank.png) no-repeat;
-		background-position: 10px;
-		padding: 1px 0px 1px 0px;
-	}
-	
-	.extraCredit {
-		background:url(../../images/common/extraCredit.png) no-repeat left;
-		padding:0px 8px 0px 8px;
-	}
-	
 	span.notAssigned {
 		font-style:italic;	
 	}
@@ -686,11 +668,6 @@
 	
 	a.mediumEdit {
 		background:url(../../images/admin_icons/mediumEdit.png) no-repeat center;
-	}
-	
-	a.smallDelete, span.smallDelete {
-		background:url(../../images/common/x.png) no-repeat center;
-		cursor:pointer;
 	}
 	
 	div.footer {

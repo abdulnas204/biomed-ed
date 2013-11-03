@@ -38,11 +38,13 @@ from the question bank into the test.
 				$position = $lastQuestion++;
 				$id = $importQuestions['id'];
 				
-				query("INSERT INTO `{$monitor['testTable']}` (
-					  `id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
-					  ) VALUES (
-					  NULL, '1', '{$id}', '{$position}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-					  )");
+				if (!exist($monitor['testTable'], "linkID", $id)) {
+					query("INSERT INTO `{$monitor['testTable']}` (
+						  `id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+						  ) VALUES (
+						  NULL, '1', '{$id}', '{$position}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+						  )");
+				}
 			}
 		}
 		

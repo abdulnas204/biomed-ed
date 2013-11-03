@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 21st, 2010
-Last updated: December 10th, 2010
+Last updated: Janurary 13th, 2011
 
 This is the question selection page for importing questions 
 from the question bank.
@@ -30,7 +30,7 @@ from the question bank.
 			if ($category['organization'] !== $userData['organization']) {
 				redirect("question_bank.php");
 			} else {
-				$bankTitle = query("SELECT * FROM `categories` WHERE `id` = '{$id}'");
+				$bankTitle = query("SELECT * FROM `categories` WHERE `id` = '{$_GET['id']}'");
 			}
 		}
 	}

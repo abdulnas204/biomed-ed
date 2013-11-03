@@ -640,5 +640,18 @@ $.validationEngine = {
 })(jQuery);
 
 $(document).ready(function() {
-	$("#validate").validationEngine()
+	$("#validate").validationEngine();
 });
+
+//Developer Enhancement
+//Uninitialize the validation engine when not needed
+//For example, if a form is simply saving its content, then do not validate
+//However, the validation engine is still needed when submitting the form
+
+function disableValidation() {
+	$.validationEngine().onSubmitValid = false;
+}
+
+function enableValidation() {
+	$("#validate").validationEngine();	
+}

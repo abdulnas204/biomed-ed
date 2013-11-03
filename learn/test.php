@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: September 4th, 2010
-Last updated: December 23rd, 2010
+Last updated: February 14th, 2011
 
 This script is dedicated to displaying the test section 
 of each learning unit.
@@ -27,32 +27,35 @@ of each learning unit.
 	$testTable = "testdata_" . $userData['id'];
 	$questionBank = "questionbank_0";
 	$unitInfo = query("SELECT * FROM `learningunits` WHERE `id` = '{$_GET['id']}' LIMIT 1");
-	$attempt = lastItem($testTable, "testID", $testID, "attempt");
 	$accessGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
 	$accessArray = unserialize($accessGrabber['learningunits']);
 	
-	if ($attempt - 1 == 0) {
-		$currentAttempt = 1;
-	} else {
-		$currentAttempt = $attempt - 1;
-	}
-	
-	if ($accessArray[$testID]['testStatus'] == "C") {
-		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
-		$updateArray = serialize($accessArray);
-		
-		query("UPDATE `users` SET `learningunits` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
-	} else {
-		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
-	}
+//Set up the user's test table, if needed
+	query("CREATE TABLE IF NOT EXISTS `{$testTable}` (
+			`testID` int(255) NOT NULL,
+			`questionID` int(255) NOT NULL,
+			`attempt` int(255) NOT NULL,
+			`type` longtext NOT NULL,
+			`link` int(255) NOT NULL,
+			`testPosition` int(255) NOT NULL,
+			`randomPosition` int(255) NOT NULL,
+			`randomizeTest` longtext NOT NULL,
+			`randomizeQuestion` int(255) NOT NULL,
+			`extraCredit` text NOT NULL,
+			`points` varchar(5) NOT NULL,
+			`score` varchar(8) NOT NULL,
+			`question` longtext NOT NULL,
+			`questionValue` longtext NOT NULL,
+			`answerValue` longtext NOT NULL,
+			`answerValueScrambled` longtext NOT NULL,
+			`userAnswer` longtext NOT NULL,
+			`testAnswer` longtext NOT NULL,
+			`feedback` longtext NOT NULL
+		  )");
 	
 //Ensure the user has permission to access this test
-	if (isset ($_GET['id'])) {		
-		if (!exist("learningunits", "id", $_GET['id'])) {
-			redirect("index.php");
-		}
-		
-		if (!array_key_exists($testID, $accessArray)) {
+	if (isset ($_GET['id']) && exist("test_" . $_GET['id'])) {		
+		if (!exist("learningunits", "id", $_GET['id']) || !array_key_exists($testID, $accessArray) || empty($unitInfo['visible'])) {
 			redirect("index.php");
 		}
 		
@@ -66,6 +69,19 @@ of each learning unit.
 	} else {
 		redirect("index.php");
 	}
+	
+	if (empty($accessArray[$testID]['submitted'])) {
+		if ($attempt = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}' ORDER BY `attempt` DESC LIMIT 1", false, false)) {
+			$currentAttempt = $attempt['attempt'];
+		} else {
+			$currentAttempt = 1;
+		}
+	} else {
+		$attempt = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$testID}' ORDER BY `attempt` DESC LIMIT 1");
+		$currentAttempt = $attempt['attempt'] + 1;
+	}
+	
+	$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
 	
 //Check to see if test questions exist
 	function questionExist($id) {
@@ -88,24 +104,45 @@ of each learning unit.
 			echo "<root>\n";
 			
 			if (sizeof($_GET) > 2) {
-				$sql = "SELECT `field_{$key}` FROM `{$parentTable}` WHERE";
-				$restrictImport = array();
+				$columns = "";
+				$values = "";
+				$count = 0;
 				
 				foreach($_GET as $key => $parameterPrep) {
-					$parameter = escape($parameterPrep);
+					$parameter = escape(urldecode($parameterPrep));
 					
 					if ($key != "id" && $key != "data") {
-						$sql .= " `{$parentTable}`.`field_{$key}` = '{$parameter}' AND `{$questionBank}`.`field_{$key}` = '{$parameter}' AND";
+						$columns .= " `field_{$key}`,";
 					}
 				}
 				
-				$sql = rtrim($sql, " AND") . "UNION ALL ELECT `field_{$key}` FROM `{$parentTable}` WHERE";
+				$columns = rtrim($columns, ",");
 				
-				$questions = query(rtrim($sql, " AND"), "num");
+				foreach($_GET as $key => $parameterPrep) {
+					$parameter = escape(urldecode($parameterPrep));
+					
+					if ($key != "id" && $key != "data") {
+						$values .= " `field_{$key}` = '{$parameter}' AND";
+					}
+				}
 				
-				for ($count = $questions; $count >= 1; $count --) {
+				$questions = query("SELECT 0,{$columns} FROM `{$parentTable}` WHERE" . rtrim($values, " AND") . " UNION ALL SELECT `id`,{$columns} FROM `{$questionBank}` WHERE" . rtrim($values, " AND"), "raw");
+				
+				while($question = fetch($questions)) {
+					if ($question['0'] == 0 || exist($parentTable, "linkID", $question['0'])) {
+						$count ++;
+					}
+				}
+				
+				if ($count > 0) {
+					for ($values = $count; $values >= 1; $values --) {
+						echo "<group>\n";
+						echo "<question>" . $values ."</question>\n";
+						echo "</group>\n";
+					}
+				} else {
 					echo "<group>\n";
-					echo "<question>" . $count ."</question>\n";
+					echo "<question>None Avaliable</question>\n";
 					echo "</group>\n";
 				}
 			} else {
@@ -123,21 +160,27 @@ of each learning unit.
 		}
 		
 	//Process the form
-		if (isset($_POST['setup']) && isset($_POST['difficulty']) && isset($_POST['questions'])) {
+		if (isset($_POST['setup'])) {
 			$totalQuestions = query("SELECT * FROM `{$parentTable}` WHERE `type` != 'Description'", "num");
-			$questionsPercentage = number_format(sprintf($_POST['questions']/$totalQuestions), 2);
+			$questionsPercentage = number_format($_POST['questions']/$totalQuestions, 2);
 			$totalDescriptions = query("SELECT * FROM `{$parentTable}` WHERE `type` = 'Description'", "num");
-			$descriptionNumber = ceil(sprintf($totalDescriptions * $questionsPercentage));
-			$difficulty = $_POST['difficulty'];
+			$descriptionNumber = ceil($totalDescriptions * $questionsPercentage);
+			$values = "";
+			
+			foreach($_POST as $key => $parameter) {
+				if ($key != "parameters" && $key != "questions" && $key != "setup" && !empty($parameter)) {
+					$values .= " {$parentTable}.field_{$key} = '{$parameter}' OR {$questionBank}.field_{$key} = '{$parameter}' AND";
+				}
+			}
+			
+			if ($values != "") {
+				$values = " AND (" . rtrim($values, " AND") . ")";
+			}
+			
 			$questions = $_POST['questions'];
-			$limit = $questions + $descriptionNumber;
 			$count = 1;
 			
-			if ($difficulty == "All Levels" || $difficulty == urlencode("All Levels")) {
-				$testDataGrabber = query("(SELECT * FROM `{$parentTable}` WHERE `type` != 'Description' ORDER BY RAND() LIMIT {$questions}) UNION (SELECT * FROM `{$parentTable}` WHERE `type` = 'Description' ORDER BY RAND() LIMIT {$descriptionNumber})", "raw");
-			} else {
-				$testDataGrabber = query("(SELECT * FROM `{$parentTable}` WHERE `difficulty` = '{$difficulty}' AND `type` != 'Description' ORDER BY RAND() LIMIT {$questions}) UNION (SELECT * FROM `{$parentTable}` WHERE `type` = 'Description' ORDER BY RAND() LIMIT {$descriptionNumber})", "raw");
-			}
+			$testDataGrabber = query("(SELECT {$parentTable}.*, {$questionBank}.* FROM `{$parentTable}` LEFT JOIN `{$questionBank}` ON {$parentTable}.linkID = {$questionBank}.id WHERE {$parentTable}.type != 'Description'{$values} ORDER BY RAND() LIMIT {$questions}) UNION (SELECT {$parentTable}.*, {$questionBank}.* FROM `{$parentTable}` LEFT JOIN `{$questionBank}` ON {$parentTable}.linkID = {$questionBank}.id WHERE {$parentTable}.type = 'Description'{$values} ORDER BY RAND() LIMIT {$descriptionNumber}) ORDER BY RAND()", "raw");
 			
 			query("CREATE TABLE IF NOT EXISTS `{$testTable}` (
 				  `testID` int(255) NOT NULL,
@@ -163,9 +206,9 @@ of each learning unit.
 				
 			$restrictImport = array();
 			
-			while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
+			while ($testDataLoop = fetch($testDataGrabber)) {
 				if ($testDataLoop['questionBank'] == "1") {
-					$importQuestion = query("SELECT * FROM `questionbank` WHERE `id` = '{$testDataLoop['linkID']}'");
+					$testData = query("SELECT * FROM `{$questionBank}` WHERE `id` = '{$testDataLoop['linkID']}'");
 				} else {
 					$testData = $testDataLoop;
 				}
@@ -175,36 +218,42 @@ of each learning unit.
 					$questionID = $testDataLoop['link'];
 					
 					query("INSERT INTO `{$testTable}` (
-					  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
-					  ) VALUES (
-					  '{$testID}', '{$questionID}', '{$attempt}', 'Description', '', '', '{$randomPosition}', '', '', '', '', '', '', '', '', '', '', '', ''
-					  )");
+						  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
+						  ) VALUES (
+						  '{$testID}', '{$questionID}', '{$currentAttempt}', 'Description', '', '', '{$randomPosition}', '', '', '', '', '', '', '', '', '', '', '', ''
+						  )");
 					  
 					array_push($restrictImport, $testDataLoop['link']);
 				}
 				
 				if (!in_array($testDataLoop['id'], $restrictImport)) {
-					$questionID = $testDataLoop['id'];
-					$type = $testDataLoop['type'];
+					$questionID = $testDataLoop['0'];
+					
+					if (empty($testDataLoop['type'])) {
+						$type = $testDataLoop['4'];
+					} else {
+						$type = $testDataLoop['type'];
+					}
+					
 					$randomPosition = $count ++;
 					
 					if ($testData['type'] == "Matching" || $testData['type'] == "Multiple Choice" || $testData['type'] == "True False") {
 						if ($testData['type'] == "Multiple Choice") {
 							$questionValue = "";
-							$answerValue = mysql_real_escape_string($testData['questionValue']);
+							$answerValue = escape($testData['questionValue']);
 							$answerValueScrambledPrep = unserialize($testData['questionValue']);
 						} elseif($testData['type'] == "Matching") {
-							$questionValue = mysql_real_escape_string($testData['questionValue']);
-							$answerValue = mysql_real_escape_string($testData['answerValue']);
+							$questionValue = escape($testData['questionValue']);
+							$answerValue = escape($testData['answerValue']);
 							$answerValueScrambledPrep = unserialize($testData['answerValue']);
 						} elseif ($testData['type'] == "True False") {
 							$questionValue = "";
-							$answerValue = mysql_real_escape_string(serialize(array("1", "0")));
+							$answerValue = escape(serialize(array("1", "0")));
 							$answerValueScrambledPrep = array("1", "0");
 						}
 						
 						shuffle($answerValueScrambledPrep);
-						$answerValueScrambled = mysql_real_escape_string(serialize($answerValueScrambledPrep));
+						$answerValueScrambled = escape(serialize($answerValueScrambledPrep));
 					} else {
 						$questionValue = "";
 						$answerValue = "";
@@ -214,13 +263,17 @@ of each learning unit.
 					query("INSERT INTO `{$testTable}` (
 						  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
 						  ) VALUES (
-						  '{$testID}', '{$questionID}', '{$attempt}', '{$type}', '', '', '{$randomPosition}', '', '', '', '', '', '', '{$questionValue}', '{$answerValue}', '{$answerValueScrambled}', '', '', ''
+						  '{$testID}', '{$questionID}', '{$currentAttempt}', '{$type}', '', '', '{$randomPosition}', '', '', '', '', '', '', '{$questionValue}', '{$answerValue}', '{$answerValueScrambled}', '', '', ''
 						  )");
 					
 					array_push($restrictImport, $testDataLoop['id']);
 				}
 			}
 			
+			$accessArray[$testID]['submitted'] = "";
+			$unitInfoUpdate = escape(serialize($accessArray));
+			
+			query("UPDATE `users` SET `learningunits` = '{$unitInfoUpdate}' WHERE `id` = '{$userData['id']}'");
 			redirect($_SERVER['REQUEST_URI']);
 		}
 			
@@ -230,7 +283,7 @@ of each learning unit.
 </script>");
 		
 	//Title
-		title($unitInfo['name'] . " Configuration", "Please configure this test to best suit your needs. Keep in mind that once these settings are set, they cannot be changed, unless you decide to retake this test after this session.");
+		title($unitInfo['name'] . " Configuration", "Configure this test to best suit your needs. Keep in mind that once these settings are set, they cannot be changed, unless you decide to retake this test after this session.");
 		
 	//Configuration form
 		echo form("configuration");
@@ -241,10 +294,7 @@ of each learning unit.
 		$customFields = query("SELECT * FROM `fields` WHERE `testFilter` = '1' AND `fieldType` != 'checkbox' AND `fieldType` != 'textArea' ORDER BY `position` ASC", "raw");
 		
 		while ($field = fetch($customFields)) {
-			if (in_array("Question Generator", unserialize($field['section']))) {
-				$items = "";
-				$values = unserialize($field['values']);
-				
+			if (in_array("Question Generator", unserialize($field['section']))) {				
 				if ($field['showTip'] == "1") {
 					$tip = strip_tags($field['description']);
 				} else {
@@ -252,6 +302,19 @@ of each learning unit.
 				}
 				
 				directions($field['name'], false, $tip);
+				
+			//Generate the values
+				$values = array();		
+				$questions = query("SELECT 0, `field_{$field['id']}` FROM `{$parentTable}` UNION ALL SELECT `id`, `field_{$field['id']}` FROM `{$questionBank}`", "raw");
+				
+				while($question = fetch($questions)) {
+					if ($question['0'] == 0 || exist($parentTable, "linkID", $question['0'])) {
+						array_push($values, $question['field_' . $field['id']]);
+					}
+				}
+				
+				sort($values);
+				$values = array_filter(array_unique($values));
 				
 				switch($field['fieldType']) {
 					case "dropDown" : 
@@ -271,7 +334,6 @@ of each learning unit.
 					case "textField" : 
 						$items = "- All -,";
 						$IDs = ",";
-						$values = array_unique(query("SELECT `field_{$field['id']}` FROM `{$parentTable}`", "selected"));
 						
 						foreach ($values as $value) {
 							if (!empty($value)) {
@@ -281,19 +343,6 @@ of each learning unit.
 						}
 						
 						indent(dropDown($field['id'], $field['id'], rtrim($items, ","), rtrim($IDs, ","), false, false, false, false, false, false, "onchange=\"updateDataSet(this.id)\""));
-						break;
-						
-					case "checkbox" : 
-						$count = 0;
-						echo "<blockquote><p>";
-						
-						foreach ($values as $value) {
-							echo checkbox($field['id'] . "[]", $field['id'] . "_" . $count, $value, prepare($value, true, true), false, false, false, false, false, false, "onclick=\"updateDataSet(this.id)\"");
-							echo "<br />\n";
-							$count++;
-						}
-						
-						echo "</p></blockquote>";
 						break;
 						
 					default : 
@@ -325,7 +374,7 @@ of each learning unit.
 	$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `questionID` ASC", "raw");
 	$questionConfig = array("Matching", "Multiple Choice");
 	
-	while ($testData = mysql_fetch_array($testDataGrabber)) {
+	while ($testData = fetch($testDataGrabber)) {
 		$bankDataGrabber = query("SELECT * FROM `{$parentTable}` WHERE `id` = '{$testData['questionID']}'");
 		
 		if (!empty($bankDataGrabber['link']) && !questionExist($bankDataGrabber['link']) && exist($parentTable, "id", $bankDataGrabber['link'])) {
@@ -340,7 +389,7 @@ of each learning unit.
 		}
 		
 		if ($bankDataGrabber['questionBank'] == "1") {
-			$bankData = query("SELECT * FROM `questionbank` WHERE `id` = '{$bankDataGrabber['linkID']}'");
+			$bankData = query("SELECT * FROM `{$questionBank}` WHERE `id` = '{$bankDataGrabber['linkID']}'");
 		} else {
 			$bankData = $bankDataGrabber;
 		}
@@ -348,19 +397,19 @@ of each learning unit.
 		if (exist($parentTable, "id", $testData['questionID'])) {
 			if (in_array($bankData['type'], $questionConfig)) {
 				if ($testData['type'] == "Matching") {
-					$questionValue = mysql_real_escape_string($bankData['questionValue']);
-					$answerValue = mysql_real_escape_string($bankData['answerValue']);
+					$questionValue = escape($bankData['questionValue']);
+					$answerValue = escape($bankData['answerValue']);
 					$answerValueScrambledPrep = unserialize($bankData['answerValue']);
 					$answerCompare = $bankData['answerValue'];
 				} else {
 					$questionValue = "";
-					$answerValue = mysql_real_escape_string($bankData['questionValue']);
+					$answerValue = escape($bankData['questionValue']);
 					$answerValueScrambledPrep = unserialize($bankData['questionValue']);
 					$answerCompare = $bankData['questionValue'];
 				}
 				
 				shuffle($answerValueScrambledPrep);
-				$answerValueScrambled = mysql_real_escape_string(serialize($answerValueScrambledPrep));
+				$answerValueScrambled = escape(serialize($answerValueScrambledPrep));
 				
 				if ($answerCompare !== $testData['answerValue']) {
 					query("UPDATE `{$testTable}` SET `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `answerValueScrambled` = '{$answerValueScrambled}' WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}'");
@@ -372,9 +421,6 @@ of each learning unit.
 		}
 	}
 	
-//Top content
-	headers($moduleInfo['name'], "Student,Site Administrator", "tinyMCESimple,newObject", true);
-	
 //Process the form
 	if (isset($_POST['submit']) || isset($_POST['save'])) {	
 		$count = 0;
@@ -382,7 +428,8 @@ of each learning unit.
 		
 		foreach ($_POST as $key => $answer) {
 			if (exist($parentTable, "id", $key)) {
-				$value = mysql_real_escape_string(serialize($answer));
+				$value = escape(serialize($answer));
+				
 				query("UPDATE `{$testTable}` SET `userAnswer` = '{$value}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$key}'");
 				array_push($questions, $key);
 			}
@@ -390,7 +437,7 @@ of each learning unit.
 		
 		$choiceGrabber = query("SELECT * FROM `{$testTable}` WHERE `type` = 'Multiple Choice' AND `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'", "raw");
 		
-		while ($choice = mysql_fetch_array($choiceGrabber)) {
+		while ($choice = fetch($choiceGrabber)) {
 			if (!in_array($choice['questionID'], $questions)) {
 				query("UPDATE `{$testTable}` SET `userAnswer` = '' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$choice['questionID']}'");
 			}
@@ -403,14 +450,14 @@ of each learning unit.
 				$id = explode("_", $key);
 				$tempFile = $file['tmp_name'];
 				$targetFile = basename($file['name']);
-				$uploadDir = $_GET['id'] . "/test/responses";
+				$uploadDir = "unit_" . $_GET['id'] . "/test/responses";
 				$fileNameArray = explode(".", $targetFile);
 				$targetFile = "";
 				extension($file['name']);
 				
 				for ($count = 0; $count <= sizeof($fileNameArray) - 1; $count++) {
 					if ($count == sizeof($fileNameArray) - 2) {
-						$targetFile .= $fileNameArray[$count] . " " . randomValue(10, "alphanum") . ".";
+						$targetFile .= $fileNameArray[$count] . "_" . randomValue(10, "alphanum") . ".";
 					} elseif($count == sizeof($fileNameArray) - 1) {
 						$targetFile .= $fileNameArray[$count];
 					} else {
@@ -418,7 +465,7 @@ of each learning unit.
 					}
 				}
 				
-				$targetFile = mysql_real_escape_string($targetFile);
+				$targetFile = escape($targetFile);
 				
 				if (move_uploaded_file($tempFile, $uploadDir . "/" . $targetFile)) {
 					$fileGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$id['0']}'");
@@ -431,7 +478,7 @@ of each learning unit.
 					
 					unlink($uploadDir . "/" . $filesArray[intval($id['1']) - 1]);
 					$filesArray[intval($id['1']) - 1] = $targetFile;
-					$value = mysql_real_escape_string(serialize($filesArray));
+					$value = escape(serialize($filesArray));
 					query("UPDATE `{$testTable}` SET `userAnswer` = '{$value}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$id['0']}'");
 				} else {
 					$errors = true;
@@ -449,16 +496,16 @@ of each learning unit.
 		//Grade the test
 		//Grab the necessary info
 			$selectionGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'", "raw");
-			$randomizeTest = $moduleInfo['randomizeAll'];
+			$randomizeTest = $unitInfo['randomizeAll'];
 			$additionalSQLConstruct = " WHERE ";
 				
-			while ($selection = mysql_fetch_array($selectionGrabber)) {
+			while ($selection = fetch($selectionGrabber)) {
 				$additionalSQLConstruct .= "`id` = '{$selection['questionID']}' OR ";
 			}
 			
 			$additionalSQL = rtrim($additionalSQLConstruct, " OR ");
 				
-			if ($moduleInfo['randomizeAll'] == "Randomize") {
+			if ($unitInfo['randomizeAll'] == "Randomize") {
 				$order = " ORDER BY `randomPosition` ASC";
 			} else {
 				$order = " ORDER BY `position` ASC";
@@ -469,7 +516,7 @@ of each learning unit.
 			
 			$testDataGrabber = query("SELECT {$grab} FROM `{$parentTable}`{$join}{$additionalSQL}{$order}", "raw");
 			
-			if (exist("moduledata", "id", $_GET['id']) == false) {
+			if (exist("learningunits", "id", $_GET['id']) == false) {
 				redirect("index.php");
 			}
 		
@@ -477,28 +524,30 @@ of each learning unit.
 			$gradeConfig = array("Fill in the Blank", "Matching", "Multiple Choice", "Short Answer", "True False");
 			$noGrade = array();
 			
-			while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
+			while ($testDataLoop = fetch($testDataGrabber)) {
 				if ($testDataLoop['questionBank'] == "1") {
-					$testData = query("SELECT * FROM `questionbank` WHERE `id` = '{$testDataLoop['linkID']}'");
+					$testData = query("SELECT * FROM `{$questionBank}` WHERE `id` = '{$testDataLoop['linkID']}'");
 					$position = $testDataLoop['position'];
 				} else {
 					$testData = $testDataLoop;
 					$position = $testData['position'];
 				}
 				
+				$userSelection = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `questionID` = '{$testDataLoop['id']}' AND `attempt` = '{$currentAttempt}'");
+				
 				$randomizeQuestion = $testData['randomize'];
-				$link = $testData['link'];
+				$link = $testDataLoop['link'];
 				$points = $testData['points'];
 				$extraCredit = $testData['extraCredit'];
-				$question = mysql_real_escape_string($testData['question']);
-				$questionValue = mysql_real_escape_string($testData['questionValue']);
+				$question = escape($testData['question']);
+				$questionValue = escape($testData['questionValue']);
 				
 				if (!empty($testData['answerValue'])) {
-					$answerValue = mysql_real_escape_string($testData['answerValue']);
+					$answerValue = escape($testData['answerValue']);
 				} elseif (!empty($testData['answer'])) {
-					$answerValue = mysql_real_escape_string($testData['answer']);
+					$answerValue = escape($testData['answer']);
 				} elseif (!empty($testData['fileURL'])) {
-					$answerValue = mysql_real_escape_string($testData['fileURL']);
+					$answerValue = escape($testData['fileURL']);
 				} else {
 					$answerValue = "";
 				}
@@ -507,7 +556,7 @@ of each learning unit.
 					switch ($testData['type']) {
 						case "Fill in the Blank" :
 							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($testData['userAnswer']);
+							$userAnswers = unserialize($userSelection['userAnswer']);
 							$wrong = 0;
 							
 							if (empty($testAnswers[sprintf(sizeof($testAnswers) - 1)])) {
@@ -536,8 +585,8 @@ of each learning unit.
 							
 						case "Matching" :
 							$testQuestion = unserialize($testData['answerValue']);
-							$testAnswers = unserialize($testData['answerValueScrambled']);
-							$userAnswers = unserialize($testData['userAnswer']);
+							$testAnswers = unserialize($userSelection['answerValueScrambled']);
+							$userAnswers = unserialize($userSelection['userAnswer']);
 							$totalValues = sizeof($testAnswers);
 							$wrong = 0;
 							
@@ -555,14 +604,14 @@ of each learning unit.
 							
 						case "Multiple Choice" :
 							if ($testData['randomize'] == "1") {
-								$answerCompare = unserialize($testData['answerValueScrambled']);
+								$answerCompare = unserialize($userSelection['answerValueScrambled']);
 							} else {
 								$answerCompare = unserialize($testData['questionValue']);
 							}
 							
 							$testQuestion = unserialize($testData['questionValue']);
 							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($testData['userAnswer']);
+							$userAnswers = unserialize($userSelection['userAnswer']);
 							$correctAnswers = array();
 							$wrong = 0;
 							
@@ -598,7 +647,7 @@ of each learning unit.
 							
 						case "Short Answer" :
 							$testAnswers = unserialize($testData['answerValue']);
-							$userAnswers = unserialize($testData['userAnswer']);
+							$userAnswers = unserialize($userSelection['userAnswer']);
 							$totalValues = 1;
 							$wrong = 0;
 							
@@ -626,7 +675,7 @@ of each learning unit.
 							
 						case "True False" :
 							$testAnswers = $testData['answer'];
-							$userAnswers = unserialize($testData['userAnswer']);
+							$userAnswers = unserialize($userSelection['userAnswer']);
 							$totalValues = 1;
 							$wrong = 0;
 							
@@ -644,10 +693,10 @@ of each learning unit.
 					if ($testData['partialCredit'] == "0") {
 						if ($scorePrep !== number_format($testData['points'], 2)) {
 							$score = "0";
-							$feedback = mysql_real_escape_string($testData['incorrectFeedback']);
+							$feedback = escape($testData['incorrectFeedback']);
 						} else {
 							$score = $scorePrep;
-							$feedback = mysql_real_escape_string($testData['correctFeedback']);
+							$feedback = escape($testData['correctFeedback']);
 						}
 					} else {						
 						if ($scorePrep < 0) {
@@ -657,17 +706,19 @@ of each learning unit.
 						}
 						
 						if ($scorePrep !== $testData['points'] && $scorePrep !== "0") {
-							$feedback = mysql_real_escape_string($testData['partialFeedback']);
+							$feedback = escape($testData['partialFeedback']);
 						} elseif ($scorePrep !== $testData['points'] && $scorePrep === "0") {
-							$feedback = mysql_real_escape_string($testData['incorrectFeedback']);
+							$feedback = escape($testData['incorrectFeedback']);
 						} else {
-							$feedback = mysql_real_escape_string($testData['correctFeedback']);
+							$feedback = escape($testData['correctFeedback']);
 						}
 					}
 					
 					query("UPDATE `{$testTable}` SET `link` = '{$link}', `testPosition` = '{$position}', `randomizeTest` = '{$randomizeTest}', `randomizeQuestion` = '{$randomizeQuestion}', `extraCredit` = '{$extraCredit}', `points` = '{$points}', `score` = '{$score}', `question` = '{$question}', `questionValue` = '{$questionValue}', `testAnswer` = '{$answerValue}', `feedback` = '{$feedback}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$testDataLoop['id']}' LIMIT 1");
 				} else {
-					array_push($noGrade, $testData['type']);
+					if ($testData['type'] != "Description") {
+						array_push($noGrade, $testData['type']);
+					}
 					
 					query("UPDATE `{$testTable}` SET `link` = '{$link}', `testPosition` = '{$position}', `randomizeTest` = '{$randomizeTest}', `randomizeQuestion` = '{$randomizeQuestion}', `extraCredit` = '{$extraCredit}', `points` = '{$points}', `question` = '{$question}', `questionValue` = '{$questionValue}', `testAnswer` = '{$answerValue}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$testDataLoop['id']}' LIMIT 1");
 				}
@@ -676,7 +727,7 @@ of each learning unit.
 			}
 			
 			$testUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}' LIMIT 1");
-			$testUpdateArray = unserialize($testUpdateGrabber['modules']);
+			$testUpdateArray = unserialize($testUpdateGrabber['learningunits']);
 			
 			if (!empty($noGrade)) {
 				$testUpdateArray[$testID]['testStatus'] = "A";
@@ -684,10 +735,11 @@ of each learning unit.
 				$testUpdateArray[$testID]['testStatus'] = "F";
 			}
 			
+			$testUpdateArray[$testID]['submitted'] = time();
 			$testUpdate = serialize($testUpdateArray);
 			
-			query("UPDATE `users` SET `modules` = '{$testUpdate}' WHERE `id` = '{$userData['id']}'");
-			redirect("review.php?id=" . $_GET['id']);
+			query("UPDATE `users` SET `learningunits` = '{$testUpdate}' WHERE `id` = '{$userData['id']}'");
+			redirect("review.php?id=" . $_GET['id'] . "&attempt=" . $currentAttempt);
 		}
 	}
 	
@@ -697,7 +749,7 @@ of each learning unit.
 		
 		if (array_key_exists(intval($_GET['fileID']) - 1, unserialize($fileData['userAnswer']))) {
 			$file = unserialize($fileData['userAnswer']);
-			unlink($testID . "/test/responses/" . $file[intval($_GET['fileID']) - 1]);
+			unlink("unit_" . $testID . "/test/responses/" . $file[intval($_GET['fileID']) - 1]);
 			unset($file[intval($_GET['fileID']) - 1]);
 			$return = serialize(array_merge($file));
 			query("UPDATE `{$testTable}` SET `userAnswer` = '{$return}' WHERE `testID` = '{$testID}' AND `questionID` = '{$_GET['questionID']}' AND `attempt` = '{$currentAttempt}'");
@@ -705,27 +757,30 @@ of each learning unit.
 		}
 	}
 	
+//Top content
+	headers($unitInfo['name'], "tinyMCESimple,newObject", true);
+	
 //Title
-	title($moduleInfo['name'], false, false);
+	title($unitInfo['name'], false, false);
 	
 //Information bar
-	echo "<div class=\"toolBar noPadding\"><strong>Directions</strong>: " . strip_tags($moduleInfo['directions']);
+	echo "<div class=\"toolBar noPadding\">\n<strong>Directions</strong>: " . strip_tags($unitInfo['directions']) . "\n";
 	
 //Display a forced completion alert
-	if ($moduleInfo['forceCompletion'] == "on") {
-		echo "<br /><strong>Force Completion</strong>: This test must be completed now.";
+	if ($unitInfo['forceCompletion'] == "on") {
+		echo "<br />\n<strong>Force Completion</strong>: This test must be completed now.\n";
 	}
 
 //Display a timer alert
-	if ($moduleInfo['timer'] == "on") {
-		$time = unserialize($moduleInfo['time']);
+	if ($unitInfo['timer'] == "on") {
+		$time = unserialize($unitInfo['time']);
 		
-		if ($moduleInfo['time'] !== "") {
+		if ($unitInfo['time'] !== "") {
 			$testH = $time['0'];
 			$testM = $time['1'];
 		}
 		
-		echo "<br /><strong>Time limit</strong>: This test must be completed within <strong>" . $time['0'];
+		echo "<br />\n<strong>Time limit</strong>: This test must be completed within <strong>" . $time['0'];
 		
 		if ($time['0'] == "1") {
 			echo " hour and ";
@@ -733,25 +788,30 @@ of each learning unit.
 			echo " hours and ";
 		}
 		
-		echo $time['1'] . " minutes</strong>.";
+		echo $time['1'] . " minutes</strong>.\n";
 	}
 	
 //Close the information bar
-	echo "</div>";
+	echo "</div>\n";
 	
 //Display link back to the lesson, if premitted
-	if ($moduleInfo['reference'] == "1") {
-		echo "<br /><div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'] . "&page=1", "previousPage") . "</div><br />";
+	$lastPage = query("SELECT * FROM `lesson_{$_GET['id']}` ORDER BY `position` DESC LIMIT 1");
+	
+	if ($unitInfo['reference'] == "1") {
+		echo "<br />\n<div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'] . "&page=" . $lastPage['position'], "previousPage") . "</div>\n<br />\n";
 	} else {
-		echo "<p>&nbsp;</p>";
+		echo "<p>&nbsp;</p>\n";
 	}
 	
+//Display an error alert for failed file uploads
+	message("error", "upload", "error", "One or more files have failed to upload. Ensure that you did not cancel the upload, or that the files did not exceed the maxmium upload size.");
+	
 //Display the test
-	test("moduletest_" . $_GET['id'], "../../gateway.php/modules/" . $_GET['id'] . "/");
+	test("test_" . $_GET['id'], "preview.php/unit_" . $_GET['id'] . "/");
 
 //Display link back to the lesson, if premitted
-	if ($moduleInfo['reference'] == "1") {
-		echo "<br /><div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'], "previousPage") . "</div>";
+	if ($unitInfo['reference'] == "1") {
+		echo "<br />\n<div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'] . "&page=" . $lastPage['position'], "previousPage") . "</div>\n";
 	}
 	
 //Include the footer

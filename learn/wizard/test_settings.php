@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 13th, 2010
-Last updated: December 10th, 2010
+Last updated: February 10th, 2011
 
 This is the test settings page for the test and learning 
 generators.
@@ -86,7 +86,7 @@ generators.
 	
 	catDivider("Test Settings", "five");
 	echo "<blockquote>\n";
-	directions("Passing score", false, "The minimum score a user must obtain to pass");	
+	directions("Passing score", false, "The minimum percentage a user must obtain to pass");	
 	
 	$valuesGenerate = "";
 	
@@ -96,7 +96,7 @@ generators.
 	
 	$values = rtrim($valuesGenerate, ",");
 	
-	indent(dropDown("score", "score", $values, $values, false, false, false, false, "testData", "score"));
+	indent(dropDown("score", "score", $values, $values, false, false, false, false, "testData", "score") . "%");
 	directions("Number of attempts", false, "The number of times a user may take this test");
 	indent(dropDown("attempts", "attempts", "Unlimited,1,2,3,4,5,6,7,8,9,10", "999,1,2,3,4,5,6,7,8,9,10", false, false, false, false, "testData", "attempts", " onchange=\"toggleTestOptions(this.value);\""));
 	echo "<div id=\"contentHide\"";

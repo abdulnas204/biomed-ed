@@ -1,6 +1,24 @@
 <?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: October 1st, 2010
+Last updated: Feburary 4th, 2010
+
+This is the page for managing the public website.
+*/
+
 //Header functions
-	require_once('../system/connections/connDBA.php');
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("cms/system/php") . "index.php");
+	require_once(relativeAddress("cms/system/php") . "functions.php");
 	
 //Check to see if the page is being edited
 	if (isset ($_GET['id'])) {
@@ -17,33 +35,26 @@
 		$title =  "Create a New Page";
 	}
 	
-	headers($title, "Site Administrator", "tinyMCEAdvanced,validate", true);
+	headers($title, "tinyMCEAdvanced,validate", true);
 	
 //Process the form
 	if (isset($_POST['submit']) && !empty ($_POST['title']) && !empty($_POST['content'])) {	
-		$title = mysql_real_escape_string($_POST['title']);
-		$content = mysql_real_escape_string($_POST['content']);
+		$title = escape($_POST['title']);
+		$content = escape($_POST['content']);
 		
 		if (!isset ($pageData)) {
-			$positionGrabber = mysql_query ("SELECT * FROM pages ORDER BY position DESC", $connDBA);
-			$positionArray = mysql_fetch_array($positionGrabber);
-			$position = $positionArray{'position'}+1;
-				
-			$newPageQuery = "INSERT INTO pages (
-								`id`, `title`, `visible`, `position`, `content`
-							) VALUES (
-								NULL, '{$title}', 'on', '{$position}', '{$content}'
-							)";
+			$position = lastItem("pages");
 			
-			mysql_query($newPageQuery, $connDBA);
-			header ("Location: index.php?added=page");
-			exit;
+			query("INSERT INTO `pages` (
+				  `id`, `title`, `visible`, `position`, `content`
+				  ) VALUES (
+				  NULL, '{$title}', 'on', '{$position}', '{$content}'
+				  )");
+				  
+			redirect ("index.php?added=page");
 		} else {
-			$page = $_GET['id'];
-			
-			mysql_query("UPDATE pages SET title = '{$title}', content = '{$content}' WHERE `id` = '{$page}'", $connDBA);
-			header ("Location: index.php?updated=page");
-			exit;
+			query("UPDATE `pages` SET title = '{$title}', content = '{$content}' WHERE `id` = '{$_GET['id']}'");
+			redirect ("index.php?updated=page");
 		}
 	} 
 	
@@ -59,25 +70,18 @@
 	title($title, $description);
 	
 //Pages form
-	form("managePage");
+	echo form("managePage");
 	catDivider("Content", "one", true);
-	echo "<blockquote>";
+	echo "<blockquote>\n";
 	directions("Title", true, "The text that will display in big letters on the top-left of each page <br />and at the top of the browser window.");
-	echo "<blockquote><p>";
-	textField("title", "title", false, false, false, true, false, false, "pageData", "title");
-	echo "</p></blockquote>";
+	indent(textField("title", "title", false, false, false, true, false, false, "pageData", "title"));
 	directions("Content", true, "The main content or body of the webpage");
-	echo "<blockquote>";
-	textArea("content", "content1", "large", true, false, false, "pageData", "content");
-	echo "</blockquote></blockquote>";
+	indent(textArea("content", "content1", "large", true, false, false, "pageData", "content"));
+	echo "</blockquote>\n";
 	
 	catDivider("Content", "two");
-	echo "<blockquote><p>";
-	button("submit", "submit", "Submit", "submit");
-	button("reset", "reset", "Reset", "reset");
-	button("cancel", "cancel", "Cancel", "cancel", "index.php");
-	echo "</p>";
-	closeForm(true, true);
+	formButtons();
+	echo closeForm();
 
 //Include the footer
 	footer();

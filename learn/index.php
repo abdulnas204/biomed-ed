@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: December 21st, 2010
+Last updated: February 13th, 2010
 
 This is the overview page for the learning units in this 
 system.
@@ -72,11 +72,14 @@ system.
 	$dataGrabber = query("SELECT * FROM `learningunits`{$additionalSQL} ORDER BY `id` ASC", "raw"); 
 	
 //Admin toolbar
-	if (access("Create Learning Unit", "Edit Learning Unit", "Delete Learning Unit", "Create Question Bank Questions", "Edit Question Bank Questions", "Delete Question Bank Questions", "Create Feedback Questions", "Edit Feedback Questions", "Delete Feedback Questions", "Assign Users to Learning Unit")) {
+	if (access("Create Learning Unit", "Edit Learning Unit", "Delete Learning Unit", "Create Question Bank Questions", "Edit Question Bank Questions", "Delete Question Bank Questions", "Create Feedback Questions", "Edit Feedback Questions", "Delete Feedback Questions", "View Grades", "Assign Users to Learning Unit")) {
 		echo "<div class=\"toolBar\">\n";
 		echo toolBarURL("Add New Module", "wizard/index.php", "toolBarItem new", false, "Create Learning Unit", "Edit Learning Unit", "Delete Learning Unit");
 		echo toolBarURL("Question Bank", "question_bank/index.php", "toolBarItem bank", false, "Create Question Bank Questions", "Edit Question Bank Questions", "Delete Question Bank Questions");
 		echo toolBarURL("Feedback", "feedback/index.php", "toolBarItem feedback", false, "Create Feedback Questions", "Edit Feedback Questions", "Delete Feedback Questions");
+		echo toolBarURL("View Grades", "gradebook/index.php", "toolBarItem bank", false, "View Grades");
+		echo toolBarURL("View Billing History", "billing/index.php", "toolBarItem billing", false, "View Own Billing History");
+		echo toolBarURL("Manage Lesson Plan", "planner/index.php", "toolBarItem calendar", false, "Manage Own Lesson Plan");
 		echo toolBarURL("Assign Users", "assign/index.php", "toolBarItem user", false, "Assign Users to Learning Unit");
 		echo "</div>\n<br />\n";
 	}
@@ -85,6 +88,7 @@ system.
 	if ((access("Create Learning Unit", "Edit Learning Unit", "Delete Learning Unit") && exist("learningunits")) || (!access("Create Learning Unit", "Edit Learning Unit", "Delete Learning Unit") && exist("learningunits", "visible", "on"))) {
 		$organization = $userData['organization'];
 		$count = 1;
+		$units = array();
 		
 		if (access("Purchase Learning Unit")) {
 			echo form("purchase", false, false, "enroll/cart.php");
@@ -104,7 +108,7 @@ system.
 		echo column("Purchase", "100", "Purchase Learning Unit");
 		echo "</tr>\n";
 		
-		while ($data = fetch($dataGrabber)) {
+		while ($data = fetch($dataGrabber)) {			
 			echo "<tr";
 			if ($count & 1) {echo " class=\"odd\">\n";} else {echo " class=\"even\">\n";}
 			
@@ -154,26 +158,36 @@ system.
 			  
 			echo "</tr>\n";
 			
+			array_push($units, $data['id']);
 			$count++;
 		 }
 		 
 		 echo "</table>\n";
 		 
 		 if (access("Purchase Learning Unit")) {
-			 echo "<hr />\n";
-			 echo "<div align=\"right\">";
-			 
-			 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-			 	echo button("submit", "submit", "Add Selected Items to Cart", "submit");
-			 } else {
-				 echo button("submit", "submit", "Update Cart", "submit");
+			 foreach($units as $unit) {
+				 if (!is_array(unserialize($userData['learningunits'])) || !array_key_exists($unit, unserialize($userData['learningunits']))) {
+					 $displayButton = true;
+				 }
 			 }
 			 
-			 echo "</div>";
+			 if (isset($displayButton)) {
+				 echo "<hr />\n";
+				 echo "<div align=\"right\">";
+				 
+				 if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+					echo button("submit", "submit", "Add Selected Items to Cart", "submit");
+				 } else {
+					 echo button("submit", "submit", "Update Cart", "submit");
+				 }
+				 
+				 echo "</div>";
+			 }
+			 
 			 echo closeForm(false);
 		 }
 	 } else {
-		 echo "<div class=\"noResults\">This are no learning units currently avaliable.";
+		 echo "<div class=\"noResults\">There are no learning units currently avaliable.";
 		  
 		 if (access("Create Learning Unit")) {
 			 echo " " . URL("Create one now", "wizard/index.php") . ".";

@@ -1,7 +1,26 @@
-<?php 
+<?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: November 28th, 2010
+Last updated: Feburary 4th, 2010
+
+This is the overview page for managing the sidebars on the 
+public website.
+*/
+
 //Header functions
-	require_once('../system/connections/connDBA.php');
-	headers("Sidebar Control Panel", "Site Administrator", "liveSubmit,customVisible", true); 
+	require_once('../system/core/index.php');
+	require_once(relativeAddress("cms/system/php") . "index.php");
+	require_once(relativeAddress("cms/system/php") . "functions.php");
+	headers("Sidebar Control Panel", "liveSubmit,customVisible", true); 
 
 //Reorder boxes	
 	reorder("sidebar", "sidebar.php");
@@ -17,15 +36,14 @@
 	
 //Admin toolbar
 	echo "<div class=\"toolBar\">";
-	echo URL("Create New Box", "manage_sidebar.php", "toolBarItem new");
-	echo URL("Manage Sidebar Settings", "sidebar_settings.php", "toolBarItem settings");
-	echo URL("Back to Pages", "index.php", "toolBarItem back");
+	echo toolBarURL("Create New Box", "manage_sidebar.php", "toolBarItem new");
+	echo toolBarURL("Back to Pages", "index.php", "toolBarItem back");
 
 	if (exist("sidebar") == true) {
 		echo URL("Preview this Site", "../../index.php", "toolBarItem search");
 	}
 	
-	echo "</div>";
+	echo "</div>\n";
 	
 //Display message updates
 	message("added", "item", "success", "The box was successfully added");

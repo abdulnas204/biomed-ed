@@ -1,22 +1,35 @@
 <?php
+/*
+---------------------------------------------------------
+(C) Copyright 2010 Apex Development - All Rights Reserved
+
+This script may NOT be used, copied, modified, or
+distributed in any way shape or form under any license:
+open source, freeware, nor commercial/closed source.
+---------------------------------------------------------
+ 
+Created by: Oliver Spryn
+Created on: June 30th, 2010
+Last updated: Janurary 13th, 2011
+
+This is the script to generate the link list for TinyMCE.
+*/
+
 //Header functions
-	require_once("../../../Connections/connDBA.php");
+	require_once('../../../core/index.php');
 
 //Define this as a javascript file
 	header ("Content-type: text/javascript");
 
 //Grab all of the pages	
-	$pageCheck = mysql_query("SELECT * FROM pages", $connDBA);
-	
-	if (mysql_fetch_array($pageCheck)) {
-		$pageDataGrabber = mysql_query("SELECT * FROM pages ORDER BY position ASC", $connDBA);
-		$pageCountGrabber = mysql_query("SELECT * FROM pages ORDER BY position ASC", $connDBA);
-		$pageCount = mysql_num_rows($pageCountGrabber);
+	if (exist("pages")) {
+		$pageDataGrabber = query("SELECT * FROM `pages` ORDER BY `position` ASC", "raw");
+		$pageCount = query("SELECT * FROM `pages` ORDER BY `position` ASC", "num");
 		
 		echo "var tinyMCELinkList = new Array(";
 		
-		while ($page = mysql_fetch_array($pageDataGrabber)) {
-			echo "[\"" . $page['title'] . "\", \"" . $root . "index.php?page=" . $page['id'] . "\"]";
+		while ($page = fetch($pageDataGrabber)) {
+			echo "[\"" . $page['title'] . "\", \"" . $root . "index.htm?page=" . $page['id'] . "\"]";
 			
 			if ($page['position'] != $pageCount) {
 				echo ", ";
@@ -25,6 +38,6 @@
 		
 		echo ");";
 	} else {
-		echo "var tinyMCELinkList = new Array([\"Home Page\", \"" . $root . "index.php\"]);";
+		echo "var tinyMCELinkList = new Array([\"Home Page\", \"" . $root . "index.htm\"]);";
 	}
 ?>

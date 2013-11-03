@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: Janurary 10th, 2011
+Last updated: February 14th, 2011
 
 This script contains user feedback, complete database 
 management, and minor code simplification functions which 
@@ -100,7 +100,7 @@ Database management functions
 	function fetch($value) {
 		global $root, $protocol;
 		
-		$result = mysql_fetch_assoc($value);
+		$result = mysql_fetch_array($value);
 		
 		if (is_array($result) && !empty($result)) {
 			array_merge_recursive($result);
@@ -142,7 +142,14 @@ Database management functions
 				//Fetch the array, and clean-up each value for display, DEFAULT BEHAVIOR
 					case false : 
 					case "array" : 
-						$result = fetch($action);
+						if ($result = fetch($action)) {
+							//Do nothing, the array was sucessfully extracted
+						} else {
+							if ($showError == true) {
+								$error = debug_backtrace();
+								die(errorMessage("There is an error with your query: " . $query . "<br /><br />Error on line: " . $error['0']['line'] . "<br />Error in file: " . $error['0']['file']));
+							}
+						}
 						
 						if (is_array($result) && !empty($result)) {
 							return $result;
@@ -297,14 +304,18 @@ Code simplification
 */
 
 //Redirect to page
-	function redirect($URL, $fixPHP = true) {
+	function redirect($URL, $fixPHP = true, $exit = true) {
+		global $root, $protocol;
+		
 		if (strstr($URL, $root) || !strstr($URL, $protocol)) {
 			if ($fixPHP == true) {
 				$URL = str_replace(".php", ".htm", $URL);
 			}
 		}
 		
-		header("Location: " . $URL);
-		exit;
+		if ($exit == true) {
+			header("Location: " . $URL);
+			exit;
+		}
 	}
 ?>

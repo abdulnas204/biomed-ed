@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: August 16th, 2010
-Last updated: December 20th, 2010
+Last updated: Janurary 27th, 2010
 
 This is the lesson settings page for the learning unit 
 generator.
@@ -40,20 +40,19 @@ generator.
 		$selected = $_POST['selected'];
 		$feedback = $_POST['feedback'];
 		$tags = escape($_POST['tags']);
-		$searchEngine = $_POST['searchEngine'];
 		$timeFrame = $time . $timeLabel;
 		
 		if ($lessonData) {
 			$id = $lessonData['id'];
 								
-			query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `feedback` = '{$feedback}', `tags` = '{$tags}', `searchEngine` = '{$searchEngine}' WHERE `id` = '{$id}'");
+			query("UPDATE `{$monitor['parentTable']}` SET `locked` = '{$locked}', `name` = '{$name}', `category` = '{$category}', `timeFrame` = '{$timeFrame}', `comments` = '{$comments}', `price` = '{$price}', `enablePrice` = '{$enablePrice}', `selected` = '{$selected}', `feedback` = '{$feedback}', `tags` = '{$tags}' WHERE `id` = '{$id}'");
 		} else {
 			$organization = $userData['organization'];
 			
 			query("INSERT INTO `{$monitor['parentTable']}` (
-				  `id`, `locked`, `visible`, `name`, `category`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `feedback`, `tags`, `searchEngine`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
+				  `id`, `locked`, `visible`, `name`, `category`, `timeFrame`, `comments`, `price`, `enablePrice`, `selected`, `feedback`, `tags`, `test`, `testName`, `directions`, `score`, `attempts`, `forceCompletion`, `completionMethod`, `reference`, `delay`, `gradingMethod`, `penalties`, `timer`, `time`, `randomizeAll`, `questionBank`, `display`, `organization`
 				  ) VALUES (
-				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '{$searchEngine}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
+				  NULL, '{$locked}', '', '{$name}', '{$category}', '{$timeFrame}', '{$comments}', '{$price}',  '{$enablePrice}', '{$selected}', '{$feedback}', '{$tags}', '0', '', '', '80', '1', '', '0', '0', '0', 'Highest Grade', '1', '', 'a:2:{i:0;s:1:\"0\";i:1;s:2:\"00\";}', 'Sequential Order', '0', 'a:1:{i:0;s:1:\"1\";}', '{$organization}'
 				  )");
 						
 			$id =  mysql_insert_id();
@@ -141,10 +140,8 @@ generator.
 	if (access("Edit Unowned Learning Units")) {
 		directions("Force user to give feedback", false, "Force a user to provide feedback at the end of this lesson");
 		indent(radioButton("feedback", "feedback", "Yes,No", "1,0", true, false, false, "0", "lessonData", "feedback"));
-		directions("Search keywords (Seperate keywords with a comma and a space)", false, "Supply a list of key words to help narrow down results in searches.<br />These seach results can show up on a search engine, such as Google, to help boost sales.");
-		indent(textField("tags", "tags", false, false, false, false, false, false, "lessonData", "tags") . 
-		"&nbsp;" . 
-		checkbox("searchEngine", "searchEngine", "Accessible by search engines", false, false, false, false, "lessonData", "searchEngine", "on"));
+		directions("Search keywords (Seperate keywords with a comma and a space)", false, "Supply a list of key words to use when searching for <br />learning units within this site");
+		indent(textField("tags", "tags", false, false, false, false, false, false, "lessonData", "tags"));
 	}
 	
 	echo "</blockquote>";

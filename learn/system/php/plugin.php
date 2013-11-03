@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: December 23rd, 2010
+Last updated: February 14th, 2011
 
 This is the plugin script for the learning plugin to 
 display on the user's portal.
@@ -26,45 +26,49 @@ display on the user's portal.
 		$lessons = unserialize($userData['learningunits']);
 		
 		if (is_array($lessons) && !empty($lessons)) {
-			$return = "<ul>\n";
+			$return = "<table class=\"dataTable\">\n";
+			$return .= "<tr align=\"center\">\n";
+			$return .= "<th>Learning Unit</th>\n";
+			$return .= "<th>Lesson Progress</th>\n";
+			$return .= "<th>Test Progress</th>\n";
+			$return .= "</tr>\n";
 			
 			foreach ($lessons as $key => $value) {
 				$unitData = query("SELECT * FROM `learningunits` WHERE `id` = '{$key}'");
 				
-				$return .= "<li class=\"";
-				
-				if ($value['lessonStatus'] == "F" && $value['testStatus'] == "F") {
-					$return .= "completed";
-				} elseif ($value['lessonStatus'] == "C" && $value['testStatus'] == "C") {
-					$return .= "notStarted";
-				} else {
-					$return .= "inProgress";
-				}
-				
 				if ($value['lessonStatus'] == "F") {
-					$lessonStatus = "Completed";
+					$lessonStatus = "completed";
 				} elseif ($value['lessonStatus'] == "C") {
-					$lessonStatus = "Not Started";
+					$lessonStatus = "notStarted";
 				} else {
-					$lessonStatus = "In Progress";
+					$lessonStatus = "inProgress";
 				}
 				
 				if ($value['testStatus'] == "F") {
-					$testStatus = "Completed";
+					$testStatus = "completed";
 				} elseif ($value['testStatus'] == "C") {
-					$testStatus = "Not Started";
+					$testStatus = "notStarted";
 				} else {
-					$testStatus = "In Progress";
+					$testStatus = "inProgress";
 				}
 				
-				$return .= "\">" . tip("<strong>Lesson Progress</strong> - " . $lessonStatus . "<br /><strong>Test Progress</strong> - " . $testStatus,  URL($unitData['name'], "../learn/lesson.php?id=" . $unitData['id']));
-				$return .= "</li>\n";
+				$return .= "<tr align=\"center\">\n";
+				$return .= "<td>" . URL($unitData['name'], "../learn/lesson.php?id=" . $unitData['id']) . "</td>\n";
+				$return .= "<td><span class=\"action " . $lessonStatus . "\"></span></td>\n";
+				
+				if (exist("test_" . $key) || exist("testdata_" . $userData, "testID", $key)) {
+					$return .= "<td><span class=\"action " . $testStatus . "\"></span></td>\n";
+				} else {
+					$return .= "<td><span class=\"notAssigned\">None</span></td>\n";
+				}
+				
+				$return .= "</tr>\n";
 			}
 			
-			$return .= "</ul>\n";
+			$return .= "</table>\n";
 		}
 		
-		sideBox("Lesson-plan progress", "Custom Content", "<p align=\"center\">" . chart("../learn/system/flash/bar2D.swf", "../learn/system/php/data.htm?type=account", "500", "240") . "</p>" . $return);
+		sideBox("Lesson-plan progress", "Custom Content", "<p align=\"center\">" . chart("../learn/system/flash/bar2D.swf", "../learn/system/php/data.htm?type=account", "500", "240") . "</p>\n" . $return);
 		
 		echo "</div>\n<div class=\"halfRight\">\n";
 		
@@ -105,5 +109,7 @@ display on the user's portal.
 </div>");
 	
 		echo "</div>\n</div>\n";
+	} else {
+		echo "<div class=\"noResults\">You are not currently assigned to any learning units. " . URL("You may assign yourself to one or more learning units, but purchasing some now", "../learn/index.php") . ".</div>\n";
 	}
 ?>

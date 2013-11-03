@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
  
 Created by: Oliver Spryn
 Created on: November 28th, 2010
-Last updated: December 20th, 2010
+Last updated: February 13th, 2010
 
 This is the configuration script for the learning plugin.
 */
@@ -212,6 +212,15 @@ This is the configuration script for the learning plugin.
 				Manage user-specific information
 				---------------------------------------------------------
 				*/
+				
+				//View gradebook
+				"gradebook/index.php" => "View Grades",
+				
+				//View billing history
+				"billing/index.php" => "View Own Billing History",
+				
+				//Manage lesson plan
+				"palnner/index.php" => "Manage Own Lesson Plan",
 				
 				//Assign users to learning unit
 				"assign/index.php;

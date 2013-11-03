@@ -5,6 +5,7 @@ $(document).ready(function(){
 	$(".visible").click(function(){
 		($(this).hasClass('hidden')) ? $(this).removeClass('hidden') : $(this).addClass('hidden');
 		$(this.hash).trigger("click");
+		Spry.Utils.submitForm(this.parentNode);
 		return false;
 	});
 });

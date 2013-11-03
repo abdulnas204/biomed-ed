@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: August 31st, 2010
-Last updated: Novemeber 29th, 2010
+Last updated: Janurary 25th, 2011
 
 This is the home page for logged in users, which displays
 information relavent to the user.
@@ -19,6 +19,8 @@ information relavent to the user.
 //Header functions
 	require_once('../system/core/index.php');	
 	headers("Home", false, true);
+	
+	echo preg_replace("/<title>(.*)<\/title>/", "<title>Replace with me</title>", "<title>SoMe CoNeNt</title>");
 	
 //Title
 	title("Home", "Welcome to your customized portal. This page contains a quick reference to major information relevent to your account. Major parts of this site can be accessed by navigating the links above.");

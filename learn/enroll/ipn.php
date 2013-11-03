@@ -12,7 +12,7 @@ Sections of the code are courtesy of PayPal.
 
 Created by: Oliver Spryn & PayPal developers
 Created on: August 18th, 2010
-Last updated: December 12th, 2010
+Last updated: February 13th, 2011
 
 This script is assign users to a learning unit after it 
 has been purchased, and to confirm that the payment 
@@ -88,7 +88,7 @@ occurred.
 
 //Process based on the given response
 	if (!$postSend) {
-		errorMessage("The system could not make a connection to the payment gateway. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the modules you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
+		errorMessage("The system could not make a connection to the payment gateway. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the learning units you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
 		error("There was no response from the server when sending the post-data.");
 		exit;
 	} else {
@@ -104,12 +104,12 @@ occurred.
 					$currentUnits = unserialize($userData['learningunits']);
 					$userUnits = unserialize(gzinflate(base64_decode($_GET['product'])));
 					
-					if (!is_array($currentModules)) {
+					if (!is_array($currentUnits)) {
 						$currentUnits = array();
 					}
 					
 					foreach ($userUnits as $item) {
-						$unit = array("item" => $item, "lessonStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"));
+						$unit = array("item" => $item, "lessonStatus" => "C", "testStatus" => "C", "startDate" => strtotime("now"), "submitted" => "");
 						$currentUnits[$item] = $unit;
 					}
 					
@@ -141,7 +141,7 @@ occurred.
 						  NULL, '{$userID}', '', '{$purchasedUnits}', '{$tax}', '{$total}', '{$date}', '{$txn_id}', '{$business}', '{$payerEmail}', '{$payment_fee}'
 						  )");
 				} else {
-					errorMessage("The difference between the credentials from the payment gateway and the credentials from the system. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the modules you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
+					errorMessage("The difference between the credentials from the payment gateway and the credentials from the system. The status of your order is: " . $payment_status . ". Given the current status, you may or may not need to re-purchase your order once this error has been resolved. If your order has been processed, please ask a system administrator to enroll you in the learning units you just purchased. The webmaster has been notified of this error." . button("continue", "continue", "Continue", "button", "../index.php"));
 					error("The payment credentials from the gateway do not match the payment credentials from the system.");
 					exit;
 				}

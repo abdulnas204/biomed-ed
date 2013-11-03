@@ -148,10 +148,35 @@ class Minify {
   
   var $files = array();
   var $type;
+  
 
+  /**
+   * Instantiates a new Minify object. A filename can be in the form of a
+   * relative path or a URL that resolves to the same site that hosts Minify.
+   *
+   * @param string $type content type of the specified files (either
+   *   Minify::TYPE_CSS or Minify::TYPE_JS)
+   * @param array|string $files filename or array of filenames to be minified
+   */
+  function __construct($type = TYPE_JS, $files = array()) {
+    if ($type !== TYPE_JS && $type !== TYPE_CSS) {
+      die('Invalid argument ($type): '.
+          $type);
+    }
+
+    $this->type = $type;
+
+    if (count((array) $files)) {
+      $this->addFile($files);
+    }
+  }
+
+//Developer Enhancement, to avoid redefinining an already defined constructor
+/*
   function Minify($type = TYPE_JS) {
 	$this->type = $type;
   }
+*/
   
 
   /**
@@ -263,27 +288,6 @@ class Minify {
   }
 
   // -- Public Instance Methods ------------------------------------------------
-
-  /**
-   * Instantiates a new Minify object. A filename can be in the form of a
-   * relative path or a URL that resolves to the same site that hosts Minify.
-   *
-   * @param string $type content type of the specified files (either
-   *   Minify::TYPE_CSS or Minify::TYPE_JS)
-   * @param array|string $files filename or array of filenames to be minified
-   */
-  function __construct($type = TYPE_JS, $files = array()) {
-    if ($type !== TYPE_JS && $type !== TYPE_CSS) {
-      die('Invalid argument ($type): '.
-          $type);
-    }
-
-    $this->type = $type;
-
-    if (count((array) $files)) {
-      $this->addFile($files);
-    }
-  }
 
   /**
    * Adds the specified filename or array of filenames to the list of files to

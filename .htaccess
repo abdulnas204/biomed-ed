@@ -34,13 +34,17 @@
 	order allow,deny
 	allow from all
 </Files>
+<Files ~ "\.(gif)$">
+	order allow,deny
+	allow from all
+</Files>
 <Files ~ "\.(htaccess)$">
 	order deny,allow
 	deny from all
 </Files>
 
-ErrorDocument 403 /system/deny/index.php?error=403
-ErrorDocument 404 /system/deny/index.php?error=404
+ErrorDocument 403 /biomed-ed/system/deny/index.php?error=403
+ErrorDocument 404 /biomed-ed/system/deny/index.php?error=404
 
 Options +FollowSymlinks
 RewriteEngine on

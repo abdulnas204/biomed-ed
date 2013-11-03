@@ -8,19 +8,48 @@ open source, freeware, nor commercial/closed source.
 ---------------------------------------------------------
 */
 
+/* Tool bar and menu options */
+	a.bank {
+		background:url(../images/common/bank.png) no-repeat left;
+	}
+	
+	a.print {
+		background:url(../images/common/print.png) no-repeat left;
+	}
+	
+	a.calendar {
+		background:url(../images/common/calendar.png) no-repeat left;
+	}
+
+/* Data table and table contents */
+	.questionBank {
+		background:url(../images/common/bank.png) no-repeat;
+		background-position: 10px;
+		padding: 1px 0px 1px 0px;
+	}
+	
+	.extraCredit {
+		background:url(../images/common/extraCredit.png) no-repeat left;
+		padding:0px 8px 0px 8px;
+	}
+
 /* Navigate through a lesson */	
 	span.currentPage {
 		font-weight:bolder;
 	}
 	
 	a.previousPage {
-		background:url(../../images/common/back.png) no-repeat left;
+		background:url(../images/common/back.png) no-repeat left;
 		padding-left:18px;
 	}
 	
 	a.nextPage {
-		background:url(../../images/common/next.png) no-repeat right;
+		background:url(../images/common/next.png) no-repeat right;
 		padding-right:18px;
+	}
+	
+	div.complete {
+		border:#090 thin solid;
 	}
 	
 /* Test structure */	
@@ -35,12 +64,12 @@ open source, freeware, nor commercial/closed source.
 	}
 	
 	span.checkmark {
-		background:url(../../images/common/checkmark.png) no-repeat left;
+		background:url(../images/common/checkmark.png) no-repeat left;
 		padding-left: 23px;
 	}
 	
 	span.x {
-		background:url(../../images/common/x.png) no-repeat left;
+		background:url(../images/common/x.png) no-repeat left;
 		padding-left: 23px;
 	}
 	
@@ -67,14 +96,29 @@ open source, freeware, nor commercial/closed source.
 	}
 	
 /* Learning unit progress */	
-	li.notStarted {
-		list-style-image:url(../../images/common/x.png);
+	span.notStarted {
+		background:url(../images/common/x.png) no-repeat center;
 	}
 	
-	li.completed {
-		list-style-image:url(../../images/common/checkmark.png);
+	span.completed {
+		background:url(../images/common/checkmark.png) no-repeat center;
 	}
 	
-	li.inProgress {
-		list-style-image:url(../../images/common/percent.png);
+	span.inProgress {
+		background:url(../images/common/percent.png) no-repeat center;
+	}
+	
+/* Misc. */
+	a.smallDelete, span.smallDelete {
+		background:url(../images/common/x.png) no-repeat center;
+		cursor:pointer;
+	}
+	
+	div.important {
+		top:0px;
+		width: 65px;
+		position:fixed;
+		right:50%;
+		background-color:#900;
+		color:#FFF;
 	}

@@ -10,7 +10,7 @@ open source, freeware, nor commercial/closed source.
 
 Created by: Oliver Spryn
 Created on: Novemeber 27th, 2010
-Last updated: December 23rd, 2010
+Last updated: February 14th, 2011
 
 This script is used to process, maintain, and secure all 
 login actions and user-related queries.
@@ -70,10 +70,10 @@ Login management
 			return false;
 		}
 	}
-
+	
 //Process a login request
 	function login() {
-		global $root;
+		global $root, $salt;
 		
 	//Do not allow access to the login page if the user is already logged in
 		if (loggedIn()) {
@@ -86,13 +86,14 @@ Login management
 		} else {
 			if (isset($_POST['submit']) && !empty($_POST['userName']) && !empty($_POST['passWord'])) {
 				$userName = $_POST['userName'];
-				$passWord = encrypt($_POST['passWord']);
-				$userInfo = query("SELECT * FROM `users` WHERE `userName` = '{$userName}' AND `passWord` = '{$passWord}'");
+				$passWord = md5($_POST['passWord'] . $salt);
+				$userInfo = query("SELECT * FROM `users` WHERE `userName` = '{$userName}' AND `passWord` = '{$passWord}'", false, false);
 				
 				if ($userInfo) {
 					$timeStamp = time();
+					$sessionID = encrypt(session_id());
 					
-					query("UPDATE `users` SET `active` = '{$timeStamp}' WHERE `id` = '{$userInfo['id']}'");
+					query("UPDATE `users` SET `sessionID` = '{$sessionID}', `active` = '{$timeStamp}' WHERE `id` = '{$userInfo['id']}'");
 					
 					$_SESSION['userName'] = $userInfo['userName'];
 					$_SESSION['role'] = $userInfo['role'];	
@@ -189,6 +190,32 @@ Login management
 			return $return;
 		} else {
 			return false;
+		}
+	}
+	
+//Check a user's access to a particular page
+	function pageAccess() {
+		if (isset($pluginRoot) && isset($privileges) && is_array($privileges) && !empty($privileges)) {
+			$pageURL = str_replace($pluginRoot, "", $_SERVER['PHP_SELF']);
+			$parameters = $_GET;
+			
+			foreach(array_keys($privileges) as $pages => $privilege) {
+				if (strstr($pages, ";")) {
+					foreach(explode(";", $pages) as $page) {
+						if (strstr($page, ",")) {
+							foreach(explode(",", $page) as $parameter) {
+								
+							}
+						}
+					}
+				} else {
+					if (strstr($pages, ",")) {
+						foreach(explode(",", $pages) as $parameter) {
+							
+						}
+					}
+				}
+			}
 		}
 	}
 ?>
