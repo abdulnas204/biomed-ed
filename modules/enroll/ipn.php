@@ -90,7 +90,8 @@
 					
 					if (is_array($currentModules)) {
 						foreach ($userModules as $item) {
-							array_push($currentModules, $item);
+							$module = array("item" => $item, "moduleStatus" => "C", "testStatus" => "C");
+							$currentModules[$item] = $module;
 						}
 						
 						$modules = serialize($currentModules);

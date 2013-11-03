@@ -266,6 +266,7 @@ $.validationEngine = {
 				promptText += $.validationEngine.settings.allrules[customRule].alertText+"<br />";
 			}
 		}
+
 		function _ajax(caller,rules,position){				 // VALIDATE AJAX RULES
 			
 			customAjaxRule = rules[position+1];

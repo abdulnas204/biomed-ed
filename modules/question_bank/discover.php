@@ -1,7 +1,6 @@
 <?php
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	questionAccess();
 	
 //Process the given data
 	if (isset($_GET['linkID'])) {

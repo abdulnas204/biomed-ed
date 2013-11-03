@@ -1,7 +1,7 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Multiple Choice", "tinyMCESimple,validate,showHide,newObject");
+	$monitor = monitor("Multiple Choice", "tinyMCESimple,validate,newObject");
 	require_once('functions.php');
 	$questionData = dataGrabber("Multiple Choice");
 	
@@ -10,7 +10,9 @@
 		$question = mysql_real_escape_string($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
+		$type = $_POST['type'];
 		$difficulty = $_POST['difficulty'];
+		$category = $_POST['category'];
 		$link = $_POST['link'];
 		$partialCredit = $_POST['partialCredit'];
 		$randomize = $_POST['randomize'];
@@ -30,15 +32,11 @@
 		}
 		
 		if (isset ($questionData)) {
-			updateQuery($monitor['type'], "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `partialCredit` = '{$partialCredit}', `choiceType` = '{$interface}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?updated=question");	
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `partialCredit` = '{$partialCredit}', `choiceType` = '{$interface}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `randomize` = '{$randomize}', `partialCredit` = '{$partialCredit}', `choiceType` = '{$interface}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($monitor['type'], "NULL, '0', '0', '{$lastQuestion}', 'Multiple Choice', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$link}', '{$randomize}', '0', '{$interface}', '1', '{$tags}', '{$question}', '{$questionValue}', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?inserted=question");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Multiple Choice', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '{$randomize}', '0', '{$interface}', '1', '{$tags}', '{$question}', '{$questionValue}', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Multiple Choice', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$randomize}', '0', '{$interface}', '1', '{$tags}', '{$question}', '{$questionValue}', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -55,7 +53,9 @@
 	catDivider("Question Settings", "two");
 	echo "<blockquote>";
 	points();
+	type();
 	difficulty();
+	category();
 	descriptionLink();
 	partialCredit();
 	randomize();

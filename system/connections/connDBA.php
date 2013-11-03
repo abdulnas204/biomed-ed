@@ -325,12 +325,6 @@ ob_start();
 					echo "\">Home</a></li><span class=\"arrow sep\">&#x25BA;</span>";
 					
 					echo "<li><a class=\"";
-					if (strstr($requestURL, "/communication")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
-					echo "\" href=\"";
-					echo $root . "communication/index.php";
-					echo "\">Communication</a></li><span class=\"arrow sep\">&#x25BA;</span>";
-					
-					echo "<li><a class=\"";
 					if (strstr($requestURL, "/modules")) {echo "topCurrentPageNav";} else {echo "topPageNav";}
 					echo "\" href=\"";
 					echo $root . "modules/index.php";
@@ -459,6 +453,25 @@ ob_start();
 						echo "\" href=\"";
 						echo $root . "cms/index.php";
 						echo "\">Public Website</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"bottomPageNav\" href=\"";
+						echo $root . "logout.php"; 
+						echo "\">Logout</a>";
+						break;
+						
+				//If this is the student footer bar
+					case "Student" : 
+						echo "<a class=\"";
+						if (!strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "portal/index.php";
+						echo "\">Home</a><span class=\"arrow sep\">&bull;</span>";
+						
+						echo "<a class=\"";
+						if (strstr($requestURL, "/modules")) {echo "bottomCurrentPageNav";} else {echo "bottomPageNav";}
+						echo "\" href=\"";
+						echo $root . "modules/index.php";
+						echo "\">Modules</a><span class=\"arrow sep\">&bull;</span>";
 						
 						echo "<a class=\"bottomPageNav\" href=\"";
 						echo $root . "logout.php"; 
@@ -644,9 +657,9 @@ ob_start();
 			}
 			
 			if ($delete == true) {
-				 $return .= " onclick=\" return confirm('This action cannot be undone. Continue?');" . $additionalParameters . "\"";
+				 $return .= " onclick=\" return confirm('This action cannot be undone. Continue?');\"" . $additionalParameters;
 			} elseif ($additionalParameters == true) {
-				 $return .= " onclick=\"" . $additionalParameters . "\"";
+				 $return .= $additionalParameters;
 			}
 			
 			$return .= ">" . prepare($text) . "</a>";
@@ -664,7 +677,7 @@ ob_start();
 	}
 	
 	//Forms and form layout
-	function form($name, $method = "post", $validate = true, $containsFile = false, $action = false, $additionalParameters = false) {
+	function form($name, $method = "post", $containsFile = false, $action = false, $additionalParameters = false) {
 		echo "<form name=\"" . $name . "\" method=\"" . $method . "\" id=\"validate\"";
 		
 		if ($containsFile == true) {
@@ -695,12 +708,8 @@ ob_start();
 		
 		echo "\"";
 		
-		if ($validate == true) {
-			echo " onsubmit=\"return errorsOnSubmit(this);" . $additionalParameters . "\"";
-		} else {
-			if ($additionalParameters == true) {
-				echo " onsubmit=\"" . $additionalParameters . "\"";
-			}
+		if ($additionalParameters == true) {
+			echo " onsubmit=\"" . $additionalParameters . "\"";
 		}
 		
 		echo ">";
@@ -710,7 +719,7 @@ ob_start();
 		global $root;
 		
 		if ($errors == true) {
-			echo "<div id=\"errorBox\" style=\"display:none;\">Some fields are incomplete, please scroll up to correct them.</div><div id=\"progress\" style=\"display:none;\"><p><span class=\"require\">Uploading in progress... </span><img src=\"" . $root . "images/common/loading.gif\" alt=\"Uploading\" width=\"16\" height=\"16\" /></p></div>";
+			echo "<blockquote><div id=\"errorBox\" style=\"display:none;\">Some fields are incomplete, please scroll up to correct them.</div><div id=\"progress\" style=\"display:none;\"><p><span class=\"require\">Uploading in progress... </span><img src=\"" . $root . "images/common/loading.gif\" alt=\"Uploading\" width=\"16\" height=\"16\" /></p></div></blockquote>";
 		}
 		
 		if ($advancedClose == true) {
@@ -756,7 +765,7 @@ ob_start();
 			case "submit" : 
 				echo "<input type=\"submit\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"" . ltrim($additionalParameters) . "tinyMCE.triggerSave();\">"; break;
 			case "reset" : 
-				echo "<input type=\"reset\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"return confirm('Are you sure you wish to reset all of the content in this form? Click OK to continue');$.validationEngine.closePrompt('#validate',true);" . $additionalParameters . "\">"; break;
+				echo "<input type=\"reset\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"return confirm('Are you sure you wish to reset all of the content in this form? Click OK to continue');$.validationEngine.closePrompt('.formError');" . $additionalParameters . "\">"; break;
 			case "cancel" : 
 				echo "<input type=\"reset\" name=\"" . $name . "\" id=\"" . $id . "\" value=\"" . $value . "\" onclick=\"window.location='" . $URL . "';" . $additionalParameters . "\">"; break;
 			case "history" : 
@@ -872,7 +881,7 @@ ob_start();
 		if ($editorTrigger == true && isset($$editorTrigger)) {
 			$value = $$editorTrigger;
 			
-			if (isset($$editorTrigger)) {
+			if (isset($$editorTrigger) && !empty($value[$arrayValue])) {
 				echo "Current file: <a href=\"" . $fileURL . "/" . $value[$arrayValue] . "\" target=\"_blank\">" . $value[$arrayValue] . "</a><br />";
 			}
 		}
@@ -901,7 +910,7 @@ ob_start();
 			echo "<br />Max file size: " .  ini_get('upload_max_filesize');
 		}
 		
-		if (($manualValue == true || (isset($$editorTrigger) && $editorTrigger == true)) && $uploadNote == true) {
+		if (($manualValue == true || (isset($$editorTrigger) && !empty($value[$arrayValue]))) && $uploadNote == true) {
 			echo "<br /><strong>Note:</strong> Uploading a new file will replace the existing one.";
 		}
 	}
@@ -1015,6 +1024,10 @@ ob_start();
 		
 		if ($validate == true) {
 			echo " class=\"validate[required" . $validateAddition . "]\"";
+		}
+		
+		if ($validate == false && $validateAddition == true) {
+			echo " class=\"validate[optional" . $validateAddition . "]\"";
 		}
 		
 		global $$editorTrigger;
@@ -1197,11 +1210,7 @@ ob_start();
 			$navigation = "<div align=\"center\">";
 			
 			if (exist($table, "position", $previousPage) == true) {
-				if ($preview == true && lastItem($table) - 1 == $_GET['page']) {
-					$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage");
-				} else {
-					$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage") . " | ";
-				}
+				$navigation .= URL("Previous Page", $URL . "page=" . $previousPage , "previousPage") . " | ";
 			}
 			
 			if (exist($table, "position", $nextPage) == true) {
@@ -1209,11 +1218,29 @@ ob_start();
 			}
 		}
 		
-		if ($preview == false) {
+		if ($preview == false && $_SESSION['MM_UserGroup'] != "Site Administrator") {
+			$userData = userData();
+			$accessGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
+			$accessArray = unserialize($accessGrabber['modules']);
+			
+			if ($accessArray[$id]['testStatus'] == "F") {
+				$testURL = "review.php?id=" . $id;
+				$text = "Review Test";
+			} else {
+				$testURL = $URL . "action=finish";
+				$text = "Proceed to Test";
+			}
+			
 			if (exist($table, "position", $nextPage) == false && $moduleData['test'] == "1") {
-				$navigation .= URL("Proceed to Test", "test.php?id=" . $id , "nextPage", false, false, false, false, false, false, "return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')");
-			} elseif (exist($table, "position", $nextPage) == false && $moduleData['test'] == "0") {
-				$navigation .= URL("Finish", $URL . "action=finish", "nextPage");
+				if ($moduleData['reference'] == "0" && $accessArray[$id]['testStatus'] != "F") {
+					$alert = "return confirm('This action will close and lock access to the lesson until you have completed the test. Continue?')";
+				} else {
+					$alert = false;
+				}
+				
+				$navigation .= URL($text, $testURL, "nextPage", false, false, false, false, false, false, $alert);
+			} elseif (exist($table, "position", $nextPage) == false && $moduleData['test'] == "0") {				
+				$navigation .= URL("Finish", $testURL, "nextPage");
 			}
 		}
 		
@@ -1371,7 +1398,7 @@ ob_start();
 				$testData = $testDataLoop;
 			}
 			
-			if (!is_numeric($preview) && exist($table, "id", $testData['link']) && $moduleInfo['randomizeAll'] == "Randomize" && !empty($testData['link']) && $testDataLoop['link'] != "0" && !in_array($testDataLoop['link'], $restrictImport)) {
+			if (!is_numeric($preview) && isset($testData['link']) && exist($table, "id", $testData['link']) && $moduleInfo['randomizeAll'] == "Randomize" && !empty($testData['link']) && $testDataLoop['link'] != "0" && !in_array($testDataLoop['link'], $restrictImport)) {
 				$importDescription = query("SELECT * FROM `{$table}` WHERE `id` = '{$testDataLoop['link']}'");
 				
 				if ($importDescription['questionBank'] == "1") {
@@ -1443,7 +1470,7 @@ ob_start();
 								echo "<tr id=\"" . $fileID . "\"><td>";
 								
 								fileUpload($testDataLoop['id'] . "_" . $fileID, $testDataLoop['id'] . "_" . $fileID, false, true, false, $fillValue[$key], false, false, $URL, false, true);
-								echo "</td><td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=" . $fileID, "action smallDelete", false, false, false, false, false, false, " return confirm('This action will delete this file. Continue?')");
+								echo "</td><td>" . URL("", $_SERVER['REQUEST_URI'] . "&delete=true&questionID=" . $testDataLoop['id'] . "&fileID=" . $fileID, "action smallDelete", false, false, false, false, false, false, " onclick=\"return confirm('This action will delete this file. Continue?')\"");
 								echo "</td></tr>";
 								
 								$fileID++;
@@ -1631,12 +1658,32 @@ ob_start();
 					break;
 					
 				case "True False" : 
-					if ($testData['randomize'] == "1") {						
-						$id = implode(",", unserialize($testValues['answerValueScrambled']));
-						$label = explode(",", $id);
+					if ($preview == false) {
+						if ($testData['randomize'] == "1") {						
+							$label = unserialize($testValues['answerValueScrambled']);
+							$id = implode(",", $label);
+						} else {
+							$label = unserialize($testValues['answerValue']);
+							$id = implode(",", $label);
+						}
 					} else {
-						$id = implode(",", unserialize($testValues['questionValue']));
-						$label = explode(",", $id);
+						$label = array("1", "0");
+						
+						if ($testData['randomize'] == "1") {
+							shuffle($label);
+						}
+						
+						if ($label['0'] == "1") {
+							$id = "1,";
+						} else {
+							$id = "0,";
+						}
+						
+						if ($label['1'] == "1") {
+							$id .= "0";
+						} else {
+							$id .= "1";
+						}
 					}
 					
 					if ($label['0'] == "1") {
@@ -1692,6 +1739,63 @@ ob_start();
 		echo "<div align=\"center\"><embed type=\"application/x-shockwave-flash\" src=\"" . $root . "statistics/charts/" . $type . ".swf\" id=\"chart\" name=\"chart\" quality=\"high\" allowscriptaccess=\"always\" flashvars=\"chartWidth=" . $width . "&chartHeight=" . $height . "&debugMode=0&DOMId=overallstats&registerWithJS=0&scaleMode=noScale&lang=EN&dataURL=" . $root . "statistics/data/index.php?type=" . $source . "\" wmode=\"transparent\" width=\"" . $width . "\" height=\"" . $height . "\"></div>";
 
 	}
+	
+	//A function to create a tooltip
+	function tip($text, $contents) {
+		return "<span onmouseover=\"Tip('" . $text . "')\" onmouseout=\"UnTip()\">" . $contents . "</span>";
+	}
+	
+	//A function to provide a letter grade for a test
+	function grade($recieved, $total) {
+		$score = round(sprintf($recieved / $total) * 100);
+		
+		switch ($score) {			
+			case $score >= 90 :
+				$letter = "A";
+				$characterPrep = 100 - $score;
+				break;
+				
+			case 80 <= $score && $score < 90 :
+				$letter = "B";
+				$characterPrep = 90 - $score;
+				break;
+				
+			case 70 <= $score && $score < 80 :
+				$letter = "C";
+				$characterPrep = 80 - $score;
+				break;
+				
+			case 60 <= $score && $score < 70 :
+				$letter = "D";
+				$characterPrep = 70 - $score;
+				break;
+				
+			case $score < 60 :
+				$letter = "F";
+				$characterPrep = 60 - $score;
+				break;
+		}
+		
+		if ($score < 100) {
+			switch (abs($characterPrep)) {
+				case $characterPrep >= 7 :
+					$character = "+";
+					break;
+					
+				case $characterPrep <= 3 && $characterPrep < 7 :
+					$character = "";
+					break;
+					
+				case $characterPrep < 3 :
+					$character = "-";
+					break;
+			}
+		} else {
+			$character = "+";
+		}
+		
+		return $letter . $character;
+	}
 /* End constructor functions */
 
 /* Begin processor functions */
@@ -1706,13 +1810,18 @@ ob_start();
 		}
 		
 		$itemCheckGrabber = mysql_query("SELECT * FROM {$table}{$additionalCheck}", $connDBA);
-		$itemCheck = mysql_num_rows($itemCheckGrabber);
 		
-		if ($itemCheck >= 1) {
-			$itemGrabber = mysql_query("SELECT * FROM {$table}{$additionalCheck}", $connDBA);
-			$item = mysql_fetch_array($itemGrabber);
+		if ($itemCheckGrabber) {
+			$itemCheck = mysql_num_rows($itemCheckGrabber);
 			
-			return $item;
+			if ($itemCheck >= 1) {
+				$itemGrabber = mysql_query("SELECT * FROM {$table}{$additionalCheck}", $connDBA);
+				$item = mysql_fetch_array($itemGrabber);
+				
+				return $item;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
@@ -1836,7 +1945,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/atd-tinymce/editor_plugin.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>";
+		echo "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_simple.php\"></script>";
 	}
 	
 	//Include the tiny_mce advanced widget
@@ -1844,7 +1953,7 @@ ob_start();
 		global $connDBA;
 		global $root;
 		
-		echo "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/atd-tinymce/editor_plugin.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.php\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/tinybrowser/tb_tinymce.js.php\"></script>";
+		echo "<script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/tiny_mce.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/AtD/editor_plugin.js\"></script><script type=\"text/javascript\" src=\"" . $root . "system/javascripts/common/tiny_mce_advanced.php\"></script><script type=\"text/javascript\" src=\"" . $root . "system/tiny_mce/plugins/tinybrowser/tb_tinymce.js.php\"></script>";
 	}
 	
 	//Include a form validator
@@ -1932,6 +2041,20 @@ ob_start();
 		global $root;
 		
 		echo "<script src=\"" . $root . "system/javascripts/common/scoreCalculate.js\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include a live data script
+	function liveData() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/liveData/liveDataCore.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/runLiveData.js\" type=\"text/javascript\"></script><script src=\"" . $root . "system/javascripts/liveData/pageData.js\" type=\"text/javascript\"></script>";
+	}
+	
+	//Include an option transfer script
+	function optionTransfer() {
+		global $root;
+		
+		echo "<script src=\"" . $root . "system/javascripts/common/optionTransfer.js\" type=\"text/javascript\"></script>";
 	}
 /* End page scripting functions */
 	
@@ -2106,37 +2229,42 @@ ob_start();
 	
 	//A function to delete a folder and all of its contents
 	function deleteAll($directory, $empty = false) {
-		if(substr($directory,-1) == "/") {
-			$directory = substr($directory,0,-1);
-		}
-	
-		if(!file_exists($directory) || !is_dir($directory)) {
-			return false;
-		} elseif(!is_readable($directory)) {
-			return false;
-		} else {
-			$directoryHandle = opendir($directory);
-			
-			while ($contents = readdir($directoryHandle)) {
-				if($contents != '.' && $contents != '..') {
-					$path = $directory . "/" . $contents;
-					
-					if(is_dir($path)) {
-						deleteAll($path);
-					} else {
-						unlink($path);
+		if (is_dir($directory)) {
+			if(substr($directory,-1) == "/") {
+				$directory = substr($directory,0,-1);
+			}
+		
+			if(!file_exists($directory) || !is_dir($directory)) {
+				return false;
+			} elseif(!is_readable($directory)) {
+				return false;
+			} else {
+				$directoryHandle = opendir($directory);
+				
+				while ($contents = readdir($directoryHandle)) {
+					if($contents != '.' && $contents != '..') {
+						$path = $directory . "/" . $contents;
+						
+						if(is_dir($path)) {
+							deleteAll($path);
+						} else {
+							unlink($path);
+						}
 					}
 				}
-			}
-			
-			closedir($directoryHandle);
-	
-			if($empty == false) {
-				if(!rmdir($directory)) {
-					return false;
+				
+				closedir($directoryHandle);
+		
+				if($empty == false) {
+					if(!rmdir($directory)) {
+						return false;
+					}
 				}
+				
+				return true;
 			}
-			
+		} else {
+			unlink($directory);
 			return true;
 		}
 	}
@@ -2430,6 +2558,14 @@ ob_start();
 			$class = "";
 		}
 		
+		if (!strstr($_SERVER['REQUEST_URI'], "/module_wizard/")) {
+			if ($functions == false) {
+				$functions = "showHide";
+			} else {
+				$functions .= ",showHide";
+			}
+		}
+		
 		headers($titlePrefix . $title, "Site Administrator", $functions, true, $class, false, false, false, false, $hideHTML);
 		$parentTable = "moduledata";
 		$prefix = "";
@@ -2513,10 +2649,17 @@ ob_start();
 				}
 			}
 		} elseif (!isset($_SESSION['currentModule']) && !strstr($_SERVER['REQUEST_URI'], "lesson_settings.php")) {
-			$allowedArray = array("index.php", "lesson_settings.php");
-			
-			if (!in_array($pageFile, $allowedArray)) {
-				redirect("lesson_settings.php");
+			if (!isset($_SESSION['questionBank'])) {
+				$allowedArray = array("index.php", "lesson_settings.php");
+				
+				if (!in_array($pageFile, $allowedArray)) {
+					redirect("lesson_settings.php");
+				}
+			} else {
+				$allowedArray = array("index.php", "lesson_settings.php", "description.php", "essay.php", "file_response.php", "blank.php", "matching.php", "multiple_choice.php", "short_answer.php", "true_false.php");
+				if (!in_array($pageFile, $allowedArray)) {
+					redirect("../question_bank/index.php");
+				}
 			}
 		}
 		
@@ -2597,26 +2740,50 @@ ob_start();
 		
 		switch ($type) {
 			case "Module" :
-				mysql_query("INSERT INTO `{$monitor['testTable']}` (
-							`id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
-							) VALUES (
-							{$moduleQuery}
-							)", $connDBA);
+				query("INSERT INTO `{$monitor['testTable']}` (
+						  `id`, `questionBank`, `linkID`, `position`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `link`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+					  ) VALUES (
+						  {$moduleQuery}
+					  )");
+					  
+				redirect($monitor['redirect'] . "?inserted=question");
 				break;
-				
+							
+			case "Bank" :
+				query("INSERT INTO questionbank (
+						  `id`, `type`, `points`, `extraCredit`, `partialCredit`, `difficulty`, `category`, `randomize`, `totalFiles`, `choiceType`, `case`, `tags`, `question`, `questionValue`, `answer`, `answerValue`, `fileURL`, `correctFeedback`, `incorrectFeedback`, `partialFeedback`
+					  ) VALUES (							
+						  {$bankQuery}
+					  )");
+					  
+				redirect("../question_bank/index.php?id=" . $_POST['category'] . "&inserted=question");
+				break;
 		}
 	}
 	
 	function updateQuery($type, $moduleQuery, $bankQuery = false, $feedbackQuery = false) {
 		global $connDBA, $monitor;
 		
-		$update = $_GET['id'];
+		if (isset($_GET['id'])) {
+			$update = $_GET['id'];
+		} elseif (isset($_GET['bankID'])) {
+			$update = $_GET['bankID'];
+		} elseif (isset($_GET['feedbackID'])) {
+			$update = $_GET['feedbackID'];
+		}
 		
 		switch ($type) {
 			case "Module" :
-				mysql_query("UPDATE `{$monitor['testTable']}` SET {$moduleQuery} WHERE `id` = '{$update}'", $connDBA);
+				query("UPDATE `{$monitor['testTable']}` SET {$moduleQuery} WHERE `id` = '{$update}'");
+				
+				redirect($monitor['redirect'] . "?updated=question");
 				break;
 				
+			case "Bank" :
+				query("UPDATE `questionbank` SET {$bankQuery} WHERE `id` = '{$update}'");
+				
+				redirect("../question_bank/index.php?id=" . $_POST['category'] . "&updated=question");
+				break;
 		}
 		
 	}
@@ -2671,7 +2838,7 @@ ob_start();
 	
 	//Check to see if a user is logged in 
 	function loggedIn() {
-		if (isset($_SESSION['MM_Username'])) {
+		if (isset($_SESSION['MM_Username']) && isset($_SESSION['MM_UserGroup'])) {
 			return true;
 		} else {
 			return false;

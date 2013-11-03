@@ -8,6 +8,8 @@
 	$parentTable = "moduletest_" . $testID;
 	$testTable = "testdata_" . $userData['id'];
 	$attempt = lastItem($testTable, "testID", $testID, "attempt");
+	$accessGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
+	$accessArray = unserialize($accessGrabber['modules']);
 	
 	if ($attempt - 1 == 0) {
 		$currentAttempt = 1;
@@ -15,11 +17,27 @@
 		$currentAttempt = $attempt - 1;
 	}
 	
+	if ($accessArray[$testID]['testStatus'] == "C") {
+		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$attempt}'";
+		$accessArray[$testID]['testStatus'] = "O";
+		$updateArray = serialize($accessArray);
+	} else {
+		$query = "SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}'";
+	}
+	
 	if (isset ($_GET['id'])) {
 		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$_GET['id']}' LIMIT 1");
 		
 		if (exist("moduledata", "id", $_GET['id']) == false) {
 			redirect("index.php");
+		}
+		
+		if (!array_key_exists($testID, $accessArray)) {
+			redirect("index.php");
+		}
+		
+		if ($accessArray[$testID]['moduleStatus'] != "F" || $accessArray[$testID]['testStatus'] == "A" || $accessArray[$testID]['testStatus'] == "F") {
+			redirect("review.php?id=" . $testID);
 		}
 	} else {
 		redirect("index.php");
@@ -39,7 +57,7 @@
 	}
 	
 //If the test is left unconfigured, then prompt the user to configure it before taking the test
-	if (!query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}'", false, false)) {
+	if (!query($query, false, false)) {
 	//Generate the test configuration form
 		$testDifficultyGrabber = query("SELECT * FROM `{$parentTable}`", "raw");
 		$questionsCalc = "";
@@ -262,6 +280,8 @@
 				}
 			}
 			
+			query("UPDATE `users` SET `modules` = '{$updateArray}' WHERE `id` = '{$userData['id']}'");
+			
 			redirect($_SERVER['REQUEST_URI']);
 		}
 			
@@ -293,6 +313,57 @@
 	//Include the footer
 		footer();
 		exit;
+	}
+	
+//Check for updates to the test canvas, and apply them to this test
+	$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `questionID` ASC", "raw");
+	$questionConfig = array("Matching", "Multiple Choice");
+	
+	while ($testData = mysql_fetch_array($testDataGrabber)) {
+		$bankDataGrabber = query("SELECT * FROM `{$parentTable}` WHERE `id` = '{$testData['questionID']}'");
+		
+		if (!empty($bankDataGrabber['link']) && !questionExist($bankDataGrabber['link']) && exist($parentTable, "id", $bankDataGrabber['link'])) {
+			$lastQuestionGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `randomPosition` DESC LIMIT 1");
+			$lastQuestion = $lastQuestionGrabber['randomPosition'] + 1;
+			
+			query("INSERT INTO `{$testTable}` (
+				  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
+				  ) VALUES (
+				  '{$testID}', '{$bankDataGrabber['link']}', '{$currentAttempt}', 'Description', '', '', '{$lastQuestion}', '', '', '', '', '', '', '', '', '', '', '', ''
+				  )");
+		}
+		
+		if ($bankDataGrabber['questionBank'] == "1") {
+			$bankData = query("SELECT * FROM `questionbank` WHERE `id` = '{$bankDataGrabber['linkID']}'");
+		} else {
+			$bankData = $bankDataGrabber;
+		}
+		
+		if (exist($parentTable, "id", $testData['questionID'])) {
+			if (in_array($bankData['type'], $questionConfig)) {
+				if ($testData['type'] == "Matching") {
+					$questionValue = mysql_real_escape_string($bankData['questionValue']);
+					$answerValue = mysql_real_escape_string($bankData['answerValue']);
+					$answerValueScrambledPrep = unserialize($bankData['answerValue']);
+					$answerCompare = $bankData['answerValue'];
+				} else {
+					$questionValue = "";
+					$answerValue = mysql_real_escape_string($bankData['questionValue']);
+					$answerValueScrambledPrep = unserialize($bankData['questionValue']);
+					$answerCompare = $bankData['questionValue'];
+				}
+				
+				shuffle($answerValueScrambledPrep);
+				$answerValueScrambled = mysql_real_escape_string(serialize($answerValueScrambledPrep));
+				
+				if ($answerCompare !== $testData['answerValue']) {
+					query("UPDATE `{$testTable}` SET `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `answerValueScrambled` = '{$answerValueScrambled}' WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}'");
+				}
+			}
+		} else {
+			query("DELETE FROM `{$testTable}` WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}' LIMIT 1");
+			query("UPDATE `{$testTable}` SET `randomPosition` = randomPosition-1 WHERE `randomPosition` > '{$testData['randomPosition']}' AND `attempt` = '{$currentAttempt}'");
+		}
 	}
 	
 //Top content
@@ -340,6 +411,8 @@
 						$targetFile .= $fileNameArray[$count] . ".";
 					}
 				}
+				
+				$targetFile = mysql_real_escape_string($targetFile);
 				
 				if (move_uploaded_file($tempFile, $uploadDir . "/" . $targetFile)) {
 					$fileGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$id['0']}'");
@@ -396,6 +469,7 @@
 		
 		//Include only the questions that can be automatically scored
 			$gradeConfig = array("Fill in the Blank", "Matching", "Multiple Choice", "Short Answer", "True False");
+			$noGrade = array();
 			
 			while ($testDataLoop = mysql_fetch_array($testDataGrabber)) {
 				if ($testDataLoop['questionBank'] == "1") {
@@ -477,7 +551,7 @@
 							if ($testData['randomize'] == "1") {
 								$answerCompare = unserialize($testData['answerValueScrambled']);
 							} else {
-								$answerCompare = unserialize($testData['answerValue']);
+								$answerCompare = unserialize($testData['questionValue']);
 							}
 							
 							$testQuestion = unserialize($testData['questionValue']);
@@ -488,10 +562,6 @@
 							
 							if (is_array($testAnswers) && sizeof($testAnswers) > 1) {
 								$totalValues = sizeof($testAnswers);
-								
-								if (sizeof($testAnswers) < sizeof($userAnswers)) {
-									$wrong = sizeof($userAnswers) - sizeof($testAnswers);
-								}
 								
 								if (sizeof($testAnswers) > sizeof($userAnswers)) {
 									$wrong = $wrong + (sizeof($testAnswers) - sizeof($userAnswers));
@@ -573,8 +643,12 @@
 							$score = $scorePrep;
 							$feedback = mysql_real_escape_string($testData['correctFeedback']);
 						}
-					} else {
-						$score = $scorePrep;
+					} else {						
+						if ($scorePrep < 0) {
+							$score = "0";
+						} else {
+							$score = $scorePrep;
+						}
 						
 						if ($scorePrep !== $testData['points'] && $scorePrep !== "0") {
 							$feedback = mysql_real_escape_string($testData['partialFeedback']);
@@ -587,62 +661,27 @@
 					
 					query("UPDATE `{$testTable}` SET `link` = '{$link}', `testPosition` = '{$position}', `randomizeTest` = '{$randomizeTest}', `randomizeQuestion` = '{$randomizeQuestion}', `extraCredit` = '{$extraCredit}', `points` = '{$points}', `score` = '{$score}', `question` = '{$question}', `questionValue` = '{$questionValue}', `testAnswer` = '{$answerValue}', `feedback` = '{$feedback}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$testDataLoop['id']}' LIMIT 1");
 				} else {
-					query("UPDATE `{$testTable}` SET `link` = '{$link}', `testPosition` = '{$position}', `randomizeTest` = '{$randomizeTest}', `randomizeQuestion` = '{$randomizeQuestion}', `extraCredit` = '{$extraCredit}', `points` = '{$points}', `question` = '{$question}', `questionValue` = '{$questionValue}', `testAnswer` = '{$answerValue}', `feedback` = '{$feedback}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$testDataLoop['id']}' LIMIT 1");
+					array_push($noGrade, $testData['type']);
+					
+					query("UPDATE `{$testTable}` SET `link` = '{$link}', `testPosition` = '{$position}', `randomizeTest` = '{$randomizeTest}', `randomizeQuestion` = '{$randomizeQuestion}', `extraCredit` = '{$extraCredit}', `points` = '{$points}', `question` = '{$question}', `questionValue` = '{$questionValue}', `testAnswer` = '{$answerValue}' WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `questionID` = '{$testDataLoop['id']}' LIMIT 1");
 				}
 				
 				unset($feedback);
 			}
 			
-			redirect("review.php?id=" . $_GET['id']);
-		}
-	}
-	
-//Check for updates to the test canvas, and apply them to this test
-	$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `questionID` ASC", "raw");
-	$questionConfig = array("Matching", "Multiple Choice");
-	
-	while ($testData = mysql_fetch_array($testDataGrabber)) {
-		$bankDataGrabber = query("SELECT * FROM `{$parentTable}` WHERE `id` = '{$testData['questionID']}'");
-		
-		if (!empty($bankDataGrabber['link']) && !questionExist($bankDataGrabber['link']) && exist($parentTable, "id", $bankDataGrabber['link'])) {
-			$lastQuestionGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `randomPosition` DESC LIMIT 1");
-			$lastQuestion = $lastQuestionGrabber['randomPosition'] + 1;
+			$testUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}' LIMIT 1");
+			$testUpdateArray = unserialize($testUpdateGrabber['modules']);
 			
-			query("INSERT INTO `{$testTable}` (
-				  `testID`, `questionID`, `attempt`, `type`, `link`, `testPosition`, `randomPosition`, `randomizeTest`, `randomizeQuestion`, `extraCredit`, `points`, `score`, `question`, `questionValue`, `answerValue`, `answerValueScrambled`, `userAnswer`, `testAnswer`, `feedback`
-				  ) VALUES (
-				  '{$testID}', '{$bankDataGrabber['link']}', '{$currentAttempt}', 'Description', '', '', '{$lastQuestion}', '', '', '', '', '', '', '', '', '', '', '', ''
-				  )");
-		}
-		
-		if ($bankDataGrabber['questionBank'] == "1") {
-			$bankData = query("SELECT * FROM `questionbank` WHERE `id` = '{$bankDataGrabber['linkID']}'");
-		} else {
-			$bankData = $bankDataGrabber;
-		}
-		
-		if (exist($parentTable, "id", $testData['questionID'])) {
-			if (in_array($bankData['type'], $questionConfig)) {
-				if ($testData['type'] == "Matching") {
-					$questionValue = mysql_real_escape_string($bankData['questionValue']);
-					$answerValue = mysql_real_escape_string($bankData['answerValue']);
-					$answerValueScrambledPrep = unserialize($bankData['answerValue']);
-				} else {
-					$questionValue = "";
-					$answerValue = mysql_real_escape_string($bankData['questionValue']);
-					$answerValueScrambledPrep = unserialize($bankData['questionValue']);
-				}
-				
-				shuffle($answerValueScrambledPrep);
-				$answerValueScrambled = mysql_real_escape_string(serialize($answerValueScrambledPrep));
-				
-				if ($bankData['answerValue'] !== $testData['answerValue']) {
-					query("UPDATE `{$testTable}` SET `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `answerValueScrambled` = '{$answerValueScrambled}' WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}'");
-				}
+			if (!empty($noGrade)) {
+				$testUpdateArray[$testID]['testStatus'] = "A";
+			} else {
+				$testUpdateArray[$testID]['testStatus'] = "F";
 			}
-		} else {
-			query("DELETE FROM `{$testTable}` WHERE `questionID` = '{$testData['questionID']}' AND `attempt` = '{$currentAttempt}' LIMIT 1");
-			query("UPDATE `{$testTable}` SET `randomPosition` = randomPosition-1 WHERE `randomPosition` > '{$testData['randomPosition']}' AND `attempt` = '{$currentAttempt}'");
+			
+			$testUpdate = serialize($testUpdateArray);
+			
+			query("UPDATE `users` SET `modules` = '{$testUpdate}' WHERE `id` = '{$userData['id']}'");
+			redirect("review.php?id=" . $_GET['id']);
 		}
 	}
 	
@@ -696,7 +735,7 @@
 	
 //Display link back to the lesson, if premitted
 	if ($moduleInfo['reference'] == "1") {
-		echo "<br /><div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'], "previousPage") . "</div><br />";
+		echo "<br /><div align=\"left\">" . URL("Back to Lesson", "lesson.php?id=" . $_GET['id'] . "&page=1", "previousPage") . "</div><br />";
 	} else {
 		echo "<p>&nbsp;</p>";
 	}

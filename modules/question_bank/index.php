@@ -1,7 +1,11 @@
 <?php
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	questionAccess();
+	
+//Set a session to use when inserting questions in to the database
+	if (isset($_GET['id'])) {
+		$_SESSION['questionBank'] = $_GET['id'];
+	}
 	
 //Select all categories
 	if (exist("modulecategories")) {
@@ -17,18 +21,18 @@
 				$sql = "";
 				
 				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (inArray($otherQuestions['category'], $currentCategories)) {
+					if (in_array($otherQuestions['category'], $currentCategories)) {
 						if ($count == 0) {
-							$sql .= "`category` != '" . $otherQuestions['category'] . "'";
+							$sql .= " WHERE`category` != '" . $otherQuestions['category'] . "'";
 						} else {
-							$sql .= " AND `category` != '" . $otherQuestions['category'] . "'";
+							$sql .= " AND `category` != '" . $otherQuestions['category'] . "' ";
 						}
 						
 						$count ++;
 					}
 				}
 				
-				$testImport = query("SELECT * FROM `questionbank` WHERE {$sql} ORDER BY id ASC", "raw");
+				$testImport = query("SELECT * FROM `questionbank`{$sql}ORDER BY id ASC", "raw");
 					
 				if (!$testImport) {
 					redirect("index.php");
@@ -49,15 +53,32 @@
 		$categoryResult = 0;
 	}
 	
-//Delete a test question
-	if (isset ($_GET['id']) && isset ($_GET['questionID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
+//Delete a test question	
+	if (isset ($_GET['questionID']) && isset ($_GET['action']) && $_GET['action'] == "delete") {
 		$delete = query("SELECT * FROM `questionbank` WHERE `id` = '{$_GET['questionID']}'");
 		
-		if ($delete) {
+		if ($delete) {			
+		//Delete from tests in which this appears
+			$questionBankDeleteGrabber = query("SELECT * FROM `moduledata`", "raw");
+			
+			while ($questionBankDelete = mysql_fetch_array($questionBankDeleteGrabber)) {
+				$currentTable = $questionBankDelete['id'];
+				$questionArray = query("SELECT * FROM `moduletest_{$currentTable}` WHERE `linkID` = '{$_GET['questionID']}'", false, false);
+				
+				if ($questionArray) {
+					$questionID = $questionArray['id'];
+					$questionPosition = $questionArray['position'];
+					
+					query("UPDATE moduletest_{$currentTable} SET position = position-1 WHERE position > '{$questionPosition}'");
+					query("DELETE FROM moduletest_{$currentTable} WHERE id = '{$questionID}'");
+				}
+			}
+			
+		//Delete the question from the bank
 			if ($delete['type'] == "File Response") {
-				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['questionID'], true, "../questionbank/test/answers/" . $delete['fileURL']);
+				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true, "../questionbank/test/answers/" . $delete['fileURL']);
 			} else {
-				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['questionID'], true);
+				delete("questionbank", $_SERVER['PHP_SELF'] . "?id=" . $_GET['id'], true);
 			}
 		}
 	}
@@ -67,7 +88,7 @@
 		if ($_GET['id'] == 0) {
 			$title = "Uncategorized Bank";
 		} else {
-			$title = stripslashes($bankTitle['category']) . " Bank";
+			$title = prepare($bankTitle['category'], false, true) . " Bank";
 		}
 	} else {
 		$title = "Question Bank";
@@ -84,7 +105,7 @@
 			echo "<div class=\"toolBar noPadding\">";
 			form("jump");
 			echo "<span class=\"toolBarItem noLink\">Add: ";
-			dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False, Import from Question Bank", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php,../questions/question_bank.php");
+			dropDown("menu", "nenu", "- Select Question Type -,Description,Essay,File Response, Fill in the Blank, Matching, Multiple Choice, Short Answer, True or False", ",../questions/description.php,../questions/essay.php,../questions/file_response.php,../questions/blank.php,../questions/matching.php,../questions/multiple_choice.php,../questions/short_answer.php,../questions/true_false.php");
 			button("submit", "submit", "Go", "button", false, " onclick=\"location=document.jump.menu.options[document.jump.menu.selectedIndex].value;\"");
 			echo "</span>";
 			echo URL("Back to Categories", "index.php", "toolBarItem back");
@@ -144,9 +165,11 @@
 			$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
 			$count = 0;
 			
-			while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-				if (!inArray($otherQuestions['category'], $currentCategories)) {
-					$count++;
+			if ($otherQuestionsGrabber) {
+				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
+					if (!inArray($otherQuestions['category'], $currentCategories)) {
+						$count++;
+					}
 				}
 			}
 			
@@ -204,12 +227,12 @@
 						case "True False" : $URL .= "true_false.php"; break;
 					}
 					
-					$URL .= "?id=" . $testData['id'];
+					$URL .= "?bankID=" . $testData['id'];
 					
 					echo URL(false, $URL, "action edit", false, "Edit this <strong>" . $testData['type'] . "</strong> question");
 					
 					echo "</td>";
-					echo "<td width=\"50\">" . URL(false, "index.php?id=" . $_GET['id'] . "&questionID=" . $testData['id'] . "&action=delete", "action delete", false, "Delete this <strong>" . $testData['type'] . "</strong> question", true) . "</td>";
+					echo "<td width=\"50\">" . URL(false, "index.php?id=" . $_GET['id'] . "&questionID=" . $testData['id'] . "&action=delete", "action delete", false, "Delete this <strong>" . $testData['type'] . "</strong> question", false, false, false, false, " onclick=\"return confirm('This action will delete this question from the question bank, and from any tests which it is currently located. If you wish to keep this question inside its current tests, click the &quot;discover&quot; button, find in which tests this question is located, then import the question into the test.')\")") . "</td>";
 					echo "</tr>";
 				}
 				

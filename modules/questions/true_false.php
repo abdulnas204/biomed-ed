@@ -10,7 +10,9 @@
 		$question = mysql_real_escape_string($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
+		$type = $_POST['type'];
 		$difficulty = $_POST['difficulty'];
+		$category = $_POST['category'];
 		$link = $_POST['link'];
 		$randomize = $_POST['randomize'];
 		$tags = mysql_real_escape_string($_POST['tags']);
@@ -19,15 +21,11 @@
 		$feedBackIncorrect = mysql_real_escape_string($_POST['feedBackIncorrect']);
 		
 		if (isset ($questionData)) {
-			updateQuery($monitor['type'], "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}'");
-							
-			redirect($monitor['redirect'] . "?updated=question");	
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `randomize` = '{$randomize}', `tags` = '{$tags}', `answer` = '{$answer}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}'");	
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($monitor['type'], "NULL, '0', '0', '{$lastQuestion}', 'True False', '{$points}', '{$extraCredit}', '', '{$difficulty}', '{$link}', '{$randomize}', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', ''");
-							
-			redirect($monitor['redirect'] . "?inserted=question");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'True False', '{$points}', '{$extraCredit}', '', '{$difficulty}', '{$category}', '{$link}', '{$randomize}', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', ''", "NULL, 'True False', '{$points}', '{$extraCredit}', '', '{$difficulty}', '{$category}', '{$randomize}', '0', '', '1', '{$tags}', '{$question}', '', '{$answer}', '', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', ''");
 		}
 	}
 	
@@ -44,7 +42,9 @@
 	catDivider("Question Settings", "two");
 	echo "<blockquote>";
 	points();
+	type();
 	difficulty();
+	category();
 	descriptionLink();
 	randomize();
 	tags();

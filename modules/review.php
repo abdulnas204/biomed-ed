@@ -1,7 +1,7 @@
 <?php 
 //Header functions
 	require_once('../system/connections/connDBA.php');
-	headers("Review Test", "Student,Site Administrator", "calculate", true);
+	headers("Review Test", "Student,Site Administrator", "validate,calculate", true);
 	
 //Grab all module and test data
 	$userData = userData();
@@ -10,10 +10,18 @@
 	$testTable = "testdata_" . $userData['id'];
 	$attempt = lastItem($testTable, "testID", $testID, "attempt");
 	$currentAttempt = $attempt - 1;
+	$updateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userData['id']}'");
+	$updateArray = unserialize($updateGrabber['modules']);
 	
-	if (isset ($_GET['id'])) {
-		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$_GET['id']}' LIMIT 1");
-		$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `testPosition` ASC", "raw");
+	if (($updateArray[$testID]['testStatus'] == "A" || $updateArray[$testID]['testStatus'] == "F") && isset ($_GET['id']) && exist($testTable, "testID", $testID)) {
+		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$testID}' LIMIT 1");
+		$randomize = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' LIMIT 1");
+		
+		if ($randomize['randomizeTest'] == "Randomize") {
+			$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `randomPosition` ASC", "raw");
+		} else {
+			$testDataGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' ORDER BY `testPosition` ASC", "raw");
+		}
 	} else {
 		redirect("index.php");
 	}
@@ -25,6 +33,10 @@
 			query("UPDATE `{$testTable}` SET `score` = '{$score}' WHERE `testID` = '{$testID}' AND `questionID` = '{$id}' AND `attempt` = '{$currentAttempt}' LIMIT 1");
 		}
 		
+		$updateArray[$testID]['testStatus'] = "F";
+		$update = serialize($updateArray);
+		
+		query("UPDATE `users` SET `modules` = '{$update}' WHERE `id` = '{$userData['id']}'");
 		redirect($_SERVER['REQUEST_URI']);
 	}
 	
@@ -40,8 +52,8 @@
 	$feedback = false;
 	
 	if (is_array($values)) {
-		foreach($values as $checkbox) {
-			switch ($checkbox) {
+		foreach($values as $setting) {
+			switch ($setting) {
 				case "1" : $score = true; break;
 				case "2" : $selectedAnswers = true; break;
 				case "3" : $correctAnswers = true; break;
@@ -53,15 +65,57 @@
 	$submitVerifyGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `type` != 'Description'", "raw");
 	
 	while ($submitVerify = mysql_fetch_array($submitVerifyGrabber)) {
-		if (empty($submitVerify['score']) && intval($submitVerify['score']) !== 0) {
+		if (empty($submitVerify['score']) && !is_numeric($submitVerify['score'])) {
 			$submit = true;
 		}
 	}
 	
 	if (isset($submit)) {
-		title("Review Test", "There are several questions in this test which require manual grading. Please scroll down and locate the test question(s) which require grading (indicated by a gray background). Some questions are accompanied by a sample answer provided by the module creator. Compare your answer with the one provided and enter the appropriate score in the text field located under the question number.");
+		title("Review Test", "There are several questions in this test which require manual grading. Please scroll down and locate the test question(s) which require grading (indicated by a gray background). Some questions may be accompanied by a sample answer provided by the module author. Compare your answer with the one provided and enter the appropriate score in the text field located under the question number.");
 	} else {
-		title("Review Test", "Below are the results to your test.");
+		$pointsGrabber = query("SELECT * FROM `{$testTable}` WHERE `testID` = '{$testID}' AND `attempt` = '{$currentAttempt}' AND `type` != 'Description'", "raw");
+		$pointValue = 0;
+		$totalExtraCredit = 0;
+		$extraCredit = 0;
+		$scorePrep = 0;
+		
+		while ($points = mysql_fetch_array($pointsGrabber)) {			
+			if ($points['extraCredit'] == "on") {
+				$totalExtraCredit = $totalExtraCredit + $points['points'];
+				$extraCredit = $extraCredit + $points['score'];
+			} else {
+				$pointValue = $pointValue + $points['points'];
+				$scorePrep = $scorePrep + $points['score'];
+			}
+			
+			$score = $scorePrep + $extraCredit;
+		}
+		
+		title("Review Test", "Below are the results to your test.", false);
+		
+	//Display the test information
+		echo "<br /><br /><div class=\"toolBar noPadding\">";
+		echo "<strong>Score</strong>: " . $score . " out of " . $pointValue . " ";
+		
+		if (intval($pointValue) == 1) {
+			echo "point";
+		} else {
+			echo "points";
+		}
+		
+		if (intval($totalExtraCredit) > 0) {
+			echo "<br /><strong>Extra Credit</strong>: " . $extraCredit . " out of " . $totalExtraCredit . " extra credit ";
+			
+			if (intval($totalExtraCredit) == 1) {
+				echo "point";
+			} else {
+				echo "points";
+			}
+		}
+		
+		echo "<br /><strong>Grade</strong>: " . grade($score, $pointValue);
+		
+		echo "</div><br />";
 	}
 	
 	while ($testData = mysql_fetch_array($testDataGrabber)) {	
@@ -74,13 +128,13 @@
 		
 		if ($testData['type'] != "Description") {
 			echo "<tr";
-			if (empty($testData['score']) && intval($testData['score']) !== 0) {echo " class=\"attention\">";} else {echo ">";}
+			if (empty($testData['score']) && $testData['score'] !== "0") {echo " class=\"attention\">";} else {echo ">";}
 			echo "<td width=\"100\" valign=\"top\"><p>";
 			echo "<span class=\"questionNumber\">Question " . $count++ . "</span><br />";
 			
-			if (empty($testData['score']) && $testData['score'] !== "0" && $submit == true) {
+			if (empty($testData['score']) && $testData['score'] !== "0" && isset($submit)) {
 				echo "<br />";
-				textField("score_" . $testData['questionID'], "score_" . $testData['questionID'], "5", "5", false, true, ",custom[onlyNumber]", false, "testData", "score", " onchange=\"calculate('score_" . $testData['questionID'] . "', '" . $testData['points'] . "', 'calculate_" . $testData['questionID'] . "');\" tabindex=\"" . $count . "\"");
+				textField("score_" . $testData['questionID'], "score_" . $testData['questionID'], "5", "5", false, true, ",custom[onlyNumber]", false, "testData", "score", " onkeyup=\"calculate('score_" . $testData['questionID'] . "', '" . $testData['points'] . "', 'calculate_" . $testData['questionID'] . "');\" tabindex=\"" . $count . "\"");
 				echo " / " . $testData['points'];
 				
 				if ($testData['extraCredit'] == "on") {
@@ -117,17 +171,21 @@
 					echo "<br /><br /><span class=\"extraCredit\" onmouseover=\"Tip('Extra credit')\" onmouseout=\"UnTip()\"></span>";
 				}
 				
+				echo "<br /><br /><div align=\"center\"><img src=\"../system/images/common/";
+				
 				if (intval($testData['score']) === intval($testData['points'])) {
-					echo "<br /><br /><img src=\"../system/images/common/correct.png\">";
+					echo "correct";
 				}
 				
 				if (intval($testData['score']) < intval($testData['points']) && intval($testData['score']) !== 0) {
-					echo "<br /><br /><img src=\"../system/images/common/partial.png\">";
+					echo "partial";
 				}
 				
 				if (intval($testData['score']) === 0) {
-					echo "<br /><br /><img src=\"../system/images/common/incorrect.png\">";
+					echo "incorrect";
 				}
+				
+				echo ".png\"></div>";
 			}
 			
 			echo "</p></td><td valign=\"top\">" . prepare($testData['question'], false, true) . "<br /><br />";
@@ -204,10 +262,12 @@
 					for ($list = 0; $list <= sizeof($sentenceValues) - 1; $list ++) {
 						echo $sentenceValues[$list];
 						
-						if ($list < sizeof($sentenceValues) - 1 && isset($userAnswer[$list]) && !empty($userAnswer['list'])) {
+						if ($list <= sizeof($sentenceValues) - 1 && isset($userAnswer[$list]) && !empty($userAnswer[$list])) {
 							echo " <strong>" . $userAnswer[$list] . "</strong> ";
 						} else {
-							echo " <strong><span class=\"notAssigned\">None Given</span></strong> ";
+							if (!empty($correctAnswer[$list])) {
+								echo " <strong><span class=\"notAssigned\">None Given</span></strong> ";
+							}
 						}
 					}
 					
@@ -220,7 +280,7 @@
 					for ($list = 0; $list <= sizeof($sentenceValues) - 1; $list ++) {
 						echo $sentenceValues[$list];
 						
-						if ($list < sizeof($sentenceValues) - 1 && isset($correctAnswer[$list])) {
+						if ($list <= sizeof($sentenceValues) - 1 && isset($correctAnswer[$list])) {
 							echo " <strong>" . $correctAnswer[$list] . "</strong> ";
 						}
 					}
@@ -271,9 +331,15 @@
 				break;
 			
 			case "Multiple Choice" : 
-				$choices = unserialize($testData['answerValue']);
 				$answers = unserialize($testData['userAnswer']);
 				$correctAnswer = unserialize($testData['testAnswer']);
+				$correctAnswerValues = unserialize($testData['answerValue']);
+				
+				if ($testData['randomizeQuestion'] == "1") {
+					$choices = unserialize($testData['answerValueScrambled']);
+				} else {
+					$choices = unserialize($testData['answerValue']);
+				}
 								
 				if ($selectedAnswers == true) {					
 					if (is_array($answers) && sizeof($answers) > 1) {
@@ -287,7 +353,12 @@
 						echo "</ul>";
 					} else {
 						echo "<p>Selected Answer: </p>";
-						echo "<blockquote><p>" . $choices[sprintf($answers - 1)] . "</p></blockquote>";
+						
+						if (!empty($answers['0'])) {
+							echo "<blockquote><p>" . $choices[sprintf($answers['0'] - 1)] . "</p></blockquote>";
+						} else {
+							echo "<blockquote><p><span class=\"notAssigned\">None Given</span></p></blockquote>";
+						}
 					}
 				}
 				
@@ -297,13 +368,13 @@
 						echo "<ul>";
 						
 						for ($list = 0; $list <= sizeof($correctAnswer) - 1; $list ++) {
-							echo "<li>" . $choices[sprintf($correctAnswer[$list] - 1)] . "</li>";
+							echo "<li>" . $correctAnswerValues[sprintf($correctAnswer[$list] - 1)] . "</li>";
 						}
 						
 						echo "</ul>";
 					} else {						
 						echo "<p>Correct Answer: </p>";
-						echo "<blockquote><p>" . $choices[sprintf($correctAnswer['0'] - 1)] . "</p></blockquote>";
+						echo "<blockquote><p>" . $correctAnswerValues[sprintf($correctAnswer['0'] - 1)] . "</p></blockquote>";
 					}
 				}
 				
@@ -372,9 +443,13 @@
 	echo "</table>";
 	
 	if (isset($submit)) {
-		echo "<p><blockquote>";
+		echo "<blockquote><p>";
 		button("submit", "submit", "Submit Scores", "submit");
-		echo "</blockquote></p>";
+		echo "</p></blockquote>";
+	} else {
+		echo "<blockquote><p>";
+		button("submit", "submit", "Finish", "button", "index.php");
+		echo "</p></blockquote>";
 	}
 	
 	closeForm(false, true);

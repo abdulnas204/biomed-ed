@@ -1,7 +1,7 @@
 <?php 
 //Header functions
 	require_once('../../system/connections/connDBA.php');
-	$monitor = monitor("Matching", "tinyMCESimple,validate,showHide,newObject");
+	$monitor = monitor("Matching", "tinyMCESimple,validate,newObject");
 	require_once('functions.php');
 	$questionData = dataGrabber("Matching");
 	
@@ -10,7 +10,9 @@
 		$question = mysql_real_escape_string($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
+		$type = $_POST['type'];
 		$difficulty = $_POST['difficulty'];
+		$category = $_POST['category'];
 		$link = $_POST['link'];
 		$partialCredit = $_POST['partialCredit'];
 		$tags = mysql_real_escape_string($_POST['tags']);
@@ -21,15 +23,11 @@
 		$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
 		if (isset ($questionData)) {
-			updateQuery($monitor['type'], "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?updated=question");	
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `partialCredit` = '{$partialCredit}', `tags` = '{$tags}', `questionValue` = '{$questionValue}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($monitor['type'], "NULL, '0', '0', '{$lastQuestion}', 'Matching', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?inserted=question");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Matching', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '1', '{$tags}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Matching', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '{$questionValue}', '{$answer}', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -46,7 +44,9 @@
 	catDivider("Question Settings", "two");
 	echo "<blockquote>";
 	points();
+	type();
 	difficulty();
+	category();
 	descriptionLink();
 	partialCredit();
 	tags();
@@ -68,7 +68,7 @@
 			textField("questionValue[]", "questionValue" . $value, false, false, false, true, false, $questions[$count]);
 			echo "</td><td>";
 			textField("answerValue[]", "answerValue" . $value, false, false, false, true, false, $answers[$count]);
-			echo "</td><td width=\"50\"><span class=\"action smallDelete\" onclick=\"deleteObject('items', '" . $value . "', '1')\"></span></td></tr>";
+			echo "</td><td width=\"50\"><span class=\"action smallDelete\" onclick=\"deleteObject('items', '" . $value . "', '2')\"></span></td></tr>";
 		}
 	} else {
 		echo "<tr id=\"1\" align=\"center\"><td>";

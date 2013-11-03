@@ -10,7 +10,9 @@
 		$question = mysql_real_escape_string($_POST['question']);
 		$points = $_POST['points'];
 		$extraCredit = $_POST['extraCredit'];
+		$type = $_POST['type'];
 		$difficulty = $_POST['difficulty'];
+		$category = $_POST['category'];
 		$link = $_POST['link'];
 		$case = $_POST['case'];
 		$tags = mysql_real_escape_string($_POST['tags']);
@@ -20,15 +22,11 @@
 		$feedBackPartial = mysql_real_escape_string($_POST['feedBackPartial']);
 		
 		if (isset ($questionData)) {
-			updateQuery($monitor['type'], "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?updated=question");	
+			updateQuery($type, "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `link` = '{$link}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'", "`question` = '{$question}', `points` = '{$points}', `extraCredit` = '{$extraCredit}', `difficulty` = '{$difficulty}', `category` = '{$category}', `case` = '{$case}', `tags` = '{$tags}', `answerValue` = '{$answerValue}', `correctFeedback` = '{$feedBackCorrect}', `incorrectFeedback` = '{$feedBackIncorrect}', `partialFeedback` = '{$feedBackPartial}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 		
-			insertQuery($monitor['type'], "NULL, '0', '0', '{$lastQuestion}', 'Short Answer', '{$points}', '{$extraCredit}', '{$partialCredit}', '{$difficulty}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
-							
-			redirect($monitor['redirect'] . "?inserted=question");
+			insertQuery($type, "NULL, '0', '0', '{$lastQuestion}', 'Short Answer', '{$points}', '{$extraCredit}', '', '{$difficulty}', '{$category}', '{$link}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'", "NULL, 'Short Answer', '{$points}', '{$extraCredit}', '', '{$difficulty}', '{$category}', '0', '0', '', '{$case}', '{$tags}', '{$question}', '', '', '{$answerValue}', '', '{$feedBackCorrect}', '{$feedBackIncorrect}', '{$feedBackPartial}'");
 		}
 	}
 	
@@ -45,7 +43,9 @@
 	catDivider("Question Settings", "two");
 	echo "<blockquote>";
 	points();
+	type();
 	difficulty();
+	category();
 	descriptionLink();
 	ignoreCase();
 	tags();

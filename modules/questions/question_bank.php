@@ -18,18 +18,18 @@
 				$sql = "";
 				
 				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-					if (inArray($otherQuestions['category'], $currentCategories)) {
+					if (in_array($otherQuestions['category'], $currentCategories)) {
 						if ($count == 0) {
-							$sql .= "`category` != '" . $otherQuestions['category'] . "'";
+							$sql .= " WHERE`category` != '" . $otherQuestions['category'] . "'";
 						} else {
-							$sql .= " AND `category` != '" . $otherQuestions['category'] . "'";
+							$sql .= " AND `category` != '" . $otherQuestions['category'] . "' ";
 						}
 						
 						$count ++;
 					}
 				}
 				
-				$testImport = query("SELECT * FROM `questionbank` WHERE {$sql} ORDER BY id ASC", "raw");
+				$testImport = query("SELECT * FROM `questionbank`{$sql}ORDER BY id ASC", "raw");
 					
 				if (!$testImport) {
 					redirect("index.php");
@@ -59,7 +59,7 @@
 				$type = $questionData['type'];
 				$lastQuestion = lastItem($monitor['testTable']);
 				
-				insertQuery("Module", "NULL, '1', '{$id}', '{$lastQuestion}', '{$type}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
+				insertQuery("Module", "NULL, '1', '{$id}', '{$lastQuestion}', '{$type}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''");
 				
 				redirect("../module_wizard/test_content.php");
 			}
@@ -108,9 +108,11 @@
 			$otherQuestionsGrabber = query("SELECT * FROM `questionbank` ORDER BY `id` ASC", "raw");
 			$count = 0;
 			
-			while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
-				if (!inArray($otherQuestions['category'], $currentCategories)) {
-					$count++;
+			if ($otherQuestionsGrabber) {
+				while ($otherQuestions = mysql_fetch_array($otherQuestionsGrabber)) {
+					if (!inArray($otherQuestions['category'], $currentCategories)) {
+						$count++;
+					}
 				}
 			}
 			

@@ -1,14 +1,13 @@
 <?php
 //Header functions
-	require_once('\../system/connections/connDBA.php');
+	require_once('../system/connections/connDBA.php');
 	
 //Check to see if the page is being edited
 	if (isset ($_GET['id'])) {
 		if ($pageData = exist("pages", "id", $_GET['id'])) {
 			//Do nothing
 		} else {
-			header("Location: index.php");
-			exit;
+			redirect("index.php");
 		}
 	}
 	

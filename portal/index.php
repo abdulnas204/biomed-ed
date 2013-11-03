@@ -1,7 +1,7 @@
 <?php
 //Header functions
 	require_once('../system/connections/connDBA.php');	
-	headers("Home", "Student,Site Administrator");
+	headers("Home", "Student,Site Administrator", false, true);
 	
 //Title
 	switch ($_SESSION['MM_UserGroup']) {
@@ -203,22 +203,37 @@
 		//Display module statistics
 			echo "<p>Information on modules you are currently enrolled:</p><ul>";
 			
-			foreach (unserialize($userInfo['modules']) as $moduleCompletion) {
-				$moduleData = query("SELECT * FROM `moduledata` WHERE `id` = '{$moduleCompletion}'");
+			foreach (unserialize($userInfo['modules']) as $key => $value) {
+				$moduleData = query("SELECT * FROM `moduledata` WHERE `id` = '{$key}'");
 				
 				echo "<li class=\"";
 				
-				if (is_array($moduleCompletion) && $moduleCompletion['1'] == "2") {
+				if ($value['moduleStatus'] == "F" && $value['testStatus'] == "F") {
 					echo "completed";
-				} elseif (is_array($moduleCompletion) && $moduleCompletion['1'] == "0") {
+				} elseif ($value['moduleStatus'] == "C" && $value['testStatus'] == "C") {
 					echo "notStarted";
-				} elseif (is_array($moduleCompletion) && $moduleCompletion['1'] == "1") {
-					echo "inProgress";
 				} else {
-					echo "notStarted";
+					echo "inProgress";
 				}
 				
-				echo "\">" . URL($moduleData['name'], "../modules/lesson.php?id=" . $moduleData['id']) . "</li>";
+				if ($value['moduleStatus'] == "F") {
+					$moduleStatus = "Completed";
+				} elseif ($value['moduleStatus'] == "C") {
+					$moduleStatus = "Not Started";
+				} else {
+					$moduleStatus = "In Progress";
+				}
+				
+				if ($value['testStatus'] == "F") {
+					$testStatus = "Completed";
+				} elseif ($value['testStatus'] == "C") {
+					$testStatus = "Not Started";
+				} else {
+					$testStatus = "In Progress";
+				}
+				
+				echo "\">" . tip("<strong>Lesson Progress</strong> - " . $moduleStatus . "<br /><strong>Test Progress</strong> - " . $testStatus,  URL($moduleData['name'], "../modules/lesson.php?id=" . $moduleData['id']));
+				echo "</li>";
 			}
 			
 			echo "</ul>";

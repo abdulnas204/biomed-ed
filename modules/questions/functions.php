@@ -2,6 +2,45 @@
 //Header functions
 	require_once('../../system/connections/connDBA.php');
 	
+//Ensure the page is handling the correct question type
+	function dataGrabber($type) {
+		global $connDBA, $monitor;
+		
+		if (isset($_GET['id'])) {
+			$id = $_GET['id'];
+			$dataGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$id}'", $connDBA);
+			
+			if ($dataGrabber) {
+				$data = mysql_fetch_array($dataGrabber);
+				
+				if ($data['type'] == $type) {
+					return $data;
+				} else {
+					redirect($monitor['redirect']);
+				}
+			} else {
+				redirect($monitor['redirect']);
+			}
+		}
+		
+		if (isset($_GET['bankID'])) {
+			$id = $_GET['bankID'];
+			$dataGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$id}'", $connDBA);
+			
+			if ($dataGrabber) {
+				$data = mysql_fetch_array($dataGrabber);
+				
+				if ($data['type'] == $type) {
+					return $data;
+				} else {
+					redirect("../question_bank/index.php");
+				}
+			} else {
+				redirect("../question_bank/index.php");
+			}
+		}
+	}
+	
 //Display a question
 	function question() {
 		directions("Question", true);
@@ -20,17 +59,72 @@
 		echo "</p></blockquote>";
 	}
 	
+//Include where this question is being inserted
+	function type() {
+		global $questionData;
+		
+		$active = 0;
+		$valuesPrep = "";
+		$valueIDsPrep = "";
+		
+		if (isset($_SESSION['currentModule'])) {
+			$active = 1;
+			$valuesPrep .= "Current Test,";
+			$valueIDsPrep .= "Module,";
+		}
+		
+		if (isset($_SESSION['questionBank'])) {
+			$active = $active + 1;
+			$valuesPrep .= "Question Bank,";
+			$valueIDsPrep .= "Bank,";
+		}
+		
+		if (isset($_SESSION['feedback'])) {
+			$active = $active + 1;
+			$valuesPrep .= "Feedback,";
+			$valueIDsPrep .= "Feedback,";
+		}
+		
+		$values = rtrim($valuesPrep, ",");
+		$valueIDs = rtrim($valueIDsPrep, ",");
+		
+		if ($active > 1 && !isset($_GET['id']) && !isset($_GET['bankID']) && !isset($_GET['feedbackID'])) {
+			directions("Insert question into");
+			echo "<blockquote><p>";
+			dropDown("type", "type", $values, $valueIDs, false, false, false, false, false, false, " onchange=\"toggleDescription(this.value);\"");
+			echo "</p></blockquote>";
+		} else {
+			if (isset($questionData)) {
+				if (!array_key_exists("position", $questionData)) {
+					$valueIDs = "Bank";
+				} elseif (!array_key_exists("link", $questionData)) {
+					$valueIDs = "Feedback";
+				} else {
+					$valueIDs = "Module";
+				}
+			}
+			
+			hidden("type", "type", $valueIDs);
+		}
+	}
+	
 //Display all levels of difficulty
 	function difficulty() {
 		global $monitor;
 		
 		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
-			$difficulty = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
-			
-			directions("Difficulty", false);
-			echo "<blockquote><p>";
-			dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, $difficulty['difficulty'], "questionData", "difficulty");
-			echo "</p></blockquote>";
+			if (isset($_SESSION['currentModule'])) {
+				$difficulty = query("SELECT * FROM `{$monitor['parentTable']}` WHERE `id` = '{$_SESSION['currentModule']}'");
+				directions("Difficulty", false);
+				echo "<blockquote><p>";
+				dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, $difficulty['difficulty'], "questionData", "difficulty");
+				echo "</p></blockquote>";
+			} else {
+				directions("Difficulty", false);
+				echo "<blockquote><p>";
+				dropDown("difficulty", "difficulty", "Easy,Average,Difficult", "Easy,Average,Difficult", false, false, false, "Average", "questionData", "difficulty");
+				echo "</p></blockquote>";
+			}
 		} else {
 			directions("Difficulty", false, "The overall difficulty of this module");
 			echo "<blockquote><p>";
@@ -43,52 +137,58 @@
 	function descriptionLink() {
 		global $connDBA, $monitor;
 		
-		$descriptionCheck = mysql_query("SELECT * FROM `{$monitor['testTable']}` ORDER BY `position` ASC", $connDBA);
-		
-		if ($descriptionCheck) {
-			$descriptionID = ",";			
-			$descriptionName = "- Select -,";
+		if (isset($_SESSION['currentModule']) && !isset($_GET['bankID']) && !isset($_GET['feedbackID'])) {
+			echo "<div id=\"descriptionLink\">";
 			
-			while ($description = mysql_fetch_array($descriptionCheck)) {
-				if ($description['type'] == "Description" && $description['questionBank'] != "1") {
-					$descriptionID .= $description['id'] . ",";
-					$descriptionName .= $description['position'] . ". " . commentTrim(25, $description['question']) . ",";
-				}
+			$descriptionCheck = query("SELECT * FROM `{$monitor['testTable']}` WHERE `type` = 'Description' ORDER BY `position` ASC", "raw");
+			
+			if ($descriptionCheck) {
+				$descriptionID = ",";			
+				$descriptionName = "- Select -,";
 				
-				if ($description['questionBank'] == "1") {
-					$importID = $description['linkID'];
-					$descriptionImportGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
-					$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
-					
-					if ($descriptionImport['type'] == "Description") {
+				while ($description = mysql_fetch_array($descriptionCheck)) {
+					if ($description['type'] == "Description" && $description['questionBank'] != "1") {
 						$descriptionID .= $description['id'] . ",";
-						$descriptionName .= $description['position'] . ". " . commentTrim(25, $descriptionImport['question']) . ",";
+						$descriptionName .= $description['position'] . ". " . commentTrim(25, $description['question']) . ",";
 					}
 					
-					unset($importID);
-					unset($descriptionImportGrabber);
-					unset($descriptionImport);
+					if ($description['questionBank'] == "1") {
+						$importID = $description['linkID'];
+						$descriptionImportGrabber = mysql_query("SELECT * FROM `questionbank` WHERE `id` = '{$importID}'", $connDBA);
+						$descriptionImport = mysql_fetch_array($descriptionImportGrabber);
+						
+						if ($descriptionImport['type'] == "Description") {
+							$descriptionID .= $description['id'] . ",";
+							$descriptionName .= $description['position'] . ". " . commentTrim(25, $descriptionImport['question']) . ",";
+						}
+						
+						unset($importID);
+						unset($descriptionImportGrabber);
+						unset($descriptionImport);
+					}
 				}
+			} else {
+				$descriptionID = "";			
+				$descriptionName = "- None -";
 			}
+			
+			$IDs = rtrim($descriptionID, ",");
+			$values = rtrim($descriptionName, ",");
+			
+			directions("Link to description", false);
+			echo "<blockquote><p>";
+			dropDown("link", "link", $values, $IDs, false, false, false, false, "questionData", "link");
+			echo "</p></blockquote></div>";
 		} else {
-			$descriptionID = "";			
-			$descriptionName = "- None -";
+			hidden("link", "link", "");
 		}
-		
-		$IDs = rtrim($descriptionID, ",");
-		$values = rtrim($descriptionName, ",");
-		
-		directions("Link to description", false);
-		echo "<blockquote><p>";
-		dropDown("link", "link", $values, $IDs, false, false, false, false, "questionData", "link");
-		echo "</p></blockquote>";
 	}
 	
 //Display partial credit option
 	function partialCredit() {
 		directions("Allow partial credit");
 		echo "<blockquote><p>";
-		radioButton("partialCredit", "partialCredit", "Yes,No", "1,0", true, false, false, "0", "questionData", "partialCredit", " onchange=\"toggleFeedback(this.value)\"");
+		radioButton("partialCredit", "partialCredit", "Yes,No", "1,0", true, false, false, "1", "questionData", "partialCredit", " onchange=\"toggleFeedback(this.value)\"");
 		echo "</p></blockquote>";
 	}
 	
@@ -133,12 +233,13 @@
 		$values = rtrim($categoryName, ",");
 		
 		if (!strstr($_SERVER['REQUEST_URI'], "module_wizard")) {
-			$editorTrigger = "questionData";
+			directions("Category");
+			echo "<blockquote><p>";
+			dropDown("category", "category", ltrim($values, "- Select -,"), ltrim($IDs, ","), false, true, false, false, "questionData", "category");
+			echo "</p></blockquote>";
 		} else {
-			$editorTrigger = "moduleData";
+			dropDown("category", "category", $values, $IDs, false, true, false, false, "moduleData", "category");
 		}
-		
-		dropDown("category", "category", $values, $IDs, false, true, false, false, $editorTrigger, "category");
 	}
 	
 //Display all of the employee types
@@ -213,27 +314,5 @@
 		button("reset", "reset", "Reset", "reset");
 		button("cancel", "cancel", "Cancel", "history");
 		echo "</p></blockquote>";
-	}
-	
-//Ensure the page is handling the correct question type
-	function dataGrabber($type) {
-		global $connDBA, $monitor;
-		
-		if (isset($_GET['id'])) {
-			$id = $_GET['id'];
-			$dataGrabber = mysql_query("SELECT * FROM `{$monitor['testTable']}` WHERE `id` = '{$id}'", $connDBA);
-			
-			if ($dataGrabber) {
-				$data = mysql_fetch_array($dataGrabber);
-				
-				if ($data['type'] == $type) {
-					return $data;
-				} else {
-					redirect($monitor['redirect']);
-				}
-			} else {
-				redirect($monitor['redirect']);
-			}
-		}
 	}
 ?>

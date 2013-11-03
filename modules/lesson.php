@@ -4,10 +4,26 @@
 	
 //Grab all module data
 	if (isset ($_GET['id'])) {
-		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$_GET['id']}' LIMIT 1");
+		$moduleLesson = "modulelesson_" . $_GET['id'];
+		$lessonID = $_GET['id'];
+		$userData = userData();
+		$userID = $userData['id'];
+		$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$lessonID}' LIMIT 1");
+		$lessonUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}' LIMIT 1");
+		$lessonUpdateArray = unserialize($lessonUpdateGrabber['modules']);
 		
-		if (exist("moduledata", "id", $_GET['id']) == false) {
+		if (exist("moduledata", "id", $_GET['id']) == false || ($_SESSION['MM_UserGroup'] != "Site Administrator" && empty($moduleInfo['visible']))) {
 			redirect("index.php");
+		}
+		
+		if (isset($_GET['page']) && $_SESSION['MM_UserGroup'] != "Site Administrator") {			
+			if (!array_key_exists($lessonID, $lessonUpdateArray)) {
+				redirect($_SERVER['PHP_SELF'] . "?id=" . $lessonID);
+			}
+			
+			if ($lessonUpdateArray[$lessonID]['moduleStatus'] == "F" && $lessonUpdateArray[$lessonID]['moduleStatus'] != "F" && $lessonUpdateArray[$lessonID]['moduleStatus'] != "A" && $moduleInfo['reference'] == "0") {
+				redirect("test.php?id=" . $lessonID);
+			}
 		}
 	} else {
 		redirect("index.php");
@@ -18,6 +34,36 @@
 		headers($moduleInfo['name'], false);
 	} else {
 		headers($moduleInfo['name'], "Student,Site Administrator");
+	}
+	
+//Process the form	
+	if ($_SESSION['MM_UserGroup'] != "Site Administrator") {
+		if (isset($_GET['page']) && $lessonUpdateArray[$lessonID]['moduleStatus'] != "F") {
+			$lessonUpdateArray[$lessonID]['moduleStatus'] = "O";
+			$lessonUpdate = serialize($lessonUpdateArray);
+			
+			query("UPDATE `users` SET `modules` = '{$lessonUpdate}' WHERE `id` = '{$userID}'");
+		}
+		
+		if (isset($_GET['action']) && $lessonUpdateArray[$lessonID]['testStatus'] == "C") {
+			$lessonUpdateGrabber = query("SELECT * FROM `users` WHERE `id` = '{$userID}' LIMIT 1");
+			$lessonUpdateArray = unserialize($lessonUpdateGrabber['modules']);
+			
+			if (exist("moduletest_" . $lessonID)) {
+				$lessonUpdateArray[$lessonID]['moduleStatus'] = "F";
+				$lessonUpdate = serialize($lessonUpdateArray);
+				
+				query("UPDATE `users` SET `modules` = '{$lessonUpdate}' WHERE `id` = '{$userID}'");
+				redirect("test.php?id=" . $lessonID);
+			} else {
+				$lessonUpdateArray[$lessonID]['moduleStatus'] = "F";
+				$lessonUpdateArray[$lessonID]['testStatus'] = "F";
+				$lessonUpdate = serialize($lessonUpdateArray);
+				
+				query("UPDATE `users` SET `modules` = '{$lessonUpdate}' WHERE `id` = '{$userID}'");
+				redirect("index.php?complete=" . $lessonID);
+			}
+		}
 	}
 
 //Information bar
@@ -36,15 +82,16 @@
 	
 //Display the lesson
 	if (isset($_GET['page'])) {
-		lesson($_GET['id'], "modulelesson_1", false);
+		lesson($_GET['id'], $moduleLesson, false);
 	} else {
 		if (loggedIn()) {
 			$userData = userData();
+			$modules = unserialize($userData['modules']);
 		}
 		
 		echo $moduleInfo['comments'] . "<div class=\"spacer\">";
 		
-		if (loggedIn() == false || !in_array($moduleInfo['id'], unserialize($userData['modules']))) {
+		if (loggedIn() == false && $_SESSION['MM_UserGroup'] != "Site Administrator" && (!is_array($modules) || !array_key_exists($moduleInfo['id'], $modules))) {
 			$price = str_replace(".", "", $moduleInfo['price']);
 			
 			if (!empty($moduleInfo['enablePrice']) && !empty($moduleInfo['price']) && $price > 0) {
@@ -54,7 +101,19 @@
 				closeForm(false, false);
 			}
 		} else {
-			button("beginLesson", "beginLesson", "Begin Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+			if ($_SESSION['MM_UserGroup'] != "Site Administrator") {
+				if ($modules[$lessonID]['moduleStatus'] == "C") {
+					button("beginLesson", "beginLesson", "Begin Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+				} elseif ($modules[$lessonID]['moduleStatus'] == "O") {
+					button("continueLesson", "continueLesson", "Continue Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+				} elseif ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['testStatus'] != "F") {
+					button("Test", "continueTest", "Continue Test", "button", "test.php?id=" . $lessonID);
+				} elseif ($modules[$lessonID]['moduleStatus'] == "F" && $modules[$lessonID]['moduleStatus'] == "F") {
+					button("reviewLesson", "reviewLesson", "Review Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+				}
+			} else {
+				button("previewLesson", "previewLesson", "Preview Lesson", "button", $_SERVER['REQUEST_URI'] . "&page=1");
+			}
 		}
 		
 		echo "</div>";

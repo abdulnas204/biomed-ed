@@ -5,7 +5,7 @@
 
 //Process the form
 	if (isset ($_POST['submit'])) {		
-		mysql_query("CREATE TABLE IF NOT EXISTS `{$monitor['testTable']}` (
+		query("CREATE TABLE IF NOT EXISTS `{$monitor['testTable']}` (
 					  `id` int(255) NOT NULL AUTO_INCREMENT,
 					  `questionBank` int(1) NOT NULL,
 					  `linkID` int(255) NOT NULL,
@@ -15,6 +15,7 @@
 					  `extraCredit` text NOT NULL,
 					  `partialCredit` int(1) NOT NULL,
 					  `difficulty` longtext NOT NULL,
+					  `category` int(11) NOT NULL,
 					  `link` longtext NOT NULL,
 					  `randomize` int(1) NOT NULL,
 					  `totalFiles` int(2) NOT NULL,
@@ -32,7 +33,7 @@
 					  PRIMARY KEY (`id`)
 					)");
 							
-		mysql_query("UPDATE `{$monitor['parentTable']}` SET `test` = '1' WHERE `id` = '{$monitor['currentModule']}'", $connDBA);	
+		query("UPDATE `{$monitor['parentTable']}` SET `test` = '1' WHERE `id` = '{$monitor['currentModule']}'");	
 			
 		redirect("test_settings.php");
 	}

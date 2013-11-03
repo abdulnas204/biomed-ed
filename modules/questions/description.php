@@ -8,18 +8,16 @@
 //Process the form
 	if (isset ($_POST['submit']) && !empty($_POST['question'])) {
 		$question = mysql_real_escape_string($_POST['question']);
+		$type = $_POST['type'];
+		$category = $_POST['category'];
 		$tags = mysql_real_escape_string($_POST['tags']);
 		
 		if (isset ($questionData)) {					
-			updateQuery($monitor['type'], "`question` = '{$question}', `tags` = '{$tags}'", $connDBA);
-			
-			redirect($monitor['redirect'] . "?updated=question");
+			updateQuery($type, "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'", "`question` = '{$question}', `category` = '{$category}', `tags` = '{$tags}'");
 		} else {
 			$lastQuestion = lastItem($monitor['testTable']);
 			
-			insertQuery($monitor['type'], "NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''");
-			
-			redirect($monitor['redirect'] . "?inserted=question");
+			insertQuery($type, "NULL, '0', '', '{$lastQuestion}', 'Description', '0', '', '0', '', '{$category}', '0', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''", "NULL, 'Description', '0', '', '0', '', '{$category}', '0', '0', '', '1', '{$tags}', '{$question}', '', '', '', '', '', '', ''");
 		}
 	}
 	
@@ -37,6 +35,8 @@
 	
 	catDivider("Settings", "two");
 	echo "<blockquote>";
+	type();
+	category();
 	tags();
 	echo "</blockquote>";
 	

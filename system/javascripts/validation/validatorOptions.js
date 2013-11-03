@@ -58,7 +58,10 @@
 						"alertText":"* Letters only"},
 					"validate2fields":{
     					"nname":"validate2fields",
-    					"alertText":"You must have a firstname and a lastname"}	
+    					"alertText":"You must have a firstname and a lastname"},
+					"uploadCheck":{
+						"nname":"uploadCheck",
+						"alertText":"* Invalid file type"}
 					}	
 					
 		}

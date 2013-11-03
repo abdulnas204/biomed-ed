@@ -14,7 +14,7 @@
 		
 		if ($deleteGrabber) {
 			if ($delete['type'] == "File Response") {
-				delete($monitor['testTable'], "test_content.php", true, $monitor['directory'] . "/test/answers/" . $delete['fileURL']);
+				delete($monitor['testTable'], "test_content.php", true, $monitor['directory'] . "test/answers/" . $delete['fileURL']);
 			} else {
 				delete($monitor['testTable'], "test_content.php", true);
 			}
@@ -91,7 +91,7 @@
 			echo "<td width=\"50\">";
 			
 			if (isset($importedQuestion)) {
-				echo URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, "return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')");
+				echo URL(false, "question_merge.php?type=import&questionID=" . $testData['id'] . "&bankID=" . $testData['linkID'], "action edit", false, "Edit this <strong>" . $type . "</strong> question", false, false, false, false, " onclick=\"return confirm('This question is currently located in the question bank. Once you edit this question, it will no long be linked to the question bank. Do you want to import and edit this question inside of the test? Click OK to continue.')\"");
 			} else {
 				$URL = "../questions/";
 				

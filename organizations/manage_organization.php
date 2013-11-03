@@ -1,50 +1,100 @@
-<?php require_once('../system/connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
 <?php
-//Decide whether an organization is being edited or created
+//Header functions
+	require_once('../system/connections/connDBA.php');
+	
+//Check to see if the organization is being edited
 	if (isset ($_GET['id'])) {
-		$id = $_GET['id'];
-		$organizationGrabber = mysql_query("SELECT * FROM organizations WHERE id = '{$id}'", $connDBA);
-		if ($organizationCheck = mysql_fetch_array($organizationGrabber)) {
-			$organization = $organizationCheck;
+		if ($organizationData = exist("organizations", "id", $_GET['id'])) {
+			//Do nothing
 		} else {
-			header("Location: index.php");
-			exit;
+			redirect("index.php");
+		}
+	}
+	
+	if (isset($pageData)) {
+		$title = "Edit the " . prepare($organizationData['organization'], true) . " Organization";
+	} else {
+		$title =  "Create a New Organization";
+	}
+	
+	headers($title, "Site Administrator", "tinyMCEAdvanced,validate,optionTransfer", true, " onload=\"opt.init(document.forms[0])\"");
+	
+//Find the list of administrators, and potential users
+	$potentialValuesPrep = "";
+	$potentialIDsPrep = "";
+	$adminValuesPrep = "";
+	$adminIDsPrep = "";
+	$potentialUserGrabber = query("SELECT * FROM `users` WHERE `role` != 'Site Administrator' OR 'Site Manager' ORDER BY `lastName` ASC", "raw");
+	$adminGrabber = query("SELECT * FROM `users` WHERE `role` != 'Site Administrator' OR 'Site Manager' ORDER BY `lastName` ASC", "raw");
+		  
+	if (!isset($_GET['id'])) {
+		while ($potentialUser = mysql_fetch_array($potentialUserGrabber)) {
+			if ($potentialUser['role'] != "Organization Administrator" && !empty($potentialUser['id'])) {
+				$potentialValuesPrep .= $potentialUser['firstName'] . " " . $potentialUser['lastName'] . ",";
+				$potentialIDsPrep .= $potentialUser['id'] . ",";
+			}
+		}
+	} else {
+		$organization = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'");
+		$currentAdministrator = explode(",", $organization['admin']);
+		
+		while ($potentialUser = mysql_fetch_array($potentialUserGrabber)) {
+			if (!in_array($potentialUser['id'], $currentAdministrator)) {
+				if ($potentialUser['role'] != "Organization Administrator" && empty($potentialUser['id'])) {
+					$potentialValuesPrep .= $potentialUser['firstName'] . " " . $potentialUser['lastName'] . ",";
+					$potentialIDsPrep .= $potentialUser['id'] . ",";
+				}
+			}
 		}
 	}
 
-//Process the form
-	if (isset ($_POST['submit']) && !empty ($_POST['name']) && !empty ($_POST['toImport'])) {
-	//If the organization is being updated
-		if (isset($id)) {
-			$organization = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
-			$admin = $_POST['toImport'];
-			
-			$organizationNameCheckGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
+	if (isset($_GET['id'])) {
+		$organization = query("SELECT * FROM `organizations` WHERE `id` = '{$_GET['id']}'");
+		$currentAdministrator = explode(",", $organization['admin']);
 		
-			if ($organizationNameCheck = mysql_fetch_array($organizationNameCheckGrabber)) {
-				if (isset($_GET['id'])) {
-					$organizationID = $_GET['id'];
-					$currentOrganizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
-					$currentOrganization = mysql_fetch_array($currentOrganizationGrabber);
-					
-					if (strtolower($currentOrganization['organization']) != strtolower($organization)) {
-						header ("Location: manage_organization.php?id=" . $id . "&error=identical");
-						exit;
-					}
-				} else {
-					header ("Location: manage_organization.php?error=identical");
-					exit;
-				}
+		while ($admin = mysql_fetch_array($adminGrabber)) {
+			if (in_array($potentialUser['id'], $currentAdministrator)) {
+				$adminValuesPrep .= $admin['firstName'] . " " . $admin['lastName'] . ",";
+				$adminIDsPrep .= $admin['id'] . ",";
 			}
-			
-			$oldDataGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$id}'", $connDBA);
-			$oldData = mysql_fetch_array($oldDataGrabber);
-			$oldName = $oldData['organization'];
-			$oldAdmin = explode(",", $oldData['admin']);
-			$newAdmin = explode(",", $admin);
-			
-			mysql_query("UPDATE `organizations` SET `organization` =  '{$organization}', `admin` = '{$admin}' WHERE `id` = '{$id}'", $connDBA);
+		}
+	}
+	
+	$potentialValues = rtrim($potentialValuesPrep, ",");
+	$potentialIDs = rtrim($potentialIDsPrep, ",");
+	$adminValues = rtrim($adminValuesPrep, ",");
+	$adminIDs = rtrim($adminIDsPrep, ",");
+
+//Process the form
+	if (isset($_POST['submit']) && !empty($_POST['name']) && !empty($_POST['admin'])) {
+		$organization = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
+		$admin = $_POST['toImport'];
+		
+		if (exist("organizations", "organization", "organization")) {
+			if (isset($_GET['id'])) {
+				$organizationID = $_GET['id'];
+				$currentOrganizationGrabber = query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", "raw");
+				$currentOrganization = mysql_fetch_array($currentOrganizationGrabber);
+				
+				if (strtolower($currentOrganization['organization']) != strtolower($organization)) {
+					redirect("manage_organization.php?id=" . $id . "&error=identical");
+				}
+				
+				$oldData = query("SELECT * FROM `organizations` WHERE `id` = '{$id}'");
+				$oldName = $oldData['organization'];
+				$oldAdmin = explode(",", $oldData['admin']);
+				$newAdmin = explode(",", $admin);
+				
+				foreach ($newAdmin as $userID) {
+					mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$id}' WHERE `id` = '{$userID}'", $connDBA);
+				}
+			} else {
+				redirect("manage_organization.php?error=identical");
+			}
+		}
+		
+		if (isset($id)) {			
+			query("UPDATE `organizations` SET `organization` =  '{$organization}', `admin` = '{$admin}' WHERE `id` = '{$id}'");
 			
 			foreach ($oldAdmin as $oldAdmin) {
 				if (!in_array($oldAdmin, $newAdmin)) {
@@ -52,197 +102,55 @@
 				}
 			}
 			
-			foreach ($newAdmin as $userID) {
-				mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$id}' WHERE `id` = '{$userID}'", $connDBA);
-			}
-			
-			header ("Location: index.php?message=organizationEdited");
-			exit;
-	//If the organization is being added
+			redirect("index.php?updated=organization");
 		} else {
-			$sysID = "org_" . randomValue(11, 'alphanum');
-			$organization = mysql_real_escape_string(preg_replace("/[^a-zA-Z0-9\s]/", "", $_POST['name']));
-			$admin = $_POST['toImport'];
+			query("INSERT INTO organizations (
+					  `id`, `organization`, `organizationID`, `admin`, `type`, `webSite`, `phone`, `mailingAddress1`, `mailingAddress2`, `mailingCity`, `mailingState`, `mailingZIP`, `billingAddress1`, `billingAddress2`, `billingCity`, `billingState`, `billingZIP`, `billingPhone`, `billingFax`, `billingEmail`, `contractStart`, `contractEnd`, `contractAgreement`, `active`, `timeZone`
+				  ) VALUES (
+					  NULL, '{$organization}', '', '{$admin}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1', ''
+				  )");
 			
-			$organizationNameCheckGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}'", $connDBA);
-		
-			if ($organizationNameCheck = mysql_fetch_array($organizationNameCheckGrabber)) {
-				if (isset($_GET['id'])) {
-					$organizationID = $_GET['id'];
-					$currentOrganizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
-					$currentOrganization = mysql_fetch_array($currentOrganizationGrabber);
-					
-					if (strtolower($currentOrganization['organization']) != strtolower($organization)) {
-						header ("Location: manage_organization.php?id=" . $id . "&error=identical");
-						exit;
-					}
-				} else {
-					header ("Location: manage_organization.php?error=identical");
-					exit;
-				}
-			}
-			
-			mysql_query("INSERT INTO organizations (`id`, `sysID`, `organization`, `organizationID`, `admin`, `type`, `webSite`, `phone`, `mailingAddress1`, `mailingAddress2`, `mailingCity`, `mailingState`, `mailingZIP`, `billingAddress1`, `billingAddress2`, `billingCity`, `billingState`, `billingZIP`, `billingPhone`, `billingFax`, `billingEmail`, `contractStart`, `contractEnd`, `contractAgreement`, `active`, `timeZone`) VALUES (NULL, '{$sysID}', '{$organization}', '', '{$admin}', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1', '')", $connDBA);
-						
-			$organizationIDGrabber = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$organization}' LIMIT 1", $connDBA);
-			$organizationIDArray = mysql_fetch_array($organizationIDGrabber);
-			$organizationID = $organizationIDArray['id'];
-			$newAdmin = explode(",", $admin);
-			
-			foreach ($newAdmin as $userID) {				
-				mysql_query("UPDATE `users` SET `role` = 'Organization Administrator', `organization` = '{$organizationID}' WHERE `id` = '{$userID}'", $connDBA);
-			}
-			
-			header ("Location: index.php?message=organizationCreated");
-			exit;
+			redirect("index.php?inserted=organization");
 		}
 	}
-?>
-<?php
-	if (isset($_GET['checkName'])) {
-		$inputNameSpaces = $_GET['checkName'];
-		$inputNameNoSpaces = str_replace(" ", "", $_GET['checkName']);
-		$checkName = mysql_query("SELECT * FROM `organizations` WHERE `organization` = '{$inputNameSpaces}'", $connDBA);
-		
-		if($name = mysql_fetch_array($checkName)) {	
-			if (isset($_GET['id'])) {
-				$organizationID = $_GET['id'];
-				$currentOrganizationGrabber = mysql_query("SELECT * FROM `organizations` WHERE `id` = '{$organizationID}'", $connDBA);
-				$currentOrganization = mysql_fetch_array($currentOrganizationGrabber);
-				
-				if (strtolower($currentOrganization['organization']) != strtolower($inputNameSpaces)) {
-					echo "<div class=\"error\" id=\"errorWindow\">An organization with this name already exists</div>";
-				} else {
-					echo "<p>&nbsp;</p>";
-				}
-			} else {
-				echo "<div class=\"error\" id=\"errorWindow\">An organization with this name already exists</div>";
-			}
-		} else {
-			echo "<p>&nbsp;</p>";
-		}
-		
-		echo "<script type=\"text/javascript\">validateName()</script>";
-		die();
-	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php
-	if (isset($id)) {
-		$title = "Edit the " . $organization['organization'] . " Organization";
-	} else {
-		$title = "Create New Organization";
-	}
-	
-	title($title);
-?>
-<?php headers(); ?>
-<?php validate(); ?>
-<?php liveError(); ?>
-<script src="../../javascripts/common/optionTransfer.js" type="text/javascript"></script>
-<script src="../../javascripts/common/goToURL.js" type="text/javascript"></script>
-</head>
 
-<body<?php bodyClass(); ?> onload="opt.init(document.forms[0])">
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2><?php echo $title; ?></h2>
-<p>Create a new organization by filling in the information below. The organization's complete details and payment method will be setup when the organization administrator first logs in.</p>
-<?php errorWindow("database", "An organization with this name already exists", "error", "identical", "true"); ?>
-<form name="manageOrganization" method="post" action="manage_organization.php<?php if (isset($id)) {echo"?id=" . $id;} ?>" id="validate" onsubmit="return errorsOnSubmit(this);">
-<div class="catDivider one">Organization Name</div>
-<div class="stepContent">
-  <blockquote>
-    <p>
-      Create the Organization name<span class="require">*</span>:</p>
-    <blockquote>
-      <p>
-        <input name="name" type="text" id="name" size="50" autocomplete="off" class="validate[required]" onblur="checkName(this.name, 'manage_organization'<?php if (isset ($id)) {echo ", 'id=" . $id . "'";}?>)"<?php
-			if (isset ($id)) {
-				echo " value=\"" . stripslashes($organization['organization']) . "\"";
-			}
-		?> />
-      </p>
-    </blockquote>
-  </blockquote>
-</div>
-<div class="catDivider two">Assign Administrator</div>
-<div class="stepContent">
-<blockquote>
-<p>Assign the organization an administrator<span class="require">*</span>:
-	<blockquote>
-        <div class="layoutControl">
-          <div class="halfLeft">
-          <h3>Potential users:</h3>
-          <div class="collapseElement"><input type="text" name="placeHolder" id="placeHolder"></div>
-          <div align="center">
-          <select name="notToList" id="notToList" class="multiple" multiple="multiple" ondblclick="opt.transferRight()">
-          <?php
-		  //Display all users
-			  $potentialUserGrabber = mysql_query("SELECT * FROM `users` WHERE `role` != 'Site Administrator' OR 'Site Manager' ORDER BY `firstName` ASC", $connDBA);
-		  
-			  if (!isset ($id)) {
-				  while ($potentialUser = mysql_fetch_array($potentialUserGrabber)) {
-					  if ($potentialUser['role'] != "Organization Administrator" && $potentialUser['id'] != "1") {
-						  echo "<option value=\"" . $potentialUser['id'] . "\">" . $potentialUser['firstName'] . " " . $potentialUser['lastName'] . "</option>";
-					  }
-				  }
-			  } else {
-				  $currentAdministrator = explode(",", $organization['admin']);
-				  
-				  while ($potentialUser = mysql_fetch_array($potentialUserGrabber)) {
-					  if (!in_array($potentialUser['id'], $currentAdministrator)) {
-						  if ($potentialUser['role'] != "Organization Administrator" && $potentialUser['id'] != "1") {
-							  echo "<option value=\"" . $potentialUser['id'] . "\">" . $potentialUser['firstName'] . " " . $potentialUser['lastName'] . "</option>";
-						  }
-					  }
-				  }
-			  }
-		  ?>
-          </select><br /><br />
-          <input type="button" name="right" value="&gt;&gt;" onclick="opt.transferRight()">
-          </div>
-          </div>
-          <div class="halfRight">
-          <h3>Selected users:</h3>
-          <div class="collapseElement"><input type="text" name="toImport" id="toImport" class="validate[required]" readonly="readonly"<?php
-		  if (isset ($id)) {
-			  echo " value=\"" . stripslashes($organization['admin']) . "\"";
-		  }
-		  ?> ></div>
-          <div align="center">
-          <select name="toList" id="toList" class="multiple" multiple="multiple" ondblclick="opt.transferLeft()">
-          <?php
-		  //Display all administrators
-			  $potentialUserGrabber = mysql_query("SELECT * FROM `users` WHERE `role` != 'Site Administrator' OR 'Site Manager' ORDER BY `firstName` ASC", $connDBA);
-		  
-			  if (isset ($id)) {
-				  $currentAdministrator = explode(",", $organization['admin']);
-				  
-				  while ($potentialUser = mysql_fetch_array($potentialUserGrabber)) {
-					  if (in_array($potentialUser['id'], $currentAdministrator)) {
-					  	echo "<option value=\"" . $potentialUser['id'] . "\">" . $potentialUser['firstName'] . " " . $potentialUser['lastName'] . "</option>";
-					  }
-				  }
-			  }
-		  ?>
-          </select><br /><br /><input type="button" name="right" value="&lt;&lt;" onclick="opt.transferLeft()"></div></div></div> 
-    </blockquote>
-</blockquote>
-</div>
-<div class="catDivider three">Submit</div>
-<div class="stepContent">
-        <blockquote>
-          <p>
-            <?php submit("submit", "Submit"); ?>
-            <input name="reset" type="reset" id="reset" onclick="GP_popupConfirmMsg('Are you sure you wish to clear the content in this form? \rPress \&quot;cancel\&quot; to keep current content.');return document.MM_returnValue" value="Reset" />
-            <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','index.php');return document.MM_returnValue" value="Cancel" />
-		  </p>
-	  <?php formErrors(); ?>
-      </blockquote>
-      </div>
-</form>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>
+//Title
+	title($title, "Organizations can be managed by filling in the information below. The organization's complete details and payment method will be setup when the organization administrator first logs in.");
+
+//Organization form	
+	form("manageOrganization");
+	catDivider("Organization Name", "one", true);
+	echo "<blockquote>";
+	directions("Assign the organization name", true);
+	echo "<blockquote><p>";
+	textField("name", "name", false, false, false, true, ",ajax[checkName]", false, "organizationData", "organization");
+	echo "</p></blockquote></blockquote>";
+	
+	catDivider("Assign Administrator", "two");
+	echo "<blockquote>";
+	directions("Assign the organization an administrator", true);
+	echo "<blockquote><div class=\"layoutControl\"><div class=\"halfLeft\"><h3>Potential users:</h3><div class=\"collapseElement\">";
+	textField("placeHolder", "placeHolder");
+	echo "</div><div align=\"center\">";
+	dropDown("notToList", "notToList", $potentialValues, $potentialIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferRight()\"");
+	echo "<br /><br />";
+	button("right", "right", "&gt;&gt;", "button", false, " onclick=\"opt.transferRight()\"");
+	echo "</div></div><div class=\"halfRight\"><h3>Selected users:</h3><div class=\"collapseElement\">";
+	textField("toImport", "toImport", false, false, false, true, false, false, "organizationData", "admin", " readonly=\"readonly\"");
+	echo "</div><div align=\"center\">";
+	dropDown("toList", "toList", $adminValues, $adminIDs, true, false, false, false, false, false, " ondblclick=\"opt.transferLeft()\"");
+	echo "<br /><br />";
+	button("left", "left", "&lt;&lt;", "button", false, " onclick=\"opt.transferLeft()\"");
+	echo "</div></div></div> </blockquote></blockquote>";
+	
+	catDivider("Submit", "three");
+	echo "<blockquote><p>";
+	button("submit", "submit", "Submit", "submit");
+	button("reset", "reset", "Reset", "reset");
+	button("cancel", "cancel", "Cancel", "cancel", "index.php");
+	echo "</p>";
+	closeForm(true, true);
+
+//Include the footer
+	footer();
+?>

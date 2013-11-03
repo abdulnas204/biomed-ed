@@ -25,7 +25,17 @@ function toggleFeedback(field) {
 	}
 }
 
-function toggleTypeDiv(field) {
+function toggleDescription(field) {
+	if (field && document.getElementById('descriptionLink')) {
+		switch(field) {
+			case "Bank" : document.getElementById('descriptionLink').className = "contentHide"; break;
+			case "Module" : document.getElementById('descriptionLink').className = "contentShow"; break;
+			case "Feedback" : document.getElementById('descriptionLink').className = "contentHide"; break;
+		}
+	}
+}
+
+function toggleType(field) {
 	if (field && document.getElementById('contentAdvanced') && document.getElementById('contentMessage')) {
 		switch (field) {
 			case "Custom Content" : 

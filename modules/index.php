@@ -21,7 +21,7 @@
 		if (isset($_GET['id']) && isset($_GET['action']) && $_GET['action'] == "delete") {
 			$id = $_GET['id'];
 			
-			delete("moduledata", "index.php", true, false, "../../modules/" . $id, "modulelesson_{$id},moduletest_{$id}");
+			delete("moduledata", "index.php", true, false, $id, "modulelesson_{$id},moduletest_{$id}");
 		}
 	
 	//Forward to editor
@@ -42,7 +42,7 @@
 		}
 	
 	//Unset old sessions
-		unset($_SESSION['currentModule'], $_SESSION['review'], $_SESSION['bankCategory'], $_SESSION['categoryName'], $_SESSION['cart']);
+		unset($_SESSION['currentModule'], $_SESSION['review'], $_SESSION['questionBank'], $_SESSION['categoryName'], $_SESSION['cart']);
 	}
 	
 //Title
@@ -78,7 +78,7 @@
 	title("Modules", $content);
 	
 //Admin toolbar
-	if (loggedIn()) {
+	if (access("modifyModule")) {
 		echo "<div class=\"toolBar\">";
 		
 		if (access("modifyModule")) {
@@ -86,8 +86,6 @@
 			echo URL("Question Bank", "question_bank/index.php", "toolBarItem bank");
 			echo URL("Customize Settings", "settings.php", "toolBarItem settings");
 			echo URL("Feedback", "feedback/index.php", "toolBarItem feedback");
-		} else {
-			echo URL("Grades", "gradebook/index.php", "toolBarItem bank");
 		}
 		
 		echo "</div><br />";
@@ -149,7 +147,7 @@
 				  echo "<td width=\"75\">"; reorderMenu($moduleData['id'], $moduleData['position'], "moduleData", "moduledata"); echo "</td>";
 			  }
 			  
-			  echo "<td width=\"200\"><a href=\"lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></td>";
+			  echo "<td width=\"200\"><a href=\"lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . commentTrim(30, $moduleData['name']) . "</a></td>";
 			  
 			  if (access("moduleStatistics") == false) {
 				  $categoryGrabber = mysql_query("SELECT * FROM `modulecategories` WHERE `id` = '{$moduleData['category']}'", $connDBA);
@@ -158,7 +156,7 @@
 				  echo "<td width=\"200\">" . prepare($category['category'], false, true) . "</td>";
 			  }
 			  
-			  echo "<td>" . commentTrim(60, $moduleData['comments']) . "</td>";
+			  echo "<td>" . commentTrim(80, $moduleData['comments']) . "</td>";
 			  
 			  if (access("moduleStatistics")) {
 				  echo "<td width=\"50\">" . URL(false, "../statistics/index.php?type=module&period=overall&id=" . $moduleData['id'], "action statistics", false, "View the <strong>" . $moduleData['name'] . "</strong> module's statistics") . "</td>";
@@ -174,11 +172,11 @@
 				 $price = str_replace(".", "", $moduleData['price']);
 				 
 				 if (!empty($moduleData['enablePrice']) && !empty($moduleData['price']) && $price > 0) {
-					 if (!is_array($modules) || !in_array($moduleData['id'], $modules)) {
+					 if (!is_array($modules) || !array_key_exists($moduleData['id'], $modules)) {
 						 checkbox("cart[]", "option" . $moduleData['id'], " $" . $moduleData['price'] , $moduleData['id'], true, "1"); echo "</td>";
 					 }
 				 } else {
-					 if (!is_array($modules) || !in_array($moduleData['id'], $modules)) {
+					 if (!is_array($modules) || !array_key_exists($moduleData['id'], $modules)) {
 						 checkbox("cart[]", "option" . $moduleData['id'], " No Charge", $moduleData['id'], true, "1"); echo "</td>";
 					 }
 				 }

@@ -14,7 +14,7 @@ function calculate (textField, totalPoints, outputField) {
 	var input = document.getElementById(textField).value;
 	
 	if (isNaN(input) || input == "") {
-		//Do nothing, this is not a number
+		document.getElementById(outputField).value = "";
 	} else {
 		var calculate = Math.round((Number(input)/Number(totalPoints)) * 100);
 		document.getElementById(outputField).value = calculate + "%";

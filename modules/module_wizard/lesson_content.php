@@ -14,9 +14,9 @@
 		
 		if ($deleteGrabber) {
 			if ($delete['type'] == "Embedded Content") {
-				delete($monitor['lessonTable'], "lesson_content.php?deleted=embedded", true, $monitor['directory'] . $delete['attachment']);
+				delete($monitor['lessonTable'], "lesson_content.php", true, $monitor['directory'] . "lesson/" . $delete['attachment']);
 			} else {
-				delete($monitor['lessonTable'], "lesson_content.php?deleted=custom", true);
+				delete($monitor['lessonTable'], "lesson_content.php", true);
 			}
 		}
 	}
@@ -35,8 +35,6 @@
 	message("inserted", "embedded", "success", "The <strong>embedded content</strong> page was successfully inserted");
 	message("updated", "custom", "success", "The <strong>custom content</strong> page was successfully updated");
 	message("updated", "embedded", "success", "The <strong>embedded content</strong> page was successfully updated");
-	message("deleted", "custom", "success", "The <strong>custom content</strong> page was successfully deleted");
-	message("deleted", "embedded", "success", "The <strong>embedded content</strong> page was successfully deleted");
 
 //Pages table
 	if (exist($monitor['lessonTable']) == true) {
@@ -49,7 +47,7 @@
 			if ($lessonData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 			echo "<td width=\"75\">"; reorderMenu($lessonData['id'], $lessonData['position'], "lessonData", $monitor['lessonTable']); echo "</td>";
 			echo "<td width=\"150\">" . $lessonData['type'] . "</td>";
-			echo "<td width=\"250\">" . URL($lessonData['title'], "preview_page.php?page=" . $lessonData['position'], false, false, "Preview the <strong>" . $lessonData['title'] . "</strong> page", false, true, "640", "480") . "</td>";
+			echo "<td width=\"250\">" . URL(commentTrim(30, $lessonData['title']), "preview_page.php?page=" . $lessonData['position'], false, false, "Preview the <strong>" . $lessonData['title'] . "</strong> page", false, true, "640", "480") . "</td>";
 			echo "<td>" . commentTrim(55, $lessonData['content']) .  "</td>";
 			
 			switch ($lessonData['type']) {

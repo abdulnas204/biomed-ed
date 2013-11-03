@@ -70,7 +70,7 @@
 	echo "</p></blockquote>";
 	directions("Type", false, "The type of content that will be displayed in the text box.<br />Different ones will be avaliable at different times, <br />depending on their current use.<br /><br /><strong>Custom Content</strong> - A box which can contain any desired content.<br /><strong>Login</strong> - A box with a pre-built form to log in a user.<br /><strong>Register</strong> - A box which will link a visitor to the site registration page.");
 	echo "<blockquote><p>";
-	dropDown("type", "type", "Custom Content,Login,Register", "Custom Content,Login,Register", "Custom Content", false, true, false, "itemData", "itemData", "type", " onchange=\"toggleTypeDiv(this.value);\"");
+	dropDown("type", "type", "Custom Content,Login,Register", "Custom Content,Login,Register", "Custom Content", false, true, false, "itemData", "itemData", "type", " onchange=\"toggleType(this.value);\"");
 	echo "</p></blockquote></blockquote>";
 	catDivider("Content", "two");
 	echo "<div id=\"contentAdvanced\"";

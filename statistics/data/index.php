@@ -37,16 +37,37 @@
 				headers("Statistics Data Collection", "Student", false, false, false, false, false, false, false, "XML"); 
 				$statistics = userData();
 				$modules = unserialize($statistics['modules']);
+				$totalModules = sprintf(sizeof($modules) * 4);
 				
-				echo "<graph caption=\"Overall Status of Completion\" subcaption=\"Total number of modules: " . sizeof($modules) . "\" yAxisMinValue=\"0\" yAxisMaxValue=\"100\" yAxisName=\"Percentage of Completion\" showNames=\"0\" decimalPrecision=\"0\" showAlternateHGridColor=\"1\" AlternateHGridColor=\"ff5904\" divLineColor=\"ff5904\" divLineAlpha=\"20\" alternateHGridAlpha=\"5\" bgAlpha=\"0\">";
+				echo "<graph caption=\"Overall Status of Completion\" subcaption=\"Total number of modules: " . sizeof($modules) . "\" yAxisMinValue=\"0\" yAxisMaxValue=\"100\" yAxisName=\"Percentage of Completion\" numberSuffix=\"%25\" showNames=\"0\" decimalPrecision=\"0\" showAlternateHGridColor=\"1\" AlternateHGridColor=\"ff5904\" divLineColor=\"ff5904\" divLineAlpha=\"20\" alternateHGridAlpha=\"5\" bgAlpha=\"0\">";
 				
-				$completion = 0;
-		
-				foreach($modules as $data) {
-					if (is_array($data) && $data['1'] == "2") {
-						$completion = $completion + 1;
+				$completionPrep = 0;
+				
+				foreach($modules as $key => $value) {
+					if (is_array($value) && $value['moduleStatus'] == "F") {
+						$completionPrep = $completionPrep + 2;
+					} elseif (is_array($value) && $value['moduleStatus'] == "C") {
+						$completionPrep = $completionPrep + 0;
+					} elseif (is_array($value) && $value['moduleStatus'] == "O") {
+						$completionPrep = $completionPrep + 1;
+					} else {
+						$completionPrep = $completionPrep + 0;
+					}
+					
+					if (is_array($value) && $value['testStatus'] == "F") {
+						$completionPrep = $completionPrep + 2;
+					} elseif (is_array($value) && $value['testStatus'] == "C") {
+						$completionPrep = $completionPrep + 0;
+					} elseif (is_array($value) && $value['testStatus'] == "A") {
+						$completionPrep = $completionPrep + 1;
+					} elseif (is_array($value) && $value['testStatus'] == "O") {
+						$completionPrep = $completionPrep + 1;
+					} else {
+						$completionPrep = $completionPrep + 0;
 					}
 				}
+				
+				$completion = ($completionPrep/$totalModules) * 100;
 				
 				if ($completion  > 0) {
 					echo "<set name=\"Percentage Complete\" value=\"" . round($completion / sizeof($modules)) . "\" /></graph>";

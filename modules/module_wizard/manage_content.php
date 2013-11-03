@@ -69,7 +69,7 @@
 				$oldFileGrabber = mysql_query("SELECT * FROM `{$monitor['lessonTable']}` WHERE `id` = '{$id}' AND `type` = 'Embedded Content'", $connDBA);
 				$oldFile = mysql_fetch_array($oldFileGrabber);
 			}
-					
+			
 			if (is_uploaded_file($_FILES['file'] ['tmp_name'])) {
 				$tempFile = $_FILES['file'] ['tmp_name'];
 				$targetFile = basename($_FILES['file'] ['name']);
@@ -87,6 +87,7 @@
 					}
 				}
 				
+				$targetFile = mysql_real_escape_string($targetFile);			
 				$allowedFiles = array("pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "wav", "mp3", "avi", "wmv", "flv", "mp4", "mov", "swf");
 				
 				if (in_array(extension($targetFile), $allowedFiles)) {
@@ -95,9 +96,9 @@
 							$lastPage = lastItem($monitor['lessonTable']);
 							
 							mysql_query("INSERT INTO `{$monitor['lessonTable']}` (
-										`id`, `position`, `type`, `title`, `content`, `attachment`
+											`id`, `position`, `type`, `title`, `content`, `attachment`
 										) VALUES (
-										NULL, '{$lastPage}', 'Embedded Content', '{$title}', '{$content}', '{$targetFile}'
+											NULL, '{$lastPage}', 'Embedded Content', '{$title}', '{$content}', '{$targetFile}'
 										)", $connDBA);
 										
 							redirect("lesson_content.php?inserted=embedded");
@@ -191,7 +192,7 @@
 				$required = "false";
 			}
 			
-			form("embeddedContent", "post", true, true, false, " return errorsOnSubmit(this, 'file', '" . $required . "', 'pdf.doc.docx.xls.xlsx.ppt.pptx.txt.rtf.wav.mp3.avi.wmv.flv.mov.mp4.swf');");
+			form("embeddedContent", "post", true);
 			hidden("type", "type", "Embedded Content");
 			catDivider("Title and Comments", "one", true);
 			echo "<blockquote>";
@@ -210,7 +211,7 @@
 			echo "<blockquote><p>";
 			
 			if (!isset($_GET['id'])) {
-				fileUpload("file", "file", false, true, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
+				fileUpload("file", "file", false, true, ",funcCall[uploadCheck]", false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			} else {
 				fileUpload("file", "file", false, false, false, false, "pageData", "attachment", $monitor['gatewayPath'] . "lesson", true);
 			}

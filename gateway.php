@@ -3,6 +3,24 @@
 	require_once('system/connections/connDBA.php');
 	
 //Script to selectively allow access to files
+//Create a function to open the file
+	function open() {
+		global $gatewayFile, $fileSize;
+		
+		$mimeType = getMimeType($gatewayFile);
+		header('Content-Description: File Transfer');
+		header("Content-type: " . $mimeType);
+		header('Content-Transfer-Encoding: binary');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		header('Content-Length: ' . $fileSize);
+		ob_clean();
+		flush();
+		readfile($gatewayFile);
+		exit;
+	}
+	
 //If a file extension was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {
 		$gatewayFile = urldecode(str_replace($strippedRoot . "gateway.php/", "", urldecode($_SERVER['REQUEST_URI'])));
@@ -19,63 +37,18 @@
 				$fileName = $filePath[$count];
 			}
 		}
-	
+		
 	//Check to see if the file exists
 		if (!file_exists($gatewayFile) || is_dir($gatewayFile)) {
-			header("Location: includes/access_deny.php?error=404");
-			exit;
+			redirect($root . "includes/access_deny.php?error=404");
 		}
 	
 	//Site administrators will have access to lesson and answer files from modules
-		if ($_SESSION['MM_UserGroup'] == "Site Administrator") {
-			header('Content-Description: File Transfer');
-			
+		if ($_SESSION['MM_UserGroup'] == "Site Administrator") {			
 			for ($count = 0; $count <= $directoryDepth; $count++) {
 				if ($count == "2") {
-					if (in_array("test", $directoryArray)) {
-						$mimeType = getMimeType($gatewayFile);
-						header("Content-type: " . $mimeType);
-						header('Content-Transfer-Encoding: binary');
-						header('Expires: 0');
-						header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-						header('Pragma: public');
-						header('Content-Length: ' . $fileSize);
-						ob_clean();
-						flush();
-						readfile($gatewayFile);
-						exit;
-					}
-					
-					if (in_array("lesson", $directoryArray)) {
-						switch (extension($directoryArray[$directoryDepth])) {
-							case "pdf" : header("Content-type: application/pdf"); break;
-							case "doc" : header("Content-type: application/msword"); break;
-							case "docx" : header("Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document"); break;
-							case "ppt" : header("Content-type: application/vnd.ms-powerpoint");; break;
-							case "pptx" : header("Content-type: application/vnd.openxmlformats-officedocument.presentationml.presentation"); break;
-							case "xls" : header("Content-type: application/vnd.ms-excel"); break;
-							case "xlsx" : header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); break;
-							case "txt" : header("Content-type: text/plain"); break;
-							case "rtf" : header("Content-type: text/rtf"); break;
-							case "wav" : header("Content-type: audio/x-wav"); break;
-							case "mp3" : header("Content-type: audio/mpeg"); break;
-							case "avi" : header("Content-type: video/x-msvideo"); break;
-							case "wmv" : header("Content-type: video/x-ms-wmv"); break;
-							case "flv" : header("Content-type: video/x-flv"); break;
-							case "mov" : header("Content-type: video/quicktime"); break;
-							case "mp4" : header("Content-type: video/mp4"); break;
-							case "swf" : header("Content-type: application/x-shockwave-flash"); break;
-						}
-						
-						header('Content-Transfer-Encoding: binary');
-						header('Expires: 0');
-						header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-						header('Pragma: public');
-						header('Content-Length: ' . $fileSize);
-						ob_clean();
-						flush();
-						readfile($gatewayFile);
-						exit;
+					if ($directoryArray['2'] == "lesson" || $directoryArray['2'] == "test") {
+						open();
 					}
 				}
 			}
@@ -84,61 +57,58 @@
 	//Student will have access to lesson and answer files partaining to them
 		if ($_SESSION['MM_UserGroup'] == "Student") {
 			$userData = userData();
-			
-			header('Content-Description: File Transfer');
+			$moduleAccess = unserialize($userData['modules']);
 			
 			for ($count = 0; $count <= $directoryDepth; $count++) {
-				if ($count == "2") {
-					if (in_array("test", $directoryArray)) {
-						$mimeType = getMimeType($gatewayFile);
-						header("Content-type: " . $mimeType);
-						header('Content-Transfer-Encoding: binary');
-						header('Expires: 0');
-						header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-						header('Pragma: public');
-						header('Content-Length: ' . $fileSize);
-						ob_clean();
-						flush();
-						readfile($gatewayFile);
-						exit;
-					}
-					
-					if (in_array("lesson", $directoryArray)) {
-						if (in_array($directoryArray['1'], unserialize($userData['modules']))) {
-							switch (extension($directoryArray[$directoryDepth])) {
-								case "pdf" : header("Content-type: application/pdf"); break;
-								case "doc" : header("Content-type: application/msword"); break;
-								case "docx" : header("Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document"); break;
-								case "ppt" : header("Content-type: application/vnd.ms-powerpoint");; break;
-								case "pptx" : header("Content-type: application/vnd.openxmlformats-officedocument.presentationml.presentation"); break;
-								case "xls" : header("Content-type: application/vnd.ms-excel"); break;
-								case "xlsx" : header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"); break;
-								case "txt" : header("Content-type: text/plain"); break;
-								case "rtf" : header("Content-type: text/rtf"); break;
-								case "wav" : header("Content-type: audio/x-wav"); break;
-								case "mp3" : header("Content-type: audio/mpeg"); break;
-								case "avi" : header("Content-type: video/x-msvideo"); break;
-								case "wmv" : header("Content-type: video/x-ms-wmv"); break;
-								case "flv" : header("Content-type: video/x-flv"); break;
-								case "mov" : header("Content-type: video/quicktime"); break;
-								case "mp4" : header("Content-type: video/mp4"); break;
-								case "swf" : header("Content-type: application/x-shockwave-flash"); break;
+				if ($count == "2" && array_key_exists($directoryArray['1'], $moduleAccess)) {
+					if ($directoryArray['2'] == "test") {
+						$fileDataGrabber = query("SELECT * FROM `testdata_{$userData['id']}` WHERE `testID` = '{$directoryArray['1']}' AND `type` = 'File Response'", "raw");
+						$moduleInfo = query("SELECT * FROM `moduledata` WHERE `id` = '{$directoryArray['1']}'");
+						$userFiles = array();
+						$testFiles = array();
+						
+						while($fileData = mysql_fetch_array($fileDataGrabber)) {
+							foreach(unserialize($fileData['userAnswer']) as $file) {
+								array_push($userFiles, $file);
 							}
 							
-							header('Content-Transfer-Encoding: binary');
-							header('Expires: 0');
-							header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-							header('Pragma: public');
-							header('Content-Length: ' . $fileSize);
-							ob_clean();
-							flush();
-							readfile($gatewayFile);
-							exit;
+							array_push($testFiles, $fileData['testAnswer']);
+						}
+						
+						foreach(unserialize($moduleInfo['display']) as $setting) {
+							switch ($setting) {
+								case "2" : $selectedAnswers = true; break;
+								case "3" : $correctAnswers = true; break;
+							}
+						}
+						
+						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "O") {
+							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['4'], $userFiles)) {
+								open();
+							}
+						}
+						
+						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "A" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") {
+							if (isset($selectedAnswers) && $directoryArray['3'] == "responses" && in_array($directoryArray['4'], $userFiles)) {
+								open();
+							}
+							
+							if (isset($correctAnswers) && $directoryArray['3'] == "answers" && in_array($directoryArray['4'], $testFiles)) {
+								open();
+							}
+						}
+					}
+					
+					if ($directoryArray['2'] == "lesson") {
+						if ($moduleAccess[$directoryArray['1']]['testStatus'] == "C" || $moduleAccess[$directoryArray['1']]['testStatus'] == "F") {
+							open();
 						}
 					}
 				}
 			}
 		}
+		
+		redirect($root . "includes/access_deny.php?error=403");
 	} else {
 		die(centerDiv("A file was not provided."));
 	}
