@@ -1,5 +1,7 @@
-<?php require_once('Connections/connDBA.php'); ?>
-<?php
+<?php 
+//Header functions
+	require_once('Connections/connDBA.php');
+	
 //Script to selectively allow access to files
 //If a file extension was handed into the gateway
 	if (sizeof(explode("/", $_SERVER['REQUEST_URI'])) > sizeof(explode("/", $strippedRoot))) {

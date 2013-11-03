@@ -10,52 +10,20 @@ open source, freeware, nor commercial/closed source.
 
 //Script to validate all form field types, and tie serveral validation technologies together
 
-function errorsOnSubmit(form, spry, upload, forced, extension) {
-	if (spry == false || !spry) {
-		spry = "true";
-	}
-	
-	var spryValidate = Spry.Widget.Form.validate(form);
+function errorsOnSubmit(form, upload, forced, extension) {
 	var jqueryValidate = $('#validate').validationEngine({returnIsValid:true});
 	
-	if (spry != "false") {
-		if (spryValidate == true) {
-			if (jqueryValidate == true) {
-				if (upload == false || !upload) {
-					return successDisplay('1', '0', '0', '1');
-				} else {
-					return uploadCheck(upload, forced, extension, 'true');
-				}	
-			}
-			
-			if (jqueryValidate == false) {
-				return errorDisplay('1', '1', '0', '1');
-				return uploadCheck(upload, forced, extension, 'false');
-			} 
+	if (jqueryValidate == true) {
+		if (upload == false || !upload) {
+			return successDisplay('1', '0', '0', '1');
 		} else {
-			if (jqueryValidate == true) {
-				return errorDisplay('1', '1', '0', '1');
-				return uploadCheck(upload, forced, extension, 'false');
-			}
-			
-			if (jqueryValidate == false) {
-				return errorDisplay('1', '1', '0', '1');
-				return uploadCheck(upload, forced, extension, 'false');
-			}
+			return uploadCheck(upload, forced, extension, 'true');
 		}
-	} else {
-		if (jqueryValidate == true) {
-			if (upload == false || !upload) {
-				return successDisplay('1', '0', '0', '1');
-			} else {
-				return uploadCheck(upload, forced, extension, 'true');
-			}
-		}
-		
-		if (jqueryValidate == false) {
-			return errorDisplay('1', '1', '0', '1');
-			return uploadCheck(upload, forced, extension, 'false');
-		}
+	}
+	
+	if (jqueryValidate == false) {
+		return errorDisplay('1', '1', '0', '1');
+		return uploadCheck(upload, forced, extension, 'false');
 	}
 }
 
@@ -77,7 +45,7 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 					for (n in extensionSplit) {
 						var lowerCase = fileCheck.toLowerCase();
 													
-						if (lowerCase.match(extensionSplit[n])) {					
+						if (lowerCase.match(extensionSplit[n])) {			
 							var extensionCheck = "1";
 						}
 					}
@@ -89,6 +57,7 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 		
 		if (result == "0") {
 			if (forcedInput == "true") {
+				$.validationEngine.buildPrompt('#file','This is not a supported file type','error');
 				return errorDisplay('1', '1', '0', '1');
 			} else {
 				return successDisplay('1', '0', '1', '1');
@@ -103,6 +72,7 @@ function uploadCheck (uploadInput, forcedInput, extensionInput, returnTrue) {
 			}
 			
 			if (extensionCheck == "0") {
+				$.validationEngine.buildPrompt('#file','This is not a supported file type','error');
 				return errorDisplay('1', '1', '1', '1');
 			}
 		}

@@ -873,7 +873,7 @@ a.skip:focus, a.skip:active {
 /* End form layout */
 
 /* Begin data table and table contents */
-	div.noResults {
+	div.noResults, div.spacer {
 		padding: 30px 0px 80px 0px;
 		text-align:center;
 	}
@@ -1078,6 +1078,14 @@ a.skip:focus, a.skip:active {
 /* Begin announcements styles */
 
 /* Begin module styles */
+	div.previousPage {
+		text-align:left;
+	}
+	
+	div.nextPage {
+		text-align:right;
+	}
+	
 	span.pageTitle {
 		font-weight:bolder;
 	}
@@ -1214,9 +1222,20 @@ a.skip:focus, a.skip:active {
 		background:url(../../images/admin_icons/preview.png) no-repeat left;
 	}
 	
+	a.smallAdd, span.smallAdd {
+		padding: 1px 8px 1px 20px;
+		background:url(../../images/admin_icons/smallAdd.png) no-repeat left;
+		cursor:pointer;
+	}
+	
 	a.smallEdit {
 		padding: 1px 8px 1px 5px;
 		background:url(../../images/admin_icons/smallEdit.png) no-repeat left;
+	}
+	
+	span.smallDelete {
+		background:url(../../images/common/x.png) no-repeat center;
+		cursor:pointer;
 	}
 	
 	div.footer {

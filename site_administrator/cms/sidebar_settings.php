@@ -1,6 +1,8 @@
-<?php require_once('../../Connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
-<?php
+<?php 
+//Header functions
+	require_once('../../Connections/connDBA.php');
+	headers("Sidebar Settings", "Site Administrator"); 
+
 //Grab the form data
 	$sideBarGrabber = mysql_query("SELECT * FROM `siteprofiles` WHERE `id` = '1'", $connDBA);
 	$sideBar = mysql_fetch_array($sideBarGrabber);
@@ -13,47 +15,25 @@
 		header("Location: sidebar.php?updated=settings");
 		exit;
 	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title("Sidebar Settings"); ?>
-<?php headers(); ?>
-</head>
 
-<body>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2>Sidebar Settings</h2>
-<p>Set which side the sidebar will display.</p>
-<p>&nbsp;</p>
-<form action="sidebar_settings.php" method="post" name="settings" id="settings" onsubmit="return errorsOnSubmit(this);">
-<div class="catDivider one">Settings</div>
-<div class="stepContent">
-  <blockquote>
-    <p>Sidebar location:</p>
-    <blockquote>
-      <p>
-        <label>
-          <input type="radio" name="side" value="Left" id="side_0"<?php if ($sideBar['sideBar'] == "Left") {echo " checked=\"checked\"";} ?> />
-        Left</label>
-        <label>
-          <input type="radio" name="side" value="Right" id="side_1"<?php if ($sideBar['sideBar'] == "Right") {echo " checked=\"checked\"";} ?> />
-        Right</label>
-        <br />
-      </p>
-    </blockquote>
-  </blockquote>
-</div>
-<div class="catDivider two">Submit</div>
-<div class="stepContent">
-  <blockquote>
-    <p>
-      <?php submit("submit", "Submit"); ?>
-      <input name="cancel" type="button" id="cancel" onclick="MM_goToURL('parent','sidebar.php');return document.MM_returnValue" value="Cancel" />
-    </p>
-  </blockquote>
-</div>
-</form>
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>
+//Title
+	title("Sidebar Settings", "Set which side of the page the sidebar will display.");
+
+//Settings form
+	form("settings");
+	catDivider("Settings", "one", true);
+	echo "<blockquote>";
+	directions("Sidebar location");
+	echo "<blockquote><p>";
+	radioButton("side", "side", "Left,Right", false, true, true, false, "sideBar", "sideBar", "sideBar");
+	echo "</p></blockquote></blockquote>";
+	catDivider("Settings", "two");
+	echo "<blockquote><p>";
+	button("submit", "submit", "Submit", "submit");
+	button("cancel", "cancel", "Cancel", "cancel", "sidebar.php");
+	echo "</p>";
+	closeForm(true, false);
+
+//Include the footer
+	footer();
+?>

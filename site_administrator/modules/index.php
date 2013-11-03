@@ -1,244 +1,98 @@
-<?php require_once('../../Connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
-<?php
-//Grab all module data
-	$moduleDataCheckGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
-	$moduleDataCheck = mysql_fetch_array($moduleDataCheckGrabber);
+<?php 
+//Header functions
+	require_once('../../Connections/connDBA.php');
+	headers("Module Administration", "Site Administrator", "liveSubmit,customVisible", true); 
+
+//Reorder modules	
+	reorder("moduledata", "index.php");
+
+//Set module avaliability
+	avaliability("moduledata", "index.php");
 	
-//Check to see if any modules exist
-	$moduleCheck = $moduleDataCheck['id'];
-	if (!$moduleCheck) {
-		$modules = "empty";
-	} else {
-		$modules = "exist";
-	}
-	
-?>
-<?php
-//Reorder the items
-	if (isset($_GET['id']) && isset($_GET['currentPosition']) && $_GET['action'] == "reorder") {
-	//Grab all necessary data
-		//Grab the id of the moving item
+//Delete a module
+	if (isset($_GET['id']) && isset($_GET['action']) && $_GET['action'] == "delete") {
 		$id = $_GET['id'];
-		//Grab the new position of the item
-		$newPosition = $_GET['position'];
-		//Grab the old position of the item
-		$currentPosition = $_GET['currentPosition'];
-			
-	//Do not process if item does not exist
-		//Get item name by URL variable
-		$getItemID = $_GET['position'];
-	
-		$itemCheckGrabber = mysql_query("SELECT * FROM moduledata WHERE position = {$getItemID}", $connDBA);
-		$itemCheckArray = mysql_fetch_array($itemCheckGrabber);
-		$itemCheckResult = $itemCheckArray['position'];
-			 if (isset ($itemCheckResult)) {
-				 $itemCheck = 1;
-			 } else {
-				$itemCheck = 0;
-			 }
-	
-	//If the item is moved up...
-		if ($currentPosition > $newPosition) {
-		//Update the other items first, by adding a value of 1
-			$otherPostionReorderQuery = "UPDATE moduledata SET position = position + 1 WHERE position >= '{$newPosition}' AND position <= '{$currentPosition}'";
-			
-		//Update the requested item	
-			$currentItemReorderQuery = "UPDATE moduledata SET position = '{$newPosition}' WHERE id = '{$id}'";
-			
-		//Execute the queries
-			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
-			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
-	
-		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
-			header ("Location: index.php");
-			exit;
-	//If the item is moved down...
-		} elseif ($currentPosition < $newPosition) {
-		//Update the other items first, by subtracting a value of 1
-			$otherPostionReorderQuery = "UPDATE moduledata SET position = position - 1 WHERE position <= '{$newPosition}' AND position >= '{$currentPosition}'";
-	
-		//Update the requested item		
-			$currentItemReorderQuery = "UPDATE moduledata SET position = '{$newPosition}' WHERE id = '{$id}'";
 		
-		//Execute the queries
-			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
-			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
-			
-		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
-			header ("Location: index.php");
-			exit;
-		}
+		delete("moduledata", "index.php", true, false, "../../modules/" . $id, "modulelesson_{$id},moduletest_{$id}");
 	}
-?>
-<?php
+
 //Forward to editor
 	if (isset ($_GET['id']) && $_GET['action'] == "edit") {
 		$id = $_GET['id'];
-		$sessionSetGrabber = mysql_query("SELECT * FROM moduledata WHERE id = '{$id}'", $connDBA);
+		
+		$sessionSetGrabber = mysql_query("SELECT * FROM `moduledata` WHERE id = '{$id}'", $connDBA);
 		$sessionSet = mysql_fetch_array($sessionSetGrabber);
-		if (!$sessionSet) {
-			header ("Location: index.php");
-			exit;
+		
+		if (!$sessionSetGrabber) {
+			redirect("index.php");
 		}
 		
-		$_SESSION['currentModule'] = $sessionSet['name'];
+		$_SESSION['currentModule'] = $sessionSet['id'];
 		$_SESSION['review'] = "review";
 		$_SESSION['difficulty'] = $sessionSet['difficulty'];
-		$_SESSION['category'] = $sessionSet['category'];
 		$_SESSION['testSettings'] = "modify";
 		
-		header ("Location: module_wizard/modify.php");
-		exit;
+		redirect("module_wizard/lesson_settings.php");
 	}
-?>
-<?php
-//Set module avaliability
-	if (isset($_POST['id']) && $_POST['action'] == "setAvaliability") {
-		$id = $_POST['id'];
-		if (!$_POST['option']) {
-			$option = "";
-		} else {
-			$option = $_POST['option'];
-		}
-		
-		$setAvaliability = "UPDATE moduledata SET `avaliable` = '{$option}' WHERE id = '{$id}'";
-		mysql_query($setAvaliability, $connDBA);
-		
-		header ("Location: index.php");
-		exit;
-	}
-?>
-<?php
-//Delete a module
-	if (isset ($_GET['id']) && isset ($_GET['module']) && $_GET['action'] == "delete") {
-		$id = $_GET['id'];
-		$deleteGrabber = mysql_query("SELECT * FROM moduledata WHERE id = '{$id}'", $connDBA);
-		$delete = mysql_fetch_array($deleteGrabber);
-		if (!$delete) {
-			header ("Location: index.php");
-			exit;
-		}
 
-	//Update the database	
-		$position = $delete['position'];
-		$tableName = strtolower(str_replace(" ", "", $delete['name']));
-		$directoryName = strtolower(str_replace(" ", "", $delete['name']));
-		mysql_query("DELETE FROM moduledata WHERE id = '{$id}' LIMIT 1", $connDBA);
-		mysql_query("UPDATE moduledata SET position = position-1 WHERE position > '{$position}'", $connDBA);
-		mysql_query("DROP TABLE `moduletest_{$tableName}`", $connDBA);
-		mysql_query("DROP TABLE `modulelesson_{$tableName}`", $connDBA);
-		
-	//Delete the directories
-		deleteAll("../../modules/" . $directoryName);
-		
-		header ("Location: index.php");
-		exit;
-	}
-?>
-<?php
 //Unset old sessions
 	unset($_SESSION['currentModule']);
 	unset($_SESSION['difficulty']);
-	unset($_SESSION['category']);
 	unset($_SESSION['review']);
 	unset($_SESSION['step']);
 	unset($_SESSION['testSettings']);
 	unset($_SESSION['bankCategory']);
 	unset($_SESSION['categoryName']);
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title("Module Administration"); ?>
-<?php headers(); ?>
-<?php liveSubmit(); ?>
-<?php customCheckbox("visible"); ?>
-<script type="text/javascript" src="../../javascripts/common/warningDelete.js"></script>
-</head>
-<body<?php bodyClass(); ?>>
-<?php toolTip(); ?>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2>Module Administration</h2>
-    <p>Below is a list of all modules.</p>
-    <p>&nbsp;</p>
-      <div class="toolBar"><a class="toolBarItem new" href="module_wizard/index.php">Add New Module</a><a class="toolBarItem bank" href="question_bank/index.php">Question Bank</a><a class="toolBarItem settings" href="settings.php">Customize Settings</a><a class="toolBarItem feedback" href="feedback/index.php">Feedback</a>
-        <?php
-			if ($modules == "exist") {
-			echo "<a class=\"toolBarItem search\" href=\"../../modules/index.php\">Preview Modules</a>";
-			}
-		?>
-      </div>
-<br />
-</br />
-<?php
-	  if ($modules == "exist") {
-		  echo "<table class=\"dataTable\">";
-		  echo "<tbody>";
-			  echo "<tr>";
-				  echo "<th width=\"25\" class=\"tableHeader\"></th>";
-				  echo "<th width=\"50\" class=\"tableHeader\">Order</th>";
-				  echo "<th width=\"200\" class=\"tableHeader\">Module Name</th>";
-				  echo "<th class=\"tableHeader\">Comments</th>";
-				  echo "<th width=\"50\" class=\"tableHeader\">Statistics</th>";
-				  echo "<th width=\"50\" class=\"tableHeader\">Edit</th>";
-				  echo "<th width=\"50\" class=\"tableHeader\">Delete</th>";
-			  echo "</tr>";
-		  //Select data for the loop
-			  $moduleDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
+	
+//Title
+	title("Module Administration", "Below is a list of all modules.");
+	
+//Admin toolbar
+	echo "<div class=\"toolBar\">";
+	echo URL("Add New Module", "module_wizard/index.php", "toolBarItem new");
+	echo URL("Question Bank", "question_bank/index.php", "toolBarItem bank");
+	echo URL("Customize Settings", "settings.php", "toolBarItem settings");
+	echo URL("Feedback", "feedback/index.php", "toolBarItem feedback");
+	
+	if (exist("moduledata") == true) {
+		echo URL("Preview Modules", "../../modules/index.php", "toolBarItem search");
+	}
+	
+	echo "</div>";
+	
+//Modules table
+	if (exist("moduledata") == true) {
+		 $moduleDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
+		 
+		 echo "<br /><table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"50\" class=\"tableHeader\">Order</th><th width=\"200\" class=\"tableHeader\">Module Name</th><th class=\"tableHeader\">Comments</th><th width=\"50\" class=\"tableHeader\">Statistics</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+		 
+		 while ($moduleData = mysql_fetch_array($moduleDataGrabber)) {
+			  echo "<tr";
+			  if ($moduleData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
+			  $currentLesson = $moduleData['id'];
+			  $lessonCheckGrabber = mysql_query("SELECT * FROM `modulelesson_{$currentLesson}`", $connDBA);
+			  $lessonCheck = mysql_num_rows($lessonCheckGrabber);
 			  
-		  //Select data for drop down menu
-			  $dropDownDataGrabber = mysql_query("SELECT * FROM moduledata ORDER BY position ASC", $connDBA);
-			  
-		  //Loop through the items		
-			  while ($moduleData = mysql_fetch_array($moduleDataGrabber)){
-				  echo "<tr";
-				  if ($moduleData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
-				  ">";
-					  $currentLesson = str_replace(" ", "", strtolower($moduleData['name']));
-					  $lessonCheckGrabber = mysql_query("SELECT * FROM `modulelesson_{$currentLesson}`", $connDBA);
-					  $lessonCheck = mysql_num_rows($lessonCheckGrabber);
-					  
-					  if ($lessonCheck < 1) {
-						  echo "<td width=\"25\"><div align=\"center\"><span onmouseover=\"Tip('There isn\'t any lesson content to this module. <br />Please add content before displaying this module.')\" onmouseout=\"UnTip()\" class=\"noShow\"></span></div></td>";
-					  } else {
-						  echo "<td width=\"25\"><div align=\"center\"><form name=\"avaliability\" action=\"index.php\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"setAvaliability\"><a href=\"#option" . $moduleData['id'] . "\" class=\"visible"; if ($moduleData['avaliable'] == "") {echo " hidden";} echo "\"></a><input type=\"hidden\" name=\"id\" value=\"" . $moduleData['id'] . "\"><div class=\"contentHide\"><input type=\"checkbox\" name=\"option\" id=\"option" . $moduleData['id'] . "\" onclick=\"Spry.Utils.submitForm(this.form);\""; if ($moduleData['avaliable'] == "on") {echo " checked=\"checked\"";} echo "></div></form></div></td>";
-					  }
-					  
-					  unset($lessonCheck);
-				  
-					  echo "<td width=\"50\"><form name=\"modules\" action=\"index.php\">";
-							  echo "<select name=\"position\" onchange=\"this.form.submit();\">";
-							  $moduleCount = mysql_num_rows($dropDownDataGrabber);
-							  for ($count=1; $count <= $moduleCount; $count++) {
-								  echo "<option value=\"{$count}\"";
-								  if ($moduleData ['position'] == $count) {
-									  echo " selected=\"selected\"";
-								  }
-								  echo ">$count</option>";
-							  }
-							  echo "</select>";
-						  echo "<input type=\"hidden\" name=\"action\" value=\"reorder\">";
-						  echo "<input type=\"hidden\" name=\"id\" value=\"";
-						  echo $moduleData['id'];
-						  echo "\">";
-						  echo "<input type=\"hidden\" name=\"currentPosition\" value=\"";
-						  echo $moduleData['position'];
-						  echo "\"></form></td>";
-					  
-					  echo "<td width=\"200\"><a href=\"../../modules/lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></td>";
-					  
-					  echo "<td>" . commentTrim(60, $moduleData['comments']) . "</td>";
-					  echo "<td width=\"50\"><a class=\"action statistics\" href=\"../statistics/index.php?type=module&period=overall&id=" . $moduleData['id'] . "\" onmouseover=\"Tip('View the <strong>" . $moduleData['name'] . "</strong> module\'s statistics</strong>')\" onmouseout=\"UnTip()\"></a></td>";
-					  echo "<td width=\"50\"><a class=\"action edit\" href=\"index.php?action=edit&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Edit the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\"></a></td>";
-					  echo "<td width=\"50\"><a class=\"action delete\" href=\"javascript:void\" onclick=\"warningDelete('index.php?action=delete&module=" . $moduleData['position'] . "&id=" . $moduleData['id'] . "', 'module');\" onmouseover=\"Tip('Delete the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\"></a></td>";
-				  echo "</tr>";
+			  if ($lessonCheck < 1) {
+				  echo "<td width=\"25\"><div align=\"center\"><span onmouseover=\"Tip('There isn\'t any lesson content to this module. <br />Please add content before displaying this module.')\" onmouseout=\"UnTip()\" class=\"noShow\"></span></div></td>";
+			  } else {
+				  echo "<td width=\"25\">"; option($moduleData['id'], $moduleData['visible'], "moduleData", "visible"); echo "</td>";
 			  }
-		  echo "</tbody></table>";
-	  } else {
-		  echo "<div class=\"noResults\">There are no modules. <a href=\"module_wizard/index.php\">Create one now</a>.</div>";
-	  }
-?> 
-<?php footer("site_administrator/includes/bottom_menu.php"); ?>
-</body>
-</html>
+			  
+			  echo "<td width=\"75\">"; reorderMenu($moduleData['id'], $moduleData['position'], "moduleData", "moduledata"); echo "</td>";
+			  echo "<td width=\"200\"><a href=\"../../modules/lesson.php?id=" . $moduleData['id'] . "\" onmouseover=\"Tip('Launch the <strong>" . $moduleData['name'] . "</strong> module')\" onmouseout=\"UnTip()\">" . $moduleData['name'] . "</a></td>";
+			  echo "<td>" . commentTrim(60, $moduleData['comments']) . "</td>";
+			  echo "<td width=\"50\">" . URL(false, "../statistics/index.php?type=module&period=overall&id=" . $moduleData['id'], "action statistics", false, "View the <strong>" . $moduleData['name'] . "</strong> module's statistics") . "</td>";
+			  echo "<td width=\"50\">" . URL(false, "index.php?action=edit&id=" . $moduleData['id'], "action edit", false, "Edit the <strong>" . $moduleData['name'] . "</strong> module") . "</td>";
+			  echo "<td width=\"50\">" . URL(false, "index.php?action=delete&id=" . $moduleData['id'], "action delete", false, "Delete the <strong>" . $moduleData['name'] . "</strong> module", true) . "</td>";
+			echo "</tr>";
+		 }
+		 
+		 echo "</tbody></table>";
+	 } else {
+		echo "<div class=\"noResults\">This site has no modules. " . URL("Create one now", "module_wizard/index.php") . ".</div>";
+	 }
+	 
+//Include the footer
+	footer();
+?>

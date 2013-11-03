@@ -1,26 +1,8 @@
-<?php require_once('Connections/connDBA.php'); ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title("Enable Javascript"); ?>
-<?php headers(); ?>
-<?php meta(); ?>
-</head>
-
-<body>
 <?php
-	if (isset ($_SESSION['MM_UserGroup'])) {
-		switch($_SESSION['MM_UserGroup']) {
-			case "Student": $topPage = "student/includes/top_menu.php"; break;
-			case "Instructor": $topPage = "instructor/includes/top_menu.php"; break;
-			case "Organization Administrator": $topPage = "administrator/includes/top_menu.php"; break;
-			case "Site Administrator": $topPage = "site_administrator/includes/top_menu.php"; break;
-		}
-	} else {
-		$topPage = "includes/top_menu.php";
-	}
+//Header functions
+	require_once('Connections/connDBA.php');
+	headers("Enable Javascript");
 ?>
-<?php topPage($topPage); ?>
 <h2>Enable Javascript</h2>
 <p>Javascript on your browser is currently disabled. This site needs javascript in order to run, so follow the steps below to enable them.</p>
 <p>&nbsp;</p>

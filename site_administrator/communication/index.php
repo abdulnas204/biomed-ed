@@ -1,166 +1,43 @@
-<?php require_once('../../Connections/connDBA.php'); ?>
-<?php loginCheck("Site Administrator"); ?>
-<?php
-//Check to see if announcements exist
-	$announcementCheck = mysql_query("SELECT * FROM announcements WHERE `position` = 1", $connDBA);
-	if (mysql_fetch_array($announcementCheck)) {
-		$announcementGrabber = mysql_query("SELECT * FROM announcements ORDER BY position ASC", $connDBA);
-	} else {
-		$announcementGrabber = 0;
-	}
-
-//Reorder announcements	
-	if (isset ($_GET['action']) && $_GET['action'] == "modifySettings" && isset($_GET['id']) && isset($_GET['position']) && isset($_GET['currentPosition'])) {
-	//Grab all necessary data	
-	  //Grab the id of the moving item
-	  $id = $_GET['id'];
-	  //Grab the new position of the item
-	  $newPosition = $_GET['position'];
-	  //Grab the old position of the item
-	  $currentPosition = $_GET['currentPosition'];
-		  
-	  //Do not process if item does not exist
-	  //Get item name by URL variable
-	  $getAnnouncementID = $_GET['position'];
-  
-	  $announcementCheckGrabber = mysql_query("SELECT * FROM announcements WHERE position = {$getAnnouncementID}", $connDBA);
-	  $announcementCheckArray = mysql_fetch_array($announcementCheckGrabber);
-	  $announcementCheckResult = $announcementCheckArray['position'];
-		   if (isset ($announcementCheckResult)) {
-			   $announcementCheck = 1;
-		   } else {
-			  $announcementCheck = 0;
-		   }
-	
-	//If the item is moved up...
-		if ($currentPosition > $newPosition) {
-		//Update the other items first, by adding a value of 1
-			$otherPostionReorderQuery = "UPDATE announcements SET position = position + 1 WHERE position >= '{$newPosition}' AND position <= '{$currentPosition}'";
-			
-		//Update the requested item	
-			$currentItemReorderQuery = "UPDATE announcements SET position = '{$newPosition}' WHERE id = '{$id}'";
-			
-		//Execute the queries
-			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
-			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
-	
-		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
-			header ("Location: index.php");
-			exit;
-	//If the item is moved down...
-		} elseif ($currentPosition < $newPosition) {
-		//Update the other items first, by subtracting a value of 1
-			$otherPostionReorderQuery = "UPDATE announcements SET position = position - 1 WHERE position <= '{$newPosition}' AND position >= '{$currentPosition}'";
-	
-		//Update the requested item		
-			$currentItemReorderQuery = "UPDATE announcements SET position = '{$newPosition}' WHERE id = '{$id}'";
-		
-		//Execute the queries
-			$otherPostionReorder = mysql_query($otherPostionReorderQuery, $connDBA);
-			$currentItemReorder = mysql_query ($currentItemReorderQuery, $connDBA);
-			
-		//No matter what happens, the user will see the updated result on the editing screen. So, just redirect back to that page when done.
-			header ("Location: index.php");
-			exit;
-		}
-	}
-
-//Set announcement avaliability
-	if (isset($_POST['id']) && $_POST['action'] == "setAvaliability") {
-		$id = $_POST['id'];
-		
-		if (!$_POST['option']) {
-			$option = "";
-		} else {
-			$option = $_POST['option'];
-		}
-		
-		$setAvaliability = "UPDATE announcements SET `visible` = '{$option}' WHERE id = '{$id}'";
-		mysql_query($setAvaliability, $connDBA);
-		
-		header ("Location: index.php");
-		exit;
-	}
-	
-//Delete an announcement
-	if (isset ($_GET['action']) && $_GET['action'] == "delete" && isset($_GET['announcement']) && isset($_GET['id'])) {
-		//Do not process if announcement does not exist
-		//Get announcement name by URL variable
-		$getAnnouncementID = $_GET['announcement'];
-	
-		$announcementCheckGrabber = mysql_query("SELECT * FROM announcements WHERE position = {$getAnnouncementID}", $connDBA);
-		$announcementCheckArray = mysql_fetch_array($announcementCheckGrabber);
-		$announcementCheckResult = $announcementCheckArray['position'];
-			 if (isset ($announcementCheckResult)) {
-				 $announcementCheck = 1;
-			 } else {
-				$announcementCheck = 0;
-			 }
-	 
-		if (!isset ($_GET['id']) || $_GET['id'] == 0 || $announcementCheck == 0) {
-			header ("Location: index.php");
-			exit;
-		} else {
-			$deleteAnnouncement = $_GET['id'];
-			$announcementLift = $_GET['announcement'];
-			
-			$announcementPositionGrabber = mysql_query("SELECT * FROM announcements WHERE position = {$announcementLift}", $connDBA);
-			$announcementPositionFetch = mysql_fetch_array($announcementPositionGrabber);
-			$announcementPosition = $announcementPositionFetch['position'];
-			
-			$otherAnnouncementsUpdateQuery = "UPDATE announcements SET position = position-1 WHERE position > '{$announcementPosition}'";
-			$deleteAnnouncementQueryResult = mysql_query($otherAnnouncementsUpdateQuery, $connDBA);
-			
-			$deleteAnnouncementQuery = "DELETE FROM announcements WHERE id = {$deleteAnnouncement}";
-			$deleteAnnouncementQueryResult = mysql_query($deleteAnnouncementQuery, $connDBA);
-			
-			header ("Location: index.php");
-			exit;
-		}
-	}
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<?php title("Communication"); ?>
-<?php headers(); ?>
-<?php liveSubmit(); ?>
-<?php customCheckbox("visible"); ?>
-</head>
-
-<body>
-<?php tooltip(); ?>
-<?php topPage("site_administrator/includes/top_menu.php"); ?>
-<h2>Communication</h2>
-<p>Communication can be established to registered users and organizations via announcements and mass emails.</p>
-<p>&nbsp;</p>
-<div class="toolBar"><a class="toolBarItem announcementLink" href="manage_announcement.php">Create Announcement</a><a class="toolBarItem email" href="send_email.php">Send Mass Email</a></div>
 <?php 
-	if (isset ($_GET['added']) && $_GET['added'] == "announcement") {successMessage("The annoumcement was successfully added");}
-    if (isset ($_GET['updated']) && $_GET['updated'] == "announcement") {successMessage("The annoumcement was successfully updated");}
-	if (isset ($_GET['email']) && $_GET['email'] == "success") {successMessage("The email was successfully sent");}
-	if (!isset ($_GET['updated']) && !isset ($_GET['added']) && !isset ($_GET['email'])) {echo "<br />";}
-?>
-<?php
-//Table header, only displayed if announcements exist.
-	if ($announcementGrabber !== 0) {
-	//Provide some data for the time tracker
-		$time = getdate();
+//Header functions
+	require_once('../../Connections/connDBA.php');
+	headers("Communication", "Site Administrator", "liveSubmit,customVisible", true); 
+
+//Reorder pages	
+	reorder("pages", "index.php");
+
+//Set page avaliability
+	avaliability("pages", "index.php");
+	
+//Delete a page
+	delete("pages", "index.php");
+	
+//Title
+	title("Communication", "Communication can be established to registered users and organizations via announcements and mass emails.");
+	
+//Admin toolbar
+	echo "<div class=\"toolBar\">";
+	URL("Create Announcement", "manage_announcement.php", "toolBarItem announcementLink");
+	URL("Send Mass Email", "send_email.php", "toolBarItem email");
+	echo "</div>";
+	
+//Display message updates
+	message("added", "announcement", "success", "The annoumcement was successfully added");
+	message("updated", "announcement", "success", "The annoumcement was successfully updated");
+	message("email", "success", "success", "The email was successfully sent");
+	message("updated", "icon", "success", "The browser icon was successfully updated. It may take a few moments to update across the system.");
+	message("updated", "siteInfo", "success", "The site information was successfully updated");
+	message("updated", "page", "theme", "The theme was successfully updated");
+
+//Announcements table
+	if (exist("announcements") == true) {
+		$announcementGrabber = mysql_query("SELECT * FROM `announcements` ORDER BY `position` ASC", $connDBA);
+		$currentDate = date("m/d/y g:i a");
 		
-		if (0 < $time['minutes'] && $time['minutes'] < 9) {
-			$minutes = "0" . $time['minutes'];
-		} else {
-			$minutes = $time['minutes'];
-		}
-		
-		$currentTime = $time['hours'] . ":" . $minutes;
-		$currentDate = strtotime($time['mon'] . "/" . $time['mday'] . "/" . $time['year'] . " " . $currentTime);
-		
-	echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Display To</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
-	//Loop through each announcement
+		echo "<table class=\"dataTable\"><tbody><tr><th width=\"25\" class=\"tableHeader\"></th><th width=\"75\" class=\"tableHeader\">Order</th><th class=\"tableHeader\" width=\"200\">Display To</th><th class=\"tableHeader\" width=\"200\">Title</th><th class=\"tableHeader\">Content</th><th width=\"50\" class=\"tableHeader\">Edit</th><th width=\"50\" class=\"tableHeader\">Delete</th></tr>";
+	
 		while($announcementData = mysql_fetch_array($announcementGrabber)) {
 			echo "<tr";
-		//Alternate the color of each row
 			if ($announcementData['position'] & 1) {echo " class=\"odd\">";} else {echo " class=\"even\">";}
 			
 			if ($announcementData['fromDate'] != "") {
